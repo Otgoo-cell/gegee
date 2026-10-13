@@ -1372,7 +1372,7 @@ body:has(#doneBar:not([hidden])) .toast{bottom:calc(148px + env(safe-area-inset-
   });
   document.addEventListener('visibilitychange', ()=>{
     if(document.hidden){ window.onAppHidden && window.onAppHidden(); }
-    else if(wake===null && document.body.classList.contains('running')){ window.Native.keepScreen(true); }
+    else { window.onAppShown && window.onAppShown(); if(wake===null && document.body.classList.contains('running')){ window.Native.keepScreen(true); } }
   });
   if('serviceWorker' in navigator) window.addEventListener('load', ()=>navigator.serviceWorker.register('sw.js').catch(()=>{}));
 })();
@@ -1511,7 +1511,7 @@ function goBackground(){
   $('sitScreen').classList.remove('on'); $('sitScreen').hidden=true; try{ N.setBrightness && N.setBrightness(-1); }catch(e){}
   save();
   try{ localStorage.setItem('gegee_bg', JSON.stringify({at:bgAt, mode, sess, sinceRemind})); }catch(e){}
-  N.bgStart(bgPlan());
+  if(N.bgStart) N.bgStart(bgPlan());
   showLock('unlock');
   return true;
 }
@@ -1520,12 +1520,12 @@ function catchUp(fromMs){
 }
 window.onAppHidden = function(){
   if(!S || pickerOpen || lmode.startsWith('chg') || lmode==='restore') return;
-  if(running && HAS_BG && !bgLocked){ if(goBackground()) return; }
+  if(running && !bgLocked){ if(goBackground()) return; }   // iPhone дээр ч суулт зогсохгүй, буцаж ирэхэд хугацааг нөхнө
   if(!bgLocked) lockApp();
 };
 window.onAppShown = function(){
   if(!bgLocked || !S) return;
-  N.bgStop();
+  if(N.bgStop) N.bgStop();
   try{ localStorage.removeItem('gegee_bg'); }catch(e){}
   catchUp(bgAt); bgAt=0;
   if(running){ lastTick=Date.now(); clearInterval(timer); timer=setInterval(tick,500); N.keepScreen(true);
@@ -1590,8 +1590,8 @@ function afterUnlock(){
   qIdx = S.quotes.length ? Math.floor(Math.random()*S.quotes.length) : 0;
   try{
     const pb=JSON.parse(localStorage.getItem('gegee_bg')||'null');
-    if(pb && HAS_BG){
-      localStorage.removeItem('gegee_bg'); N.bgStop();
+    if(pb){
+      localStorage.removeItem('gegee_bg'); if(N.bgStop) N.bgStop();
       if(Date.now()-pb.at < 8*3600e3){ mode=pb.mode; sess=pb.sess; sinceRemind=pb.sinceRemind||0; running=true; catchUp(pb.at); if(running){ running=false; } save(); }
     }
   }catch(e){}
@@ -1841,6 +1841,7 @@ async function start(){
   N.keepScreen(true); primeDone(); if(mode==='free') primeFree();
   try{ switchAudio.muted=true; const pp=switchAudio.play(); if(pp) pp.then(()=>{ switchAudio.pause(); switchAudio.muted=false; }).catch(()=>{ switchAudio.muted=false; }); }catch(e){}
   { const dd=S.days[k]||(S.days[k]={l:0,s:0}); if(!Number.isFinite(dd.fs)){ const n=new Date(); dd.fs=n.getHours()*60+n.getMinutes(); } }
+  if(!HAS_BG && /iPhone|iPad|iPod/.test(navigator.userAgent) && !S.iosHint){ S.iosHint=1; setTimeout(()=>toast(tr('iPhone дээр дэлгэц унтарсан ч хугацаа тоологдсоор байна. Харин хонх дуугарахгүй тул дэлгэцээ асаалттай байлгавал илүү.','On iPhone time keeps counting with the screen off, but bells cannot ring, so keeping the screen on is better.')),1500); }
   running=true; lastTick=Date.now(); sinceRemind=0; tickPrev=dget(today()).t; bell(528,2.4,.18); socSitting(true);
   document.body.classList.add('running');
   timer=setInterval(tick,500); renderMed(); dimOn=true; showSit(true);
@@ -3653,7 +3654,7 @@ async function openGroup(id){
 function socBadges(){ if(!socOn()||!S||!S.soc) return; chatUnread(); rpc('my_friends').then(l=>{ FR.list=l; FR.incoming=l.filter(f=>f.state==='incoming').length; }).catch(()=>{}); rpc('my_invites').then(l=>{ GR.inv=l; }).catch(()=>{}); }
 
 /* ===================== шинэчлэлийн мэдэгдэл (Android) ===================== */
-const APP_VER=61, SITE='https://otgoo-cell.github.io/gegee';
+const APP_VER=62, SITE='https://otgoo-cell.github.io/gegee';
 async function checkUpdate(){
   if(!N.openUrl) return;
   try{ const r=await fetch(SITE+'/version.json?t='+Date.now(),{cache:'no-store'}); const v=await r.json();
@@ -3725,7 +3726,7 @@ async function pollChat(first){
 
 /* ===================== Санал хүсэлт ===================== */
 const FB={kind:'bug', newCount:0, mine:null, seenAt:0};
-const APP_NAME='7.1';
+const APP_NAME='7.2';
 const FB_K={bug:['🐞',()=>tr('Алдаа','Problem')], idea:['💡',()=>tr('Санаа','Idea')], other:['💬',()=>tr('Бусад','Other')]};
 const fbPlat=()=>{ try{ if(N.hasBg && N.hasBg()) return 'android-app'; }catch(e){} return /iPhone|iPad|iPod/.test(navigator.userAgent)?'ios-pwa':'web'; };
 const fbDev=()=>`${navigator.userAgent.slice(0,260)} | ${screen.width}x${screen.height}@${window.devicePixelRatio||1} | ${LANG} | ${view}`;
