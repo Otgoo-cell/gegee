@@ -203,6 +203,16 @@ header{display:flex;justify-content:space-between;align-items:baseline;gap:12px}
 .minrow{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
 .minrow input{width:82px;font-family:var(--thin);font-weight:300;font-size:22px;text-align:center;padding:6px}
 .preview{font-size:13.5px;color:var(--muted)}
+.fSeg{display:grid!important;grid-template-columns:1.35fr 1fr 1fr;gap:4px;padding:4px;border-radius:16px;background:var(--soft)}
+.fSeg .chip{border:0;box-shadow:none;justify-content:center;text-align:center;padding:9px 4px;background:transparent}
+.fSeg .chip.on{background:var(--card,#fff);box-shadow:0 2px 8px rgba(0,0,0,.08);color:var(--accent);font-weight:600}
+.fQ{display:grid!important;grid-template-columns:repeat(7,1fr);gap:6px}
+.fQ .chip{padding:8px 0;justify-content:center;text-align:center;min-width:0;font-variant-numeric:tabular-nums}
+.fQ #fMore.on{font-size:12px}
+.fCustom{display:flex;align-items:center;gap:8px}.fCustom input{width:72px;text-align:center;font-size:17px;font-variant-numeric:tabular-nums}.fCustom span{font-size:18px;color:var(--muted)}.fCustom .main{margin-left:auto;padding:10px 16px}
+.fFoot{display:flex;align-items:center;gap:10px;min-height:34px}
+.fFoot .preview{flex:1;min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;font-size:13px}
+.fFoot #fMusic{flex:none;padding:7px 12px;font-size:12.5px}
 .preview b{font-weight:500;font-variant-numeric:tabular-nums}
 .preview .l{color:var(--light)} .preview .s{color:var(--sound)}
 .chips{display:flex;gap:8px;flex-wrap:wrap}
@@ -509,7 +519,8 @@ body.running #gemLive,body:has(#lock:not([hidden])) #gemLive{visibility:hidden}
 body.running .cglow{display:none}
 .cripple{position:absolute;inset:14%;border-radius:50%;pointer-events:none;background:radial-gradient(circle,rgba(var(--auraRGB,230,180,60),.35),rgba(var(--auraRGB,230,180,60),0) 70%);animation:cripple .7s ease-out forwards}
 @keyframes cripple{from{transform:scale(.6);opacity:1}to{transform:scale(1.15);opacity:0}}
-.ringHint{text-align:center;font-size:12px;color:var(--muted);margin:-6px 0 4px;min-height:16px}
+.ringHint{text-align:center;font-size:12px;color:var(--muted);margin:-6px 0 4px;height:16px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.center #phase{height:18px;overflow:hidden}.center #remain{height:46px}.center #sub{height:18px;overflow:hidden;white-space:nowrap}
 
 /* ⋮ тохиргоо */
 .view>header{padding-right:38px}
@@ -870,6 +881,13 @@ body.running .updbar{display:none}
 .ciEq,.ciPlus{color:#ffe9a8;font-size:18px;margin:0 4px 14px}
 .ciTreeT{font-size:12px;color:rgba(255,245,220,.75)}
 .ciList{justify-content:center;max-height:160px;overflow:auto}.ciList .awC{background:rgba(255,255,255,.14);color:#fff8e6}
+.av.xs{--s:30px}.av.xs .avSp,.av.xs .avRay{display:none}
+.hallS{display:flex;align-items:center;gap:10px;padding:8px 12px;margin:0 0 10px;border-radius:16px}
+.hsT{font-size:12.5px;font-weight:600;flex:1;min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.hsA{display:flex;gap:4px}.hsP{position:relative;background:none!important;border:0;box-shadow:none!important;padding:0}
+.hsP i{position:absolute;right:-4px;bottom:-4px;font-style:normal;font-size:12px}
+.myRank{width:100%;text-align:left;color:var(--fg)}.myRank .mrB{flex:1;min-width:0}.myRank .mrB small{display:block;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.myRank .mrN{min-width:52px;height:52px;font-size:20px}
 /* ---- 1·2·3 тавцан ---- */
 .race{display:grid;grid-template-columns:auto 1fr auto;align-items:center;gap:2px 8px;margin:2px 0 0;padding:10px 14px;border-radius:16px;background:linear-gradient(90deg,rgba(255,200,60,.18),rgba(255,140,185,.14));border:1px solid rgba(226,169,31,.35);font-size:13px}
 .race span{font-weight:600}.race b{color:#d99400;font-weight:700}.race small{grid-column:2/4;color:var(--muted);font-size:11.5px}
@@ -1028,13 +1046,14 @@ body:has(#doneBar:not([hidden])) .toast{bottom:calc(148px + env(safe-area-inset-
   </div>
   <div class="glass openBar" id="openBar" hidden><div><b id="obT"></b><small id="obS"></small></div><div class="obBtns"><button class="main" id="obGo"></button><button id="obCont"></button><button class="obX" id="obX" aria-label="Хаах">✕</button></div></div>
   <div class="free glass" id="freeCfg" hidden>
-    <div class="chips" id="fMode">
+    <div class="chips fSeg" id="fMode">
       <button class="chip on" data-fm="phi">Алтан харьцаа</button>
-      <button class="chip" data-fm="light">Дан гэрэл</button>
-      <button class="chip" data-fm="sound">Дан аялгуу</button>
+      <button class="chip" data-fm="light">Гэрэл</button>
+      <button class="chip" data-fm="sound">Аялгуу</button>
     </div>
-    <div class="chips" id="fQuick"><button class="chip" data-min="30">30м</button><button class="chip" data-min="60">1ц</button><button class="chip" data-min="120">2ц</button><button class="chip" data-min="180">3ц</button><button class="chip" data-min="300">5ц</button><button class="chip" data-min="420">7ц</button><button class="chip" data-min="540">9ц</button><button class="chip" data-min="720">12ц</button></div>
-    <div class="row" style="justify-content:space-between;gap:8px"><div class="preview" id="fPrev"></div><button class="chip on" id="fMusic">♪ Дуусахад ая дуугарна</button></div>
+    <div class="chips fQ" id="fQuick"><button class="chip" data-min="30">30м</button><button class="chip" data-min="60">1ц</button><button class="chip" data-min="120">2ц</button><button class="chip" data-min="180">3ц</button><button class="chip" data-min="300">5ц</button><button class="chip" data-min="420">7ц</button><button class="chip" id="fMore">⋯</button></div>
+    <div class="fCustom" id="fCustom" hidden><input id="fcH" type="number" inputmode="numeric" min="0" max="99" placeholder="цаг"><span>:</span><input id="fcM" type="number" inputmode="numeric" min="0" max="59" placeholder="мин"><button class="main" id="fcOk">Болсон</button></div>
+    <div class="fFoot"><div class="preview" id="fPrev"></div><button class="chip on" id="fMusic">♪ Ая</button></div>
   </div>
   <div class="ringwrap">
     <div class="ringbox" id="ringbox">
@@ -1660,7 +1679,11 @@ function setFreeMode(fm){
   renderMed();
 }
 $('modeSw').addEventListener('click', e=>{ const b=e.target.closest('button'); if(b) setMode(b.dataset.m); });
-$('fQuick').addEventListener('click', e=>{ const b=e.target.closest('.chip'); if(!b||!S) return; S.freeMin=Number(b.dataset.min); sess=null; save(); renderMed(); });
+$('fQuick').addEventListener('click', e=>{ const b=e.target.closest('.chip'); if(!b||!S) return;
+  if(b.id==='fMore'){ const c=$('fCustom'); c.hidden=!c.hidden; if(!c.hidden){ $('fcH').value=S.freeMin?Math.floor(S.freeMin/60):''; $('fcM').value=S.freeMin?S.freeMin%60:''; $('fcH').focus(); } return; }
+  $('fCustom').hidden=true; S.freeMin=Number(b.dataset.min); sess=null; save(); renderMed(); });
+$('fcOk').addEventListener('click', ()=>{ const h=Math.max(0,Math.min(99,parseInt($('fcH').value)||0)), m=Math.max(0,Math.min(59,parseInt($('fcM').value)||0)); S.freeMin=h*60+m; sess=null; save(); $('fCustom').hidden=true; renderMed(); });
+['fcH','fcM'].forEach(id=>$(id).addEventListener('keydown',e=>{ if(e.key==='Enter') $('fcOk').click(); }));
 $('fMode').addEventListener('click', e=>{ const b=e.target.closest('.chip'); if(b){ setFreeMode(b.dataset.fm); save(); } });
 /* ---- цагираг дээр гулсуулж минут сонгох ---- */
 const MAXMIN=720;
@@ -1727,8 +1750,8 @@ function freeAlarmStart(){
   }catch(e){ bell(528,6,.25); }
 }
 function freeMusicStop(){ clearTimeout(freeAlarmStart._t); if(freeAudio.paused){ return; } fadeFree(0,1200,()=>{ freeAudio.pause(); freeAudio.currentTime=0; }); if($('doneTxt').textContent.indexOf('150')<0) $('doneBar').hidden=true; }
-function drawMusicChip(){ const c=$('fMusic'); if(!c) return; c.classList.toggle('on',freeMusicOn); c.textContent=freeMusicOn?tr('♪ Дуусахад ая дуугарна','♪ Music at the end'):tr('♪ Дуусахад зөвхөн хонх','♪ Only a bell at the end'); }
-$('fMusic').addEventListener('click',()=>{ freeMusicOn=!freeMusicOn; try{ localStorage.setItem('gegee_freemusic',freeMusicOn?'1':'0'); }catch(e){} drawMusicChip(); });
+function drawMusicChip(){ const c=$('fMusic'); if(!c) return; c.classList.toggle('on',freeMusicOn); c.textContent=freeMusicOn?tr('♪ Ая','♪ Music'):tr('🔔 Хонх','🔔 Bell'); c.title=freeMusicOn?tr('Дуусахад ая дуугарна','Music at the end'):tr('Дуусахад зөвхөн хонх','Only a bell at the end'); }
+$('fMusic').addEventListener('click',()=>{ freeMusicOn=!freeMusicOn; try{ localStorage.setItem('gegee_freemusic',freeMusicOn?'1':'0'); }catch(e){} drawMusicChip(); toast(freeMusicOn?tr('Дуусахад ая дуугарна','Music at the end'):tr('Дуусахад зөвхөн хонх дуугарна','Only a bell at the end')); });
 
 /* ===================== суултын дэлгэц: бүдэг гэрэл, бясалгаж буй хамтрагч ===================== */
 let dimOn = (()=>{ try{ return localStorage.getItem('gegee_dim')!=='0'; }catch(e){ return true; } })();
@@ -2018,7 +2041,8 @@ function renderMed(){
   } else {
     const sp = sess && sess.e<sess.T ? sess : {...freeSplit(S.freeMin,S.freeMode), e:0};
     const dialing = dialActive();
-    document.querySelectorAll('#fQuick .chip').forEach(c=>c.classList.toggle('on', Number(c.dataset.min)===S.freeMin));
+    document.querySelectorAll('#fQuick .chip[data-min]').forEach(c=>c.classList.toggle('on', Number(c.dataset.min)===S.freeMin));
+    { const pre=[30,60,120,180,300,420].includes(S.freeMin), mb=$('fMore'); mb.classList.toggle('on', S.freeMin>0 && !pre); mb.textContent = S.freeMin>0 && !pre ? (S.freeMin>=60?`${Math.floor(S.freeMin/60)}${tr('ц','h')}${S.freeMin%60?pad2(S.freeMin%60):''}`:`${S.freeMin}${tr('м','m')}`) : '⋯'; }
     document.body.classList.toggle('dialing', dialing);
     const ph = (sp.e < sp.Tl || freeWait()) ? 'light' : 'sound';
     $('phase').textContent = freeWait()?tr('Аялгуу руу шилжих','Switch to sound'): ph==='light'?tr('Гэрэл','Light'):tr('Аялгуу','Sound');
@@ -2035,7 +2059,7 @@ function renderMed(){
       setRing(isL?(e%3600)/3600:0, isL?0:(e%3600)/3600);
       $('fillL').parentNode.style.flex=isL?61.8:0.0001; $('fillS').parentNode.style.flex=isL?0.0001:38.2; $('fillL').style.width=isL&&e?'100%':'0%'; $('fillS').style.width=!isL&&e?'100%':'0%';
       $('lgL').textContent=fmt(isL?e:other); $('lgS').textContent=fmt(isL?other:e);
-      $('fPrev').innerHTML=tr('Хугацаагүй суулт. Зогсоосны дараа нөгөө хэсгийг <b class="s">алтан харьцаагаар</b> санал болгоно','No time limit. When you stop, the other part is suggested by the <b class="s">golden ratio</b>');
+      $('fPrev').innerHTML=tr('Хугацаагүй · дараа нь нөгөөг санал болгоно','No limit · the other part is suggested after');
       g.textContent = running?tr('Түр зогсоох','Pause'):tr('Үргэлжлүүлэх','Continue'); g.disabled=false;
       $('sitToSound').hidden=!(running && e>=30); $('sitToSound').textContent=isL?tr('♪ Аялгуу руу','♪ To sound'):tr('☀ Гэрэл рүү','☀ To light');
     }
@@ -2043,11 +2067,11 @@ function renderMed(){
       const m=S.freeMin, lapFrac = m%60===0 ? 1 : (m%60)/60, a=(m*6)%360 || (m>0?360:0);
       setRing(lapFrac*sp.Tl/sp.T, lapFrac*sp.Ts/sp.T);
       const rad=(a-90)*Math.PI/180; $('knob').setAttribute('cx',100+88*Math.cos(rad)); $('knob').setAttribute('cy',100+88*Math.sin(rad));
-      $('phase').textContent=tr('Чөлөөт суулт','Free sitting'); $('phase').style.color='var(--accent)';
+      $('phase').textContent={phi:tr('Алтан харьцаа','Golden ratio'),light:tr('Гэрэл','Light'),sound:tr('Аялгуу','Sound')}[S.freeMode]||tr('Чөлөөт суулт','Free sitting'); $('phase').style.color=S.freeMode==='sound'?'var(--sound)':S.freeMode==='light'?'var(--light)':'var(--accent)';
       $('remain').textContent = m===0 ? '00:00' : m>=60 ? `${Math.floor(m/60)}${tr('ц','h')} ${pad2(m%60)}${tr('м','m')}` : `${m} ${tr('мин','min')}`;
       const noLim = m===0 && (S.freeMode==='light'||S.freeMode==='sound');
       if(noLim){ $('remain').textContent='∞'; setRing(0,0); }
-      $('sub').textContent = noLim ? tr('дарж эхлүүл','tap to start') : m===0 ? tr('цагираг дээр гулсуулж сонго','slide around the ring') : tr('голд нь дарж эхлүүл','tap the center to start');
+      $('sub').textContent = noLim ? tr('дарж эхлүүл','tap to start') : m===0 ? tr('цагираг дээр гулсуулж сонго','slide around the ring') : tr('дарж эхлүүл','tap to start');
       $('sub').classList.toggle('tapGo', m>0||noLim);
     } else { $('sub').classList.remove('tapGo'); setRing(Math.min(sp.e,sp.Tl)/sp.T, Math.max(0,sp.e-sp.Tl)/sp.T); }
     if(!openNow){ $('sitToSound').hidden=true; }
@@ -2056,18 +2080,18 @@ function renderMed(){
     $('fillL').parentNode.style.flex=sp.Tl||0.0001; $('fillS').parentNode.style.flex=sp.Ts||0.0001;
     $('fillL').style.width=(sp.Tl?Math.min(sp.e,sp.Tl)/sp.Tl*100:0)+'%'; $('fillS').style.width=(sp.Ts?Math.max(0,sp.e-sp.Tl)/sp.Ts*100:0)+'%';
     $('lgL').textContent=fmt(sp.Tl); $('lgS').textContent=fmt(sp.Ts);
-    $('fPrev').innerHTML = `${tr('Гэрэл','Light')} <b class="l">${fmt(sp.Tl)}</b> · ${tr('Аялгуу','Sound')} <b class="s">${fmt(sp.Ts)}</b> · ${tr('өдрийн 150-д нэмэгдэнэ','counts toward the daily 150')}`;
+    $('fPrev').innerHTML = `${tr('Гэрэл','Light')} <b class="l">${fmt(sp.Tl)}</b> · ${tr('Аялгуу','Sound')} <b class="s">${fmt(sp.Ts)}</b>`;
     g.textContent = running?tr('Түр зогсоох','Pause'): (sess&&sess.e>0&&sess.e<sess.T)?tr('Үргэлжлүүлэх','Continue'):tr('Эхлэх','Begin');
     g.disabled = false;
     }
-    if(dialing && S.freeMin===0 && (S.freeMode==='light'||S.freeMode==='sound')){ $('fPrev').innerHTML=tr('Хугацаагүй суулт. Зогсоосны дараа нөгөө хэсгийг <b class="s">алтан харьцаагаар</b> санал болгоно','No time limit. When you stop, the other part is suggested by the <b class="s">golden ratio</b>'); $('lgL').textContent=$('lgS').textContent='—'; $('fillL').style.width=$('fillS').style.width='0%'; }
+    if(dialing && S.freeMin===0 && (S.freeMode==='light'||S.freeMode==='sound')){ $('fPrev').innerHTML=tr('Хугацаагүй · дараа нь нөгөөг санал болгоно','No limit · the other part is suggested after'); $('lgL').textContent=$('lgS').textContent='—'; $('fillL').style.width=$('fillS').style.width='0%'; }
   }
   g.classList.toggle('running',running);
   { const dd=dget(today()), pz = !running && (mode==='free' ? !!(sess&&sess.e>0&&sess.e<sess.T) : (dd.t>0 && !dayDone(today()) && !dialActive()));
     $('ringbox').classList.toggle('paused', pz); $('resumeTag').hidden=!pz; $('resumeTag').textContent=tr('Үргэлжлүүлэх','Resume'); }
   { const paused = mode==='free' ? (sess&&sess.e>0&&sess.e<sess.T) : false;
     $('ringHint').textContent = mode==='free'
-      ? ((S.freeMode==='light'||S.freeMode==='sound') && !(S.freeMin>0) && !paused ? tr('Хугацаагүй бол шууд төвд нь дарна. Зогсоосны дараа нөгөөг нь санал болгоно','For no time limit just tap the center. When you stop, the other part is suggested') : paused ? tr('Төвд нь дарж үргэлжлүүлнэ · хоёр дарвал 00:00','Tap the center to continue · double-tap for 00:00') : tr('Цагирагийг эргүүлж тохируулаад, цагны голд дарж эхлүүлнэ · хоёр дарвал 00:00','Turn the ring, then press the middle of the clock · double-tap for 00:00'))
+      ? (paused ? tr('Төвд нь дарж үргэлжлүүлнэ · хоёр дарвал 00:00','Tap the center to continue · double-tap for 00:00') : running ? '' : tr('Цагирагаа эргүүлж тохируулна','Turn the ring to set the time'))
       : (dayDone(today()) ? '' : dget(today()).t>0 ? tr('Цагны төвд дарж үргэлжлүүлнэ','Tap the center of the clock to resume') : tr('Цагны төвд дарж эхлүүлнэ','Tap the center of the clock to begin')); }
   $('sitTime').textContent=$('remain').textContent; $('sitPhase').textContent=$('phase').textContent;
 
@@ -3112,22 +3136,18 @@ function awardLabel(a){ const s=String(a.start).slice(0,10), d=new Date(s+'T00:0
 const MEDAL=['','🥇','🥈','🥉'];
 function hallHead(){
   const h=(SOC.hall||[]).filter(x=>x.kind===SOC.p); if(!h.length) return '';
-  return `<div class="hall glass"><div class="hallT">🏆 ${tr(`Өнгөрсөн ${KIND[SOC.p][0].toLowerCase()} аваргууд`,`Last ${KNAME[SOC.p][1].toLowerCase()}'s champions`)} <small>${awardLabel(h[0])}</small></div>
-    <div class="hallRow">${h.slice(0,3).map(x=>`<button class="hallP pl${x.place}${x.me?' me':''}" data-k="${esc(x.k)}">${avatar(x.avatar, 6-x.place, x.gems, 'sm')}<span>${MEDAL[x.place]||''} ${x.me?tr('Та','You'):x.nick?esc(x.nick):hmin(x.minutes)}</span></button>`).join('')}</div></div>`;
+  return `<div class="hallS glass"><span class="hsT">🏆 ${tr(`Өнгөрсөн ${KNAME[SOC.p][0].toLowerCase()}`,`Last ${KNAME[SOC.p][1].toLowerCase()}`)}</span><span class="hsA">${h.slice(0,3).map(x=>`<button class="hsP${x.me?' me':''}" data-k="${esc(x.k)}">${avatar(x.avatar, 6-x.place, [], 'xs')}<i>${MEDAL[x.place]||''}</i></button>`).join('')}</span></div>`;
 }
+function leftTxt(){ const ms=periodEnd(SOC.p)-new Date(), d=Math.floor(ms/864e5), h=Math.floor(ms%864e5/36e5); return (d?tr(`${d} өдөр ${h} цаг`,`${d}d ${h}h`):tr(`${h} цаг`,`${h}h`))+' '+tr('үлдлээ','left'); }
 function myRank(){
-  const R=SOC.rows||[], i=R.findIndex(r=>r.me); const lbl=tr(KIND[SOC.p][0].toLowerCase(),KNAME[SOC.p][1].toLowerCase());
-  if(i<0) return SOC.rows?`<div class="myRank glass"><div class="mrN">—</div><div><b>${tr('Та энэ '+lbl+' жагсаалтад хараахан ороогүй','You are not on this board yet')}</b><small>${tr('Өнөөдөр суугаад шууд жагсаалтад орно','Sit today and you will appear right away')}</small></div></div>`:'';
-  const me=R[i], up=R.slice(0,i).reverse().find(r=>r.rank<me.rank), top=R[0];
-  const msg=me.rank===1?tr('Та 1-р байранд явж байна! 👑','You are in 1st place! 👑')
-    :`${up?tr(`#${up.rank}-ыг гүйцэхэд <b>${hmin(up.minutes-me.minutes+1)}</b>`,`<b>${hmin(up.minutes-me.minutes+1)}</b> to pass #${up.rank}`):''}${top&&top!==up?tr(` · 1-р байр хүртэл <b>${hmin(top.minutes-me.minutes+1)}</b>`,` · <b>${hmin(top.minutes-me.minutes+1)}</b> to 1st`):''}`;
-  return `<div class="myRank glass${me.rank<=3?' top':''}"><div class="mrN"><small>${tr('Та','You')}</small>#${me.rank}</div><div><b>${tr(`Энэ ${lbl} ${hmin(me.minutes)} суусан`,`${hmin(me.minutes)} this ${lbl}`)}</b><small>${msg}</small></div></div>`;
+  const R=SOC.rows||[], i=R.findIndex(r=>r.me), av=avatar(charPref(), i>=0?rowTier(R[i]):(SOC.myTier||0), [], 'md');
+  if(!SOC.rows) return '';
+  if(i<0) return `<button class="myRank glass" id="socMine">${av}<div class="mrB"><b>${esc(S.soc.nick)}</b><small>${tr('Өнөөдөр суугаад жагсаалтад орно','Sit today to join the board')}</small><small>⏳ ${leftTxt()}</small></div></button>`;
+  const me=R[i], up=R.slice(0,i).reverse().find(r=>r.rank<me.rank);
+  const msg=me.rank===1?tr('1-р байранд явж байна 👑','In 1st place 👑'):up?tr(`#${up.rank} хүртэл ${hmin(up.minutes-me.minutes+1)}`,`${hmin(up.minutes-me.minutes+1)} to #${up.rank}`):'';
+  return `<button class="myRank glass${me.rank<=3?' top':''}" id="socMine">${av}<div class="mrB"><b>${esc(S.soc.nick)} · ${hmin(me.minutes)}</b>${msg?`<small>${msg}</small>`:''}<small>⏳ ${leftTxt()}</small></div><div class="mrN">#${me.rank}</div></button>`;
 }
-function raceHead(){
-  const ms=periodEnd(SOC.p)-new Date(), d=Math.floor(ms/864e5), h=Math.floor(ms%864e5/36e5);
-  const nx={week:tr('Даваа гараг бүр','Every Monday'),month:tr('Сар бүрийн 1-нд','On the 1st of every month'),quarter:tr('Улирал бүр','Every quarter'),year:tr('Шинэ жил бүр','Every new year')}[SOC.p];
-  return hallHead()+myRank()+`<div class="race">🏁 <span>${tr(`Энэ ${KIND[SOC.p][0].toLowerCase()} уралдаан`,`This ${KNAME[SOC.p][1].toLowerCase()}'s race`)}</span><b>${d?tr(`${d} өдөр ${h} цаг`,`${d}d ${h}h`):tr(`${h} цаг`,`${h}h`)} ${tr('үлдлээ','left')}</b><small>${nx} ${tr('бүгд 0-ээс эхэлнэ. 1·2·3-т орсон хүн шагнал авна.','everyone starts from zero. Top 3 win an award.')}</small></div>`;
-}
+function raceHead(){ return myRank()+hallHead(); }
 function drawSoc(){
   const box=$('socBody'); if(!box || !S || !S.soc) return;
   const P=[['week',tr('7 хоног','Week')],['month',tr('Сар','Month')],['quarter',tr('Улирал','Quarter')],['year',tr('Жил','Year')]];
@@ -3148,24 +3168,17 @@ function drawSoc(){
     list=podium+rest.map((r,ri)=>{ const gap=prev && r.rank>prev+1 ? '<div class="socGap">···</div>' : ''; prev=r.rank;
       return gap+`<button class="socRow lb${r.me?' me':''}" data-k="${esc(r.k)}" data-t="${rowTier(r)}"><span class="socRank">${r.rank}</span>${avatar(r.avatar, rowTier(r), r.gems, ri>=20&&!r.me?'sm still':'sm')}<span class="socWho"><b>${who(r)}</b><small>${meta(r)}</small></span><span class="socMin">${hmin(r.minutes)}</span></button>`; }).join('');
   }
-  box.innerHTML=socTabs()+`<div class="glass socMe">${avatar(charPref(), (SOC.rows&&SOC.rows.find(r=>r.me))?rowTier(SOC.rows.find(r=>r.me)):(SOC.myTier||0), myGems().slice(0,8).map(g=>({s:g.s,p:g.p})), 'md')}<div><b>${esc(S.soc.nick)}</b><small>${flag(S.soc.country)} ${cname(S.soc.country)}</small></div><button class="ghost" id="socMine">${tr('Миний профайл','My profile')}</button></div>
+  box.innerHTML=socTabs()+`
     <div class="seg2 glass socSeg" id="socP">${P.map(p=>`<button data-p="${p[0]}" class="${SOC.p===p[0]?'on':''}">${p[1]}</button>`).join('')}</div>
     <div class="chips socCh" id="socC"><button class="chip${SOC.c==='all'?' on':''}" data-c="all">🌐 ${tr('Бүх дэлхий','World')}</button><button class="chip${SOC.c===S.soc.country?' on':''}" data-c="${S.soc.country}">${flag(S.soc.country)} ${cname(S.soc.country)}</button></div>
     <div class="socList">${S&&S.soc&&!SOC.err?raceHead():''}${list}</div>
-    <div class="glass socSet">
-      <div class="row"><span class="muted">${tr('Улс','Country')}</span><select id="socCtry">${countryOpts(S.soc.country)}</select></div>
-      <div class="row"><span class="muted">${tr('Хоч солих','Change nickname')}</span><span class="socNickEd"><input id="socNick" maxlength="20" value="${esc(S.soc.nick)}"><button id="socNickGo">${tr('Хадгалах','Save')}</button></span></div>
-      ${socAdmin?`<button class="ghostlink" id="socAdm">${tr('Эзэмшигчийн хэсэг · бүх бүртгэл','Owner area · all members')}</button>`:''}
-    </div>`;
+    ${socAdmin?`<button class="ghostlink" id="socAdm">${tr('Эзэмшигчийн хэсэг · бүх бүртгэл','Owner area · all members')}</button>`:''}`;
   bindTabs();
   $('socP').onclick=e=>{ const b=e.target.closest('button'); if(!b) return; SOC.p=b.dataset.p; SOC.rows=null; socLoad(); };
   $('socC').onclick=e=>{ const b=e.target.closest('button'); if(!b) return; SOC.c=b.dataset.c; SOC.rows=null; socLoad(); };
   box.querySelectorAll('[data-k]').forEach(b=>b.onclick=()=>openProfile(null, b.dataset.k, +b.dataset.t));
-  $('socMine').onclick=()=>openProfile(S.soc.nick);
+  if($('socMine')) $('socMine').onclick=()=>openProfile(S.soc.nick);
   if($('socRetry')) $('socRetry').onclick=()=>{ SOC.rows=null; socLoad(); };
-  const patch=async(o,okMsg)=>{ try{ await socLogin(); await sreq('/rest/v1/profiles?id=eq.'+S.soc.uid,o,'PATCH',{Prefer:'return=minimal'}); Object.assign(S.soc,o); save(); SOC.rows=null; socLoad(); toast(okMsg); }catch(e){ toast(socErr(e)); drawSoc(); } };
-  $('socCtry').onchange=e=>patch({country:e.target.value}, tr('Улс солигдлоо','Country updated'));
-  $('socNickGo').onclick=()=>{ const n=$('socNick').value.trim(); if(n && n!==S.soc.nick) patch({nick:n}, tr('Хоч солигдлоо','Nickname updated')); };
   if($('socAdm')) $('socAdm').onclick=openAdmin;
 }
 
@@ -3251,6 +3264,7 @@ function drawAcct(){
   box.hidden=false;
   box.innerHTML=`<div class="acH">${avatar(charPref(), SOC.myTier||0, [], 'md')}<div><b>${tr('Миний бүртгэл','My account')}</b><small>${tr('Хоч, нэр, утсаа хүссэн үедээ сольж болно','Change your nickname, name and phone any time')}</small></div></div>
     <label>${tr('Хоч (бусдад харагдахгүй, зөвхөн та болон найз нар)','Nickname (seen only by you and friends)')}<input id="acNick" maxlength="20" value="${esc(S.soc.nick)}" autocomplete="off"></label>
+    <label>${tr('Улс','Country')}<select id="acCtry">${countryOpts(S.soc.country)}</select></label>
     <label>${tr('Жинхэнэ нэр (зөвхөн эзэмшигч харна)','Real name (only the owner sees it)')}<input id="acReal" maxlength="60" value="${esc(S.soc.real||'')}" placeholder="${tr('Солих бол бичнэ үү','Type to change')}" autocomplete="off"></label>
     <label>${tr('Утас (заавал биш)','Phone (optional)')}<input id="acPhone" maxlength="20" inputmode="tel" value="${esc(S.soc.phone||'')}" placeholder="${tr('Солих бол бичнэ үү','Type to change')}" autocomplete="off"></label>
     <div class="acMsg" id="acMsg"></div>
@@ -3264,7 +3278,8 @@ function drawAcct(){
         await sreq('/rest/v1/rpc/set_private',{real_:real||S.soc.real, phone_:phone||null});
         if(real) S.soc.real=real; S.soc.phone=phone;
       }
-      if(nick && nick!==S.soc.nick){ await sreq('/rest/v1/profiles?id=eq.'+S.soc.uid,{nick},'PATCH',{Prefer:'return=minimal'}); S.soc.nick=nick; SOC.rows=null; }
+      const ctry=$('acCtry').value; const pp={}; if(nick && nick!==S.soc.nick) pp.nick=nick; if(ctry && ctry!==S.soc.country) pp.country=ctry;
+      if(Object.keys(pp).length){ await sreq('/rest/v1/profiles?id=eq.'+S.soc.uid,pp,'PATCH',{Prefer:'return=minimal'}); Object.assign(S.soc,pp); SOC.rows=null; }
       save(); msg.className='acMsg ok'; msg.textContent=tr('Хадгалагдлаа ✓','Saved ✓'); toast(tr('Бүртгэл шинэчлэгдлээ','Account updated'));
     }catch(e){ msg.className='acMsg err'; msg.textContent=socErr(e); }
     $('acSave').disabled=false;
@@ -3508,7 +3523,7 @@ async function openGroup(id){
 function socBadges(){ if(!socOn()||!S||!S.soc) return; chatUnread(); rpc('my_friends').then(l=>{ FR.list=l; FR.incoming=l.filter(f=>f.state==='incoming').length; }).catch(()=>{}); rpc('my_invites').then(l=>{ GR.inv=l; }).catch(()=>{}); }
 
 /* ===================== шинэчлэлийн мэдэгдэл (Android) ===================== */
-const APP_VER=53, SITE='https://otgoo-cell.github.io/gegee';
+const APP_VER=54, SITE='https://otgoo-cell.github.io/gegee';
 async function checkUpdate(){
   if(!N.openUrl) return;
   try{ const r=await fetch(SITE+'/version.json?t='+Date.now(),{cache:'no-store'}); const v=await r.json();
@@ -3579,7 +3594,7 @@ async function pollChat(first){
 
 /* ===================== Санал хүсэлт ===================== */
 const FB={kind:'bug', newCount:0, mine:null, seenAt:0};
-const APP_NAME='6.3';
+const APP_NAME='6.4';
 const FB_K={bug:['🐞',()=>tr('Алдаа','Problem')], idea:['💡',()=>tr('Санаа','Idea')], other:['💬',()=>tr('Бусад','Other')]};
 const fbPlat=()=>{ try{ if(N.hasBg && N.hasBg()) return 'android-app'; }catch(e){} return /iPhone|iPad|iPod/.test(navigator.userAgent)?'ios-pwa':'web'; };
 const fbDev=()=>`${navigator.userAgent.slice(0,260)} | ${screen.width}x${screen.height}@${window.devicePixelRatio||1} | ${LANG} | ${view}`;
