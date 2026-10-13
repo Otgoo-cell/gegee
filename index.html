@@ -825,8 +825,7 @@ body.running .updbar{display:none}
 .acct .acMsg{font-size:12.5px;min-height:1em}.acct .acMsg.ok{color:#3a9a5a}.acct .acMsg.err{color:#d0553a}
 .openBar{padding:14px 16px;border-radius:22px;display:flex;flex-direction:column;gap:10px;margin-bottom:10px;border:1.5px solid var(--sound)!important}
 .openBar b{display:block;font-weight:600}.openBar small{color:var(--muted);font-size:12.5px}
-.obBtns{display:flex;gap:8px}.obBtns button{flex:1}
-body.openMode #fQuick{display:none}
+.obBtns{display:flex;gap:8px}.obBtns button{flex:1}.obBtns .obX{flex:none;width:44px;padding:0}.obBtns #obCont:empty{display:none}
 /* ---- цомны тавиур ---- */
 .awards .cupSrc{font-size:12.5px;font-weight:600;color:var(--muted);margin:12px 0 2px}
 .cupRow{display:flex;flex-direction:column;gap:2px;padding:8px 0;border-top:1px dashed rgba(170,140,80,.25)}
@@ -1008,7 +1007,7 @@ body:has(#doneBar:not([hidden])) .toast{bottom:calc(148px + env(safe-area-inset-
   <div class="sitTime" id="sitTime"></div>
   <button class="sitAlert" id="sitAlert" hidden><b>Аялгуу руу шилжих цаг боллоо</b><span>Дарж баталгаажуулна уу</span></button>
   <div class="sitHint">Дэлгэц дээр дарж удирдлага харна</div>
-  <div class="sitQuiet" id="sitQuiet" hidden><svg viewBox="0 0 24 24" fill="currentColor"><path d="M15.5 4.5a8 8 0 1 0 4 12.8a7 7 0 0 1-4-12.8z"/></svg><span id="sitQuietTxt">Чимээгүй</span></div><div class="sitCtl" id="sitCtl" hidden><button id="sitToSound" hidden>♪ Аялгуу руу</button><button id="sitPause">Түр зогсоох</button><button id="sitDim">Гэрэл</button></div>
+  <div class="sitQuiet" id="sitQuiet" hidden><svg viewBox="0 0 24 24" fill="currentColor"><path d="M15.5 4.5a8 8 0 1 0 4 12.8a7 7 0 0 1-4-12.8z"/></svg><span id="sitQuietTxt">Чимээгүй</span></div><div class="sitCtl" id="sitCtl" hidden><button id="sitToSound" hidden></button><button id="sitPause">Түр зогсоох</button><button id="sitDim">Гэрэл</button></div>
 </div>
 
 <!-- ============ SPLASH QUOTE ============ -->
@@ -1027,13 +1026,12 @@ body:has(#doneBar:not([hidden])) .toast{bottom:calc(148px + env(safe-area-inset-
     <button data-m="daily" class="on">Өдрийн 150 минут</button>
     <button data-m="free">Чөлөөт суулт</button>
   </div>
-  <div class="glass openBar" id="openBar" hidden><div><b id="obT"></b><small id="obS"></small></div><div class="obBtns"><button class="main" id="obSound">♪ Аялгуу эхлүүлэх</button><button id="obLight">Гэрлээ үргэлжлүүлэх</button></div></div>
+  <div class="glass openBar" id="openBar" hidden><div><b id="obT"></b><small id="obS"></small></div><div class="obBtns"><button class="main" id="obGo"></button><button id="obCont"></button><button class="obX" id="obX" aria-label="Хаах">✕</button></div></div>
   <div class="free glass" id="freeCfg" hidden>
     <div class="chips" id="fMode">
       <button class="chip on" data-fm="phi">Алтан харьцаа</button>
       <button class="chip" data-fm="light">Дан гэрэл</button>
       <button class="chip" data-fm="sound">Дан аялгуу</button>
-      <button class="chip" data-fm="open">∞ Хязгааргүй</button>
     </div>
     <div class="chips" id="fQuick"><button class="chip" data-min="30">30м</button><button class="chip" data-min="60">1ц</button><button class="chip" data-min="120">2ц</button><button class="chip" data-min="180">3ц</button><button class="chip" data-min="300">5ц</button><button class="chip" data-min="420">7ц</button><button class="chip" data-min="540">9ц</button><button class="chip" data-min="720">12ц</button></div>
     <div class="row" style="justify-content:space-between;gap:8px"><div class="preview" id="fPrev"></div><button class="chip on" id="fMusic">♪ Дуусахад ая дуугарна</button></div>
@@ -1559,6 +1557,7 @@ $('pad').addEventListener('click', e=>{
 });
 function afterUnlock(){
   $('remind').value=String(S.remind); $('orbitSel').value=orbitMode(); drawQuiet();
+  if(S.freeMode==='open') S.freeMode='light';
   setFreeMode(S.freeMode); drawMusicChip();
   qIdx = S.quotes.length ? Math.floor(Math.random()*S.quotes.length) : 0;
   try{
@@ -1643,7 +1642,7 @@ function dayDone(k){ const d=dget(k); return d.l>=LIGHT && d.s>=soundTarget(k); 
 function freeWait(){ return sess && sess.Tl>0 && sess.Ts>0 && sess.e>=sess.Tl && sess.e<sess.T && !sess.acked; }
 const OPEN_T=12*3600;
 function freeSplit(min, fm){
-  if(fm==='open') return {T:OPEN_T, Tl:OPEN_T, Ts:0, open:true};
+  if(!(min>0) && (fm==='light'||fm==='sound')) return fm==='light' ? {T:OPEN_T, Tl:OPEN_T, Ts:0, open:'light'} : {T:OPEN_T, Tl:0, Ts:OPEN_T, open:'sound'};
   const T=Math.round(min*60);
   const Tl = fm==='light'?T : fm==='sound'?0 : Math.round(T/PHI);
   return {T, Tl, Ts:T-Tl};
@@ -1666,7 +1665,7 @@ $('fMode').addEventListener('click', e=>{ const b=e.target.closest('.chip'); if(
 /* ---- цагираг дээр гулсуулж минут сонгох ---- */
 const MAXMIN=720;
 let dial=null;   // {acc, prev}
-function dialActive(){ return S && mode==='free' && S.freeMode!=='open' && !running && !(sess && sess.e>0 && sess.e<sess.T); }
+function dialActive(){ return S && mode==='free' && !running && !(sess && sess.e>0 && sess.e<sess.T); }
 function angleOf(e){
   const r=$('ringbox').getBoundingClientRect(), x=e.clientX-(r.left+r.width/2), y=e.clientY-(r.top+r.height/2);
   return (Math.atan2(x,-y)*180/Math.PI+360)%360;   // 0° дээд талд, цагийн зүүний дагуу
@@ -1686,7 +1685,7 @@ function centerTap(){
   if(now-tapT<330){ clearTimeout(tapTimer); tapT=0; resetFree(); return; }
   tapT=now;
   tapTimer=setTimeout(()=>{ tapT=0; if(running) return;
-    if(S.freeMode!=='open' && !(S.freeMin>0) && !(sess && sess.e>0 && sess.e<sess.T)){ toast(tr('Эхлээд цагирагийг эргүүлж хугацаагаа тохируулна уу','First turn the ring to set the time')); return; }
+    if(S.freeMode==='phi' && !(S.freeMin>0) && !(sess && sess.e>0 && sess.e<sess.T)){ toast(tr('Алтан харьцаанд хугацаа тохируулна. Хугацаагүй суух бол Дан гэрэл эсвэл Дан аялгууг сонгоорой','Golden ratio needs a time. To sit without a time, choose Light only or Sound only')); return; }
     start(); }, 330);
 }
 $('ringbox').addEventListener('pointerdown', e=>{
@@ -1779,20 +1778,33 @@ function stopDone(){
 doneAudio.addEventListener('ended', ()=>{ $('doneBar').hidden=true; });
 $('doneBar').addEventListener('click', ()=>{ stopDone(); freeMusicStop(); $('doneBar').hidden=true; });
 
-function toSound(){
-  if(!sess || !sess.open || sess.e<30) return;
-  const ts=Math.max(60,Math.round(sess.e/PHI)); sess.Tl=sess.e; sess.Ts=ts; sess.T=sess.e+ts; sess.open=false; sess.acked=true; save();
-  try{ bell(528,2.4,.16); }catch(e){}
-  toast(tr(`Аялгуу ${hmin(Math.round(ts/60))} эхэллээ`,`${hmin(Math.round(ts/60))} of sound has begun`));
-  if(!running) start(); else renderMed();
+// Нөгөө хэсгийг алтан харьцаагаар санал болгох
+function sugFromOpen(){ if(!sess||!sess.open||sess.e<30) return null; const isL=sess.open==='light'; return {kind:isL?'sound':'light', sec:Math.max(60,Math.round(isL?sess.e/PHI:sess.e*PHI)), done:sess.e, from:sess.open}; }
+function drawSug(openNow){
+  const ob=$('openBar'); let sg=null, cont=false;
+  if(mode==='free' && !running){ if(openNow){ sg=sugFromOpen(); cont=!!sg; } else if(S.sug && !(sess && sess.e>0 && sess.e<sess.T)) sg=S.sug; }
+  ob.hidden=!sg; if(!sg) return;
+  const L=x=>hmin(Math.max(1,Math.round(x/60)));
+  $('obT').textContent = sg.from==='light'?tr(`Гэрэл ${L(sg.done)} хийлээ`,`${L(sg.done)} of light done`):tr(`Аялгуу ${L(sg.done)} хийлээ`,`${L(sg.done)} of sound done`);
+  $('obS').textContent = sg.kind==='sound'?tr(`Алтан харьцаагаар аялгуу ${L(sg.sec)} хийх үү?`,`Golden ratio: ${L(sg.sec)} of sound?`):tr(`Алтан харьцаагаар гэрэл ${L(sg.sec)} хийх үү?`,`Golden ratio: ${L(sg.sec)} of light?`);
+  $('obGo').textContent = sg.kind==='sound'?tr(`♪ Аялгуу ${L(sg.sec)}`,`♪ Sound ${L(sg.sec)}`):tr(`☀ Гэрэл ${L(sg.sec)}`,`☀ Light ${L(sg.sec)}`);
+  $('obCont').textContent = cont ? (sg.from==='light'?tr('Гэрлээ үргэлжлүүлэх','Keep doing light'):tr('Аялгуугаа үргэлжлүүлэх','Keep doing sound')) : '';
 }
-$('obSound').addEventListener('click', ()=>toSound());
-$('obLight').addEventListener('click', ()=>start());
-$('sitToSound').addEventListener('click', e=>{ e.stopPropagation(); toSound(); });
+function startOther(sg){
+  if(!sg) return; S.sug=null;
+  sess={T:sg.sec, Tl:sg.kind==='light'?sg.sec:0, Ts:sg.kind==='sound'?sg.sec:0, e:0, fm:sg.kind, acked:true, chained:true};
+  setFreeMode(sg.kind); save(); try{ bell(528,2.4,.16); }catch(e){}
+  if(running){ clearInterval(timer); running=false; }
+  start();
+}
+$('obGo').addEventListener('click', ()=>{ const sg = (sess&&sess.open&&!running) ? sugFromOpen() : S.sug; startOther(sg); });
+$('obCont').addEventListener('click', ()=>start());
+$('obX').addEventListener('click', ()=>{ S.sug=null; if(sess&&sess.open&&!running) sess=null; save(); renderMed(); });
+$('sitToSound').addEventListener('click', e=>{ e.stopPropagation(); const sg=sugFromOpen(); if(sg) startOther(sg); });
 async function start(){
   const k=today();
   if(mode==='daily' && dayDone(k)) return;
-  if(mode==='free'){ const sp=freeSplit(S.freeMin, S.freeMode); if(!sess || sess.e>=sess.T || (sess.fm!==S.freeMode && !(sess.e>0))) sess={...sp, e:0, fm:S.freeMode}; }
+  if(mode==='free'){ const sp=freeSplit(S.freeMin, S.freeMode); if(!sess || sess.e>=sess.T || (sess.fm!==S.freeMode && !(sess.e>0))) sess={...sp, e:0, fm:S.freeMode}; S.sug=null; }
   try{ actx = actx || new (window.AudioContext||window.webkitAudioContext)(); await actx.resume(); }catch(e){}
   N.keepScreen(true); primeDone(); if(mode==='free') primeFree();
   try{ switchAudio.muted=true; const pp=switchAudio.play(); if(pp) pp.then(()=>{ switchAudio.pause(); switchAudio.muted=false; }).catch(()=>{ switchAudio.muted=false; }); }catch(e){}
@@ -1829,7 +1841,7 @@ function tick(){
         dadd(k,'light',lPart); dadd(k,'sound',step-lPart);
       }
     }
-    if(sess.e>=sess.T){ stop(); freeAlarmStart(); toast(tr(`${Math.round(sess.T/60)} минутын суулт дууслаа`,`${Math.round(sess.T/60)}-minute sitting complete`)); return; }
+    if(sess.e>=sess.T){ if(!sess.open && !sess.chained && (sess.fm==='light'||sess.fm==='sound')) S.sug={kind:sess.fm==='light'?'sound':'light', sec:Math.max(60,Math.round(sess.fm==='light'?sess.T/PHI:sess.T*PHI)), done:sess.T, from:sess.fm}; stop(); freeAlarmStart(); toast(tr(`${Math.round(sess.T/60)} минутын суулт дууслаа`,`${Math.round(sess.T/60)}-minute sitting complete`)); return; }
   }
   const tNow=dget(k).t;
   for(const r of REWARDS){ if(tNow>=r.min*60 && tickPrev<r.min*60 && tickPrev>0){ toast(tr(`${r.name} нэмэгдлээ · ${r.why}`,`${r.name} earned · ${r.why}`)); bell(660,3,.12); } }
@@ -2013,22 +2025,19 @@ function renderMed(){
     $('phase').style.color = ph==='light'?'var(--light)':'var(--sound)';
     $('remain').textContent = fmt(sp.T-sp.e);
     $('sub').textContent = sp.Ts&&sp.Tl ? (ph==='light'?tr(`гэрэлд ${fmt(sp.Tl-sp.e)} үлдлээ`,`${fmt(sp.Tl-sp.e)} of light left`):tr(`аялгуунд ${fmt(sp.T-sp.e)} үлдлээ`,`${fmt(sp.T-sp.e)} of sound left`)) : tr(`${Math.round(sp.T/60)} минутын суулт`,`${Math.round(sp.T/60)}-minute sitting`);
-    document.body.classList.toggle('openMode', S.freeMode==='open');
-    const openNow = sp.open && !(sess && sess.open===false);
+    const openNow = !!(sess && sess.open && sess.e<sess.T);
     if(openNow){
-      const e=sp.e, ts=Math.round(e/PHI);
-      $('phase').textContent=tr('Гэрэл · хязгааргүй','Light · open'); $('phase').style.color='var(--light)';
+      const e=sess.e, isL=sess.open==='light', other=isL?Math.round(e/PHI):Math.round(e*PHI);
+      $('phase').textContent=isL?tr('Гэрэл · хугацаагүй','Light · no limit'):tr('Аялгуу · хугацаагүй','Sound · no limit'); $('phase').style.color=isL?'var(--light)':'var(--sound)';
       $('remain').textContent=fmt(e);
-      $('sub').textContent= e>0 ? tr(`аялгуу ≈ ${fmt(ts)}`,`sound ≈ ${fmt(ts)}`) : tr('голд нь дарж эхлүүл','tap the center to start');
-      $('sub').classList.toggle('tapGo', e===0);
-      setRing((e%3600)/3600, 0);
-      $('fillL').parentNode.style.flex=61.8; $('fillS').parentNode.style.flex=38.2; $('fillL').style.width=e?'100%':'0%'; $('fillS').style.width='0%';
-      $('lgL').textContent=fmt(e); $('lgS').textContent=fmt(ts);
-      $('fPrev').innerHTML=tr('Хүссэн хэрээрээ гэрэл хийгээд зогсооход аялгууг <b class="s">алтан харьцаагаар</b> тооцоод өгнө','Do light as long as you wish; when you stop, the sound time is set by the <b class="s">golden ratio</b>');
-      g.textContent = running?tr('Түр зогсоох','Pause'):e>0?tr('Үргэлжлүүлэх','Continue'):tr('Эхлэх','Begin'); g.disabled=false;
-      const ob=$('openBar'); ob.hidden = running || !(e>=30);
-      if(!ob.hidden){ $('obT').textContent=tr(`Гэрэл ${hmin(Math.round(e/60))} хийлээ`,`${hmin(Math.round(e/60))} of light done`); $('obS').textContent=tr(`Алтан харьцаагаар аялгуу ${hmin(Math.max(1,Math.round(ts/60)))} хийнэ`,`By the golden ratio: ${hmin(Math.max(1,Math.round(ts/60)))} of sound`); }
-      $('sitToSound').hidden=!(running && e>=30);
+      $('sub').classList.remove('tapGo');
+      $('sub').textContent= e>0 ? (isL?tr(`аялгуу ≈ ${fmt(other)}`,`sound ≈ ${fmt(other)}`):tr(`гэрэл ≈ ${fmt(other)}`,`light ≈ ${fmt(other)}`)) : '';
+      setRing(isL?(e%3600)/3600:0, isL?0:(e%3600)/3600);
+      $('fillL').parentNode.style.flex=isL?61.8:0.0001; $('fillS').parentNode.style.flex=isL?0.0001:38.2; $('fillL').style.width=isL&&e?'100%':'0%'; $('fillS').style.width=!isL&&e?'100%':'0%';
+      $('lgL').textContent=fmt(isL?e:other); $('lgS').textContent=fmt(isL?other:e);
+      $('fPrev').innerHTML=tr('Хугацаагүй суулт. Зогсоосны дараа нөгөө хэсгийг <b class="s">алтан харьцаагаар</b> санал болгоно','No time limit. When you stop, the other part is suggested by the <b class="s">golden ratio</b>');
+      g.textContent = running?tr('Түр зогсоох','Pause'):tr('Үргэлжлүүлэх','Continue'); g.disabled=false;
+      $('sitToSound').hidden=!(running && e>=30); $('sitToSound').textContent=isL?tr('♪ Аялгуу руу','♪ To sound'):tr('☀ Гэрэл рүү','☀ To light');
     }
     else if(dialing){
       const m=S.freeMin, lapFrac = m%60===0 ? 1 : (m%60)/60, a=(m*6)%360 || (m>0?360:0);
@@ -2036,10 +2045,13 @@ function renderMed(){
       const rad=(a-90)*Math.PI/180; $('knob').setAttribute('cx',100+88*Math.cos(rad)); $('knob').setAttribute('cy',100+88*Math.sin(rad));
       $('phase').textContent=tr('Чөлөөт суулт','Free sitting'); $('phase').style.color='var(--accent)';
       $('remain').textContent = m===0 ? '00:00' : m>=60 ? `${Math.floor(m/60)}${tr('ц','h')} ${pad2(m%60)}${tr('м','m')}` : `${m} ${tr('мин','min')}`;
-      $('sub').textContent = m===0 ? tr('цагираг дээр гулсуулж сонго','slide around the ring') : tr('голд нь дарж эхлүүл','tap the center to start');
-      $('sub').classList.toggle('tapGo', m>0);
+      const noLim = m===0 && (S.freeMode==='light'||S.freeMode==='sound');
+      if(noLim){ $('remain').textContent='∞'; setRing(0,0); }
+      $('sub').textContent = noLim ? tr('шууд дарвал хугацаагүй · эсвэл цагираг эргүүлж тохируул','tap to start with no limit · or turn the ring') : m===0 ? tr('цагираг дээр гулсуулж сонго','slide around the ring') : tr('голд нь дарж эхлүүл','tap the center to start');
+      $('sub').classList.toggle('tapGo', m>0||noLim);
     } else { $('sub').classList.remove('tapGo'); setRing(Math.min(sp.e,sp.Tl)/sp.T, Math.max(0,sp.e-sp.Tl)/sp.T); }
-    if(!openNow){ $('openBar').hidden=true; $('sitToSound').hidden=true; }
+    if(!openNow){ $('sitToSound').hidden=true; }
+    drawSug(openNow);
     if(!openNow){
     $('fillL').parentNode.style.flex=sp.Tl||0.0001; $('fillS').parentNode.style.flex=sp.Ts||0.0001;
     $('fillL').style.width=(sp.Tl?Math.min(sp.e,sp.Tl)/sp.Tl*100:0)+'%'; $('fillS').style.width=(sp.Ts?Math.max(0,sp.e-sp.Tl)/sp.Ts*100:0)+'%';
@@ -2048,13 +2060,14 @@ function renderMed(){
     g.textContent = running?tr('Түр зогсоох','Pause'): (sess&&sess.e>0&&sess.e<sess.T)?tr('Үргэлжлүүлэх','Continue'):tr('Эхлэх','Begin');
     g.disabled = false;
     }
+    if(dialing && S.freeMin===0 && (S.freeMode==='light'||S.freeMode==='sound')){ $('fPrev').innerHTML=tr('Хугацаагүй суулт. Зогсоосны дараа нөгөө хэсгийг <b class="s">алтан харьцаагаар</b> санал болгоно','No time limit. When you stop, the other part is suggested by the <b class="s">golden ratio</b>'); $('lgL').textContent=$('lgS').textContent='—'; $('fillL').style.width=$('fillS').style.width='0%'; }
   }
   g.classList.toggle('running',running);
   { const dd=dget(today()), pz = !running && (mode==='free' ? !!(sess&&sess.e>0&&sess.e<sess.T) : (dd.t>0 && !dayDone(today()) && !dialActive()));
     $('ringbox').classList.toggle('paused', pz); $('resumeTag').hidden=!pz; $('resumeTag').textContent=tr('Үргэлжлүүлэх','Resume'); }
   { const paused = mode==='free' ? (sess&&sess.e>0&&sess.e<sess.T) : false;
     $('ringHint').textContent = mode==='free'
-      ? (S.freeMode==='open' && !(sess && sess.open===false) ? tr('Төвд нь дарж гэрлээ эхлүүлнэ. Хүссэн үедээ зогсоогоод аялгуу руу шилжинэ','Tap the center to begin light. Stop whenever you like and switch to sound') : paused ? tr('Төвд нь дарж үргэлжлүүлнэ · хоёр дарвал 00:00','Tap the center to continue · double-tap for 00:00') : tr('Цагирагийг эргүүлж тохируулаад, цагны голд дарж эхлүүлнэ · хоёр дарвал 00:00','Turn the ring, then press the middle of the clock · double-tap for 00:00'))
+      ? ((S.freeMode==='light'||S.freeMode==='sound') && !(S.freeMin>0) && !paused ? tr('Хугацаагүй бол шууд төвд нь дарна. Зогсоосны дараа нөгөөг нь санал болгоно','For no time limit just tap the center. When you stop, the other part is suggested') : paused ? tr('Төвд нь дарж үргэлжлүүлнэ · хоёр дарвал 00:00','Tap the center to continue · double-tap for 00:00') : tr('Цагирагийг эргүүлж тохируулаад, цагны голд дарж эхлүүлнэ · хоёр дарвал 00:00','Turn the ring, then press the middle of the clock · double-tap for 00:00'))
       : (dayDone(today()) ? '' : dget(today()).t>0 ? tr('Цагны төвд дарж үргэлжлүүлнэ','Tap the center of the clock to resume') : tr('Цагны төвд дарж эхлүүлнэ','Tap the center of the clock to begin')); }
   $('sitTime').textContent=$('remain').textContent; $('sitPhase').textContent=$('phase').textContent;
 
@@ -3481,7 +3494,7 @@ async function openGroup(id){
 function socBadges(){ if(!socOn()||!S||!S.soc) return; chatUnread(); rpc('my_friends').then(l=>{ FR.list=l; FR.incoming=l.filter(f=>f.state==='incoming').length; }).catch(()=>{}); rpc('my_invites').then(l=>{ GR.inv=l; }).catch(()=>{}); }
 
 /* ===================== шинэчлэлийн мэдэгдэл (Android) ===================== */
-const APP_VER=50, SITE='https://otgoo-cell.github.io/gegee';
+const APP_VER=51, SITE='https://otgoo-cell.github.io/gegee';
 async function checkUpdate(){
   if(!N.openUrl) return;
   try{ const r=await fetch(SITE+'/version.json?t='+Date.now(),{cache:'no-store'}); const v=await r.json();
@@ -3552,7 +3565,7 @@ async function pollChat(first){
 
 /* ===================== Санал хүсэлт ===================== */
 const FB={kind:'bug', newCount:0, mine:null, seenAt:0};
-const APP_NAME='6.0';
+const APP_NAME='6.1';
 const FB_K={bug:['🐞',()=>tr('Алдаа','Problem')], idea:['💡',()=>tr('Санаа','Idea')], other:['💬',()=>tr('Бусад','Other')]};
 const fbPlat=()=>{ try{ if(N.hasBg && N.hasBg()) return 'android-app'; }catch(e){} return /iPhone|iPad|iPod/.test(navigator.userAgent)?'ios-pwa':'web'; };
 const fbDev=()=>`${navigator.userAgent.slice(0,260)} | ${screen.width}x${screen.height}@${window.devicePixelRatio||1} | ${LANG} | ${view}`;
