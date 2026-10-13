@@ -977,6 +977,13 @@ body:has(#doneBar:not([hidden])) .toast{bottom:calc(148px + env(safe-area-inset-
 .admMv{font-size:12px;color:#c0632b;margin-top:2px}
 .pushRow{display:flex;align-items:center;gap:12px;margin-top:14px;padding:12px;border-radius:14px;background:var(--glass);border:1px solid var(--edge)}.pushRow>div{flex:1;min-width:0}.pushRow b{display:block;font-size:14px}.pushRow small{display:block;font-size:12px;color:var(--muted);margin-top:2px}.pushRow button{flex:none;width:auto;padding:8px 14px;font-size:13px}
 .pushNudge{display:flex;align-items:center;gap:10px;padding:10px 12px;margin:0 0 10px}.pushNudge>span{font-size:20px}.pushNudge>div{flex:1;min-width:0}.pushNudge b{display:block;font-size:14px}.pushNudge small{font-size:12px;color:var(--muted)}.pushNudge .main{width:auto;padding:8px 14px;font-size:13px;margin:0}.pushNudge .x{background:none;border:0;color:var(--muted);font-size:14px;padding:6px;width:auto}
+.evItem{display:inline-flex;align-items:center;gap:6px}.evDel{margin-left:6px;padding:3px 9px;border-radius:10px;font-size:11px;background:transparent;border:1px solid var(--edge);color:var(--muted);width:auto}.evDel.sure{color:#fff;background:#c0563b;border-color:#c0563b}
+/* Нэг загвартай хоосон төлөв: хүрээгүй, төвд, жижиг гэрэлтэй цэг */
+.emptyS{display:flex!important;flex-direction:column;align-items:center;gap:10px;text-align:center;color:var(--muted);padding:30px 18px!important;font-size:14px;line-height:1.6;background:none!important;border:0!important;box-shadow:none!important;-webkit-backdrop-filter:none!important;backdrop-filter:none!important}
+.emptyS::before{content:'';flex:none;width:30px;height:30px;border-radius:50%;background:radial-gradient(circle,var(--accent) 0 2.5px,transparent 3.5px),radial-gradient(circle,rgba(127,127,127,.16) 0 58%,transparent 60%);opacity:.9}
+.quote.empty{background:none!important;border:0!important;box-shadow:none!important;-webkit-backdrop-filter:none!important;backdrop-filter:none!important;text-align:center}
+#ptr{position:fixed;left:50%;top:calc(env(safe-area-inset-top,0px) + 6px);z-index:60;width:38px;height:38px;border-radius:50%;display:flex;align-items:center;justify-content:center;background:var(--glass);border:1px solid var(--edge);box-shadow:var(--shadow);-webkit-backdrop-filter:blur(14px);backdrop-filter:blur(14px);color:var(--accent);font-size:20px;opacity:0;transform:translate(-50%,-50px);pointer-events:none;transition:opacity .15s}
+#ptr.ready{color:var(--fg)}#ptr.spin i{display:block;animation:ptrSpin .8s linear infinite}@keyframes ptrSpin{to{transform:rotate(360deg)}}
 </style>
 </head>
 <body>
@@ -1102,23 +1109,13 @@ body:has(#doneBar:not([hidden])) .toast{bottom:calc(148px + env(safe-area-inset-
     <h2>Энэ долоо хоног</h2>
     <div class="week" id="week"></div>
   </div>
-  <div class="row settings">
-    <label for="remind" class="muted">Эргэн төвлөрөх хонх</label>
-    <select id="remind">
-      <option value="0">Унтраах</option>
-      <option value="5">5 мин тутам</option>
-      <option value="10">10 мин тутам</option>
-      <option value="15">15 мин тутам</option>
-      <option value="21">21 мин тутам</option>
-    </select>
-  </div>
 </section>
 
 <!-- ============ TRACKING ============ -->
 <section class="view" id="vTrack" hidden>
   <header><h1>Хяналт</h1><span class="date" id="since"></span></header>
   <div class="stats">
-    <div class="glass good"><span>Дараалсан бүрэн өдөр</span><b id="sStreak">0</b></div>
+    <div class="glass good"><span>Дараалан суусан</span><b id="sStreak">0 өдөр</b></div>
     <div class="glass"><span>Нийт суусан</span><b id="sTotal">0ц</b></div>
     <div class="glass bad"><span>Нийт дутуу</span><b id="sMissAll">0м</b></div>
   </div>
@@ -1486,7 +1483,7 @@ let bgAt=0, bgLocked=false, quiet=false;
 function bgPlan(){
   const SV={'bell_switch.wav':'vib2','bell_remind.wav':'vib1','alldone.mp3':'vib3','free.mp3':'vib3','bell_end.wav':'vib3'};
   const ev=[], add=(sec,snd)=>{ if(sec<=0.5) return; if(isSilent() && SV[snd]){ if(!vibOn()) return; snd=SV[snd]; } ev.push(Math.round(sec*1000)+':'+snd); };
-  const every=(S.remind||0)*60, k=today();
+  const every=0, k=today();
   let rem, sw=0, music=false;
   let waitSw=false;
   if(mode==='daily'){ const r=dailyRemain(k); rem=r.R; if(r.Lr>0 && r.Sr>0){ sw=r.Lr; waitSw=true; } else if(r.wait){ sw=0.6; waitSw=true; } }
@@ -1584,7 +1581,7 @@ $('pad').addEventListener('click', e=>{
   if(entry.length===PIN_LEN) setTimeout(submitPin,120);
 });
 function afterUnlock(){
-  $('remind').value=String(S.remind); $('orbitSel').value=orbitMode(); drawQuiet();
+  $('orbitSel').value=orbitMode(); drawQuiet();
   if(S.freeMode==='open') S.freeMode='light';
   setFreeMode(S.freeMode); drawMusicChip();
   qIdx = S.quotes.length ? Math.floor(Math.random()*S.quotes.length) : 0;
@@ -1879,13 +1876,10 @@ function tick(){
   for(const r of REWARDS){ if(tNow>=r.min*60 && tickPrev<r.min*60 && tickPrev>0){ toast(tr(`${r.name} нэмэгдлээ · ${r.why}`,`${r.name} earned · ${r.why}`)); bell(660,3,.12); } }
   if(hasRainbow(tNow,k) && !hasRainbow(tickPrev,k) && tickPrev>0){ toast(tr('Солонго татлаа ✨','A rainbow appeared ✨')); bell(660,3,.12); }
   tickPrev=tNow;
-  const every=(S.remind||0)*60;
-  if(every){ sinceRemind+=dt; if(sinceRemind>=every){ sinceRemind=0; bell(432,3,.14); flash(); } }
   sinceSave+=dt; if(sinceSave>=30){ sinceSave=0; save(); }
   renderMed();
 }
 $('go').addEventListener('click', ()=> running?stop():start());
-$('remind').addEventListener('change', e=>{ S.remind=Number(e.target.value); sinceRemind=0; save(); });
 
 /* ===================== duties ===================== */
 function dutyPeriod(type, ref){
@@ -2136,7 +2130,7 @@ function renderTrack(){
   const t=today(), sd=parse(S.start);
   $('since').textContent=tr(`${sd.getFullYear()}.${pad2(sd.getMonth()+1)}.${pad2(sd.getDate())}-аас`,`since ${sd.getFullYear()}.${pad2(sd.getMonth()+1)}.${pad2(sd.getDate())}`);
   const all=rangeStats(sd,new Date());
-  $('sStreak').textContent=streak(); $('sTotal').textContent=hrs(all.done); $('sMissAll').textContent=Math.ceil(all.miss/60)+tr('м','m');
+  $('sStreak').textContent=streak()+tr(' өдөр',' d'); $('sTotal').textContent=hrs(all.done); $('sMissAll').textContent=Math.ceil(all.miss/60)+tr('м','m');
 
   const y=mCursor.getFullYear(), m=mCursor.getMonth();
   $('mTitle').textContent=tr(`${y} оны ${MN[m]}`,`${MN[m]} ${y}`);
@@ -2191,9 +2185,13 @@ function renderDayDetail(){
   const txt = inf.st==='pre'?tr('Энэ өдөр хяналт эхлээгүй байсан.','Tracking had not started yet.'): inf.st==='fut'?tr('Ирээдүйн өдөр.','A future day.'):
     tr(`Гэрэл <strong>${Math.floor(inf.l/60)}</strong> мин, аялгуу <strong>${Math.floor(inf.s/60)}</strong> мин, нийт <strong>${Math.floor(inf.t/60)} / 150</strong>.`,`Light <strong>${Math.floor(inf.l/60)}</strong> min, sound <strong>${Math.floor(inf.s/60)}</strong> min, total <strong>${Math.floor(inf.t/60)} / 150</strong>.`) + (inf.miss?` <span style="color:var(--miss)">${tr(`${Math.ceil(inf.miss/60)} минут дутуу.`,`${Math.ceil(inf.miss/60)} min short.`)}</span>`:'');
   el.innerHTML=`<div><b>${tr(`${d.getMonth()+1}-р сарын ${d.getDate()}`,`${MN_EN[d.getMonth()]} ${d.getDate()}`)}</b>, ${DN[(d.getDay()+6)%7]}</div><div>${txt}</div>` +
-    ((rewardsFor(inf.t).length||ev.length||hasRainbow(inf.t,selDay))?`<div class="rwlist">${rewardsFor(inf.t).map(r=>`<span class="rwitem"><i class="bd bd-${r.id}">${IC(r.id)}</i>${r.name}<small>${r.why}</small></span>`).join('')}${hasRainbow(inf.t,selDay)?`<span class="rwitem rwrb"><i class="bd bd-rainbow"><i class="rbow">${IC('rainbow')}</i></i>${RAINBOW.name}<small>${RAINBOW.why}</small></span>`:''}${ev.map(e=>`<span class="rwitem"><i class="bd di di-${e.type}">${IC(e.type)}</i>${DUTY[e.type].name}</span>`).join('')}</div>`:'') +
+    ((rewardsFor(inf.t).length||ev.length||hasRainbow(inf.t,selDay))?`<div class="rwlist">${rewardsFor(inf.t).map(r=>`<span class="rwitem"><i class="bd bd-${r.id}">${IC(r.id)}</i>${r.name}<small>${r.why}</small></span>`).join('')}${hasRainbow(inf.t,selDay)?`<span class="rwitem rwrb"><i class="bd bd-rainbow"><i class="rbow">${IC('rainbow')}</i></i>${RAINBOW.name}<small>${RAINBOW.why}</small></span>`:''}${ev.map(e=>`<span class="rwitem evItem"><i class="bd di di-${e.type}">${IC(e.type)}</i>${DUTY[e.type].name}<button class="evDel" data-evdel="${e.id}" aria-label="${tr('Устгах','Delete')}">${tr('Устгах','Delete')}</button></span>`).join('')}</div>`:'') +
     ns.map(n=>`<div style="margin-top:8px;border-top:1px solid var(--line);padding-top:8px"><span class="tag ${n.tag}">${TAGN[n.tag]}</span> <span class="ntext">${esc(n.text)}</span></div>`).join('');
 }
+$('dayDetail').addEventListener('click', e=>{ const b=e.target.closest('[data-evdel]'); if(!b) return;
+  if(!b.classList.contains('sure')){ b.classList.add('sure'); b.textContent=tr('Устгах уу?','Delete?'); return; }
+  const x=S.events.find(v=>v.id===b.dataset.evdel); S.events=S.events.filter(v=>v.id!==b.dataset.evdel); save(); renderTrack(); try{ renderDuties(); }catch(er){}
+  if(x) toast(DUTY[x.type].name+tr(' устгагдлаа',' removed')); });
 $('cal').addEventListener('click', e=>{ const b=e.target.closest('.cell'); if(!b||!b.dataset.k) return; selDay = selDay===b.dataset.k?null:b.dataset.k; renderTrack(); });
 $('mPrev').onclick=()=>{ mCursor=new Date(mCursor.getFullYear(),mCursor.getMonth()-1,1); selDay=null; renderTrack(); };
 $('mNext').onclick=()=>{ mCursor=new Date(mCursor.getFullYear(),mCursor.getMonth()+1,1); selDay=null; renderTrack(); };
@@ -2213,7 +2211,7 @@ function renderNotes(){
   $('nList').innerHTML = list.length ? list.map(n=>{
     const d=new Date(n.ts);
     return `<div class="nitem glass"><div class="nhead"><span>${d.getFullYear()}.${pad2(d.getMonth()+1)}.${pad2(d.getDate())} · ${pad2(d.getHours())}:${pad2(d.getMinutes())} <span class="tag ${n.tag}">${TAGN[n.tag]}</span></span><button class="del ${delArm===n.id?'confirm':''}" data-id="${n.id}">${delArm===n.id?tr('Устгахыг батлах','Tap to confirm'):tr('Устгах','Delete')}</button></div><div class="ntext">${esc(n.text)}</div></div>`;
-  }).join('') : `<div class="note glass muted">${q?tr('Хайлтад тохирох тэмдэглэл олдсонгүй.','No notes match your search.'):tr('Одоогоор тэмдэглэл алга. Суултын дараа юу үзэж, юу сонссоноо дээр бичээрэй.','No notes yet. After a sitting, write above what you saw and heard.')}</div>`;
+  }).join('') : `<div class="emptyS">${q?tr('Хайлтад тохирох тэмдэглэл олдсонгүй.','No notes match your search.'):tr('Одоогоор тэмдэглэл алга. Суултын дараа юу үзэж, юу сонссоноо дээр бичээрэй.','No notes yet. After a sitting, write above what you saw and heard.')}</div>`;
 }
 $('tagChips').addEventListener('click', e=>{ const b=e.target.closest('.chip'); if(!b) return; noteTag=b.dataset.tag; document.querySelectorAll('#tagChips .chip').forEach(c=>c.classList.toggle('on',c===b)); });
 $('nSave').addEventListener('click', ()=>{
@@ -2255,7 +2253,7 @@ function hideSplash(){ const sp=$('splash'); clearTimeout(sp._t); sp.classList.r
 $('splash').addEventListener('click', hideSplash);
 function renderQuotes(){
   $('qList').innerHTML = S.quotes.length ? [...S.quotes].reverse().map(q=>`<div class="nitem glass"><div class="qtext">${esc(q.text)}</div><div class="nhead"><span>${esc(q.src||'')}</span><button class="del ${qArm===q.id?'confirm':''}" data-qid="${q.id}">${qArm===q.id?tr('Устгахыг батлах','Tap to confirm'):tr('Устгах','Delete')}</button></div></div>`).join('')
-    : `<div class="note glass muted">${tr('Одоогоор үг нэмээгүй байна. Нэмсэн үгс чинь Суулт хэсгийн дээд талд болон апп нээх бүрт ээлжлэн харагдана.','No words added yet. They will take turns appearing at the top of Sit and each time you open the app.')}</div>`;
+    : `<div class="emptyS">${tr('Одоогоор үг нэмээгүй байна. Нэмсэн үгс чинь Суулт хэсгийн дээд талд болон апп нээх бүрт ээлжлэн харагдана.','No words added yet. They will take turns appearing at the top of Sit and each time you open the app.')}</div>`;
 }
 $('nSw').addEventListener('click', e=>{ const b=e.target.closest('button'); if(!b) return; notesSub=b.dataset.s; renderNotes(); });
 $('qAdd').addEventListener('click', ()=>{
@@ -2500,7 +2498,7 @@ const EN = {
   'Суулт':'Sit', 'Өдрийн 150 минут':'Daily 150 min', 'Чөлөөт суулт':'Free sitting', 'Алтан харьцаа':'Golden ratio', 'Дан гэрэл':'Light only', 'Дан аялгуу':'Sound only',
   'Гэрэл':'Light', 'Аялгуу':'Sound', 'Эхлэх':'Begin', 'Энэ долоо хоног':'This week', 'Эргэн төвлөрөх хонх':'Bell to return focus between the eyebrows',
   'Унтраах':'Off', '5 мин тутам':'Every 5 min', '10 мин тутам':'Every 10 min', '15 мин тутам':'Every 15 min', '21 мин тутам':'Every 21 min',
-  'Хяналт':'Progress', 'Дараалсан бүрэн өдөр':'Full days in a row', 'Нийт суусан':'Total sat', 'Нийт дутуу':'Total short', 'Сарын суулт':'This month', 'Бүрэн өдөр':'Full days',
+  'Хяналт':'Progress', 'Дараалан суусан':'Streak', 'Дараалсан бүрэн өдөр':'Full days in a row', 'Нийт суусан':'Total sat', 'Нийт дутуу':'Total short', 'Сарын суулт':'This month', 'Бүрэн өдөр':'Full days',
   'Сарын дутуу':'Month short', 'Жилийн суулт':'This year', 'Жилийн дутуу':'Year short', 'Тэмдэглэл':'Journal', 'Миний тэмдэглэл':'My notes', 'Багшийн үгс':'Master\'s words',
   'Ерөнхий':'General', 'Суултын үеэр юу үзэж, юу сонсож, юу мэдэрснээ бич':'Write what you saw, heard and felt while sitting', 'Хадгалах':'Save',
   'Багшийн номноос зүрхэнд хүрсэн үгээ буулгаж хадгал. Хэд хэдэн үгийг нэг дор нэмэх бол хооронд нь хоосон мөр үлдээгээрэй.':'Paste words from the Master\'s books that touched your heart. To add several at once, leave an empty line between them.',
@@ -3255,7 +3253,7 @@ function drawSoc(){
   let list='';
   if(SOC.busy && !SOC.rows) list=`<div class="socEmpty">${tr('Ачааллаж байна...','Loading...')}</div>`;
   else if(SOC.err) list=`<div class="socEmpty">${esc(SOC.err)}<br><button id="socRetry">${tr('Дахин','Retry')}</button></div>`;
-  else if(SOC.rows && !SOC.rows.length) list=`<div class="socEmpty">${tr('Энэ хугацаанд хараахан хэн ч суугаагүй байна.','No one has sat in this period yet.')}</div>`;
+  else if(SOC.rows && !SOC.rows.length) list=`<div class="socEmpty emptyS">${tr('Энэ хугацаанд хараахан хэн ч суугаагүй байна.','No one has sat in this period yet.')}</div>`;
   else if(SOC.rows){
     const top=SOC.rows.filter(r=>r.rank<=3).slice(0,3), rest=SOC.rows.slice(top.length);
     const DOTS='•••••••', who=r=>r.me?`${esc(r.mask)} <i>${tr('та','you')}</i>`:`<span class="blurName">${DOTS}</span>`;
@@ -3435,7 +3433,7 @@ function drawFriends(){
     ${FR.err?`<div class="socEmpty">${esc(FR.err)}</div>`:''}
     ${inc.length?`<div class="socH">${tr('Найз болох хүсэлт','Friend requests')}</div>`+inc.map(f=>`<div class="glass socReq"><span class="socWho"><b>${esc(f.nick)}</b><small>${flag(f.country)} ${tr('өдөрт дунджаар','daily avg')} ${hmin(f.avg30)}</small></span><button class="main sm" data-ok="${esc(f.nick)}">${tr('Зөвшөөрөх','Accept')}</button><button class="sm" data-no="${esc(f.nick)}">${tr('Татгалзах','Decline')}</button></div>`).join(''):''}
     <div class="socH">${tr('Найзууд','Friends')} <small>${fr.length}${sitting?` · <span class="sitTxt">${sitting} ${tr('нь одоо сууж байна','sitting now')}</span>`:''}</small><small class="r">${tr('энэ 7 хоног','this week')}</small></div>
-    <div class="socList">${fr.length?fr.map(row).join(''):`<div class="socEmpty">${tr('Найзынхаа ID-г дээр бичээд нэмээрэй. Найзууд бие биеийнхээ суултыг харж, хамтдаа чатлаж, урам авна.','Add a friend by their ID above. Friends see each other\'s sitting, chat, and keep each other going.')}</div>`}</div>
+    <div class="socList">${fr.length?fr.map(row).join(''):`<div class="socEmpty emptyS">${tr('Найзынхаа ID-г дээр бичээд нэмээрэй. Найзууд бие биеийнхээ суултыг харж, хамтдаа чатлаж, урам авна.','Add a friend by their ID above. Friends see each other\'s sitting, chat, and keep each other going.')}</div>`}</div>
     ${sent.length?`<div class="socH">${tr('Илгээсэн хүсэлт','Sent requests')}</div>`+sent.map(f=>`<div class="socRow fr dim" data-nick="${esc(f.nick)}"><span class="socWho"><b>${esc(f.nick)}</b><small>${tr('хүлээгдэж байна','waiting')}</small></span><button class="sm ghost" data-cancel="${esc(f.nick)}">${tr('Цуцлах','Cancel')}</button></div>`).join(''):''}`;
   bindTabs();
   if(!S.soc.code) rpc('my_code').then(c=>{ if(c){ S.soc.code=c; save(); if($('myCode')) $('myCode').textContent=c; } }).catch(()=>{});
@@ -3500,16 +3498,16 @@ function drawGroups(){
     ${GR.err?`<div class="socEmpty">${esc(GR.err)}</div>`:''}
     ${(GR.inv||[]).map(i=>`<div class="glass socReq inv"><span class="socWho"><b>✉ ${esc(i.name)} ${clsBadge(i.class)}</b><small>${esc(i.by_nick||'')} ${tr('таныг урьж байна','invited you')}</small></span><button class="main sm" data-acc="${i.id}">${tr('Нэгдэх','Join')}</button><button class="sm" data-dec="${i.id}">${tr('Үгүй','No')}</button></div>`).join('')}
     <div class="socH">${tr('Миний группүүд','My groups')}<button class="sm main r" id="gNew">+ ${tr('Үүсгэх','Create')}</button></div>
-    <div class="socList">${GR.mine.length?GR.mine.map(g=>gRow(g)).join(''):`<div class="socEmpty">${tr('Та одоогоор группгүй байна. Доороос хайж нэгдэх эсвэл өөрөө үүсгээрэй.','You are not in a group yet. Search below to join one, or create your own.')}</div>`}</div>
+    <div class="socList">${GR.mine.length?GR.mine.map(g=>gRow(g)).join(''):`<div class="socEmpty emptyS">${tr('Та одоогоор группгүй байна. Доороос хайж нэгдэх эсвэл өөрөө үүсгээрэй.','You are not in a group yet. Search below to join one, or create your own.')}</div>`}</div>
     <div class="socH">${tr('Группүүдийн уралдаан','Group race')}</div>
     <div class="seg2 glass socSeg" id="gP">${P.map(p=>`<button data-p="${p[0]}" class="${SOC.p===p[0]?'on':''}">${p[1]}</button>`).join('')}</div>
     <div class="chips socCh" id="gC">${Object.keys(CLS).map(c=>`<button class="chip${GR.cls===c?' on':''}" data-c="${c}">${CLS[c][0]} <small>${CLS[c][1]}</small></button>`).join('')}</div>
     ${ghall}${myGcard}${gRace}
-    <div class="socList">${board||`<div class="socEmpty">${tr('Энэ ангилалд хараахан групп алга.','No groups in this class yet.')}</div>`}</div>
+    <div class="socList">${board||`<div class="socEmpty emptyS">${tr('Энэ ангилалд хараахан групп алга.','No groups in this class yet.')}</div>`}</div>
     <p class="hint socNote2">${tr('Ангилал бүрт гишүүн тус бүрийн дундаж суултаар өрсөлдөнө. Хугацаа дуусахад 1·2·3-т орсон группийн гишүүн бүр шагнал авна.','Within each class, groups compete on average sitting per member. When a period ends, every member of the top 3 groups gets the award.')}</p>
     <div class="socH">${tr('Групп хайх','Find a group')}</div>
     <div class="glass socAdd"><input id="gQ" maxlength="30" value="${esc(GR.q)}" placeholder="${tr('Группийн нэр','Group name')}"><button id="gFind">${tr('Хайх','Search')}</button></div>
-    <div class="socList" id="gFound">${GR.found?(GR.found.length?GR.found.map(g=>gRow(g)).join(''):`<div class="socEmpty">${tr('Олдсонгүй','Nothing found')}</div>`):''}</div>`;
+    <div class="socList" id="gFound">${GR.found?(GR.found.length?GR.found.map(g=>gRow(g)).join(''):`<div class="socEmpty emptyS">${tr('Олдсонгүй','Nothing found')}</div>`):''}</div>`;
   bindTabs();
   box.querySelectorAll('.socRow.grp,.podCol.grp').forEach(b=>b.onclick=()=>openGroup(b.dataset.g));
   $('gP').onclick=e=>{ const b=e.target.closest('button'); if(!b) return; SOC.p=b.dataset.p; SOC.rows=null; GR.mine=null; drawGroups(); };
@@ -3627,7 +3625,7 @@ async function openGroup(id){
 function socBadges(){ if(!socOn()||!S||!S.soc) return; chatUnread(); rpc('my_friends').then(l=>{ FR.list=l; FR.incoming=l.filter(f=>f.state==='incoming').length; }).catch(()=>{}); rpc('my_invites').then(l=>{ GR.inv=l; }).catch(()=>{}); }
 
 /* ===================== шинэчлэлийн мэдэгдэл (Android) ===================== */
-const APP_VER=59, SITE='https://otgoo-cell.github.io/gegee';
+const APP_VER=60, SITE='https://otgoo-cell.github.io/gegee';
 async function checkUpdate(){
   if(!N.openUrl) return;
   try{ const r=await fetch(SITE+'/version.json?t='+Date.now(),{cache:'no-store'}); const v=await r.json();
@@ -3652,7 +3650,7 @@ function drawChats(){
       <span class="socWho"><b>${esc(c.title)} ${c.kind==='group'&&c.cls?clsBadge(c.cls):''}</b><small>${c.last_body?`${c.last_nick===S.soc.nick?tr('Та: ','You: '):(c.kind==='group'?esc(c.last_nick)+': ':'')}${esc(c.last_body.slice(0,70))}`:tr('Хараахан бичээгүй байна','No messages yet')}</small></span>
       <span class="chMeta">${c.last_at?`<small>${chTime(c.last_at)}</small>`:''}${c.unread?`<i class="dotN">${c.unread}</i>`:''}</span></button>`).join('');
   box.innerHTML=socTabs()+pushNudge()+(CH.err?`<div class="socEmpty">${esc(CH.err)}</div>`:'')+
-    `<div class="socList">${rows||`<div class="socEmpty">${tr('Найз нэмэх эсвэл группт нэгдвэл энд чат нээгдэнэ.','Add a friend or join a group to start chatting.')}</div>`}</div>`;
+    `<div class="socList">${rows||`<div class="socEmpty emptyS">${tr('Найз нэмэх эсвэл группт нэгдвэл энд чат нээгдэнэ.','Add a friend or join a group to start chatting.')}</div>`}</div>`;
   bindTabs();
   box.querySelectorAll('.chatRow').forEach(b=>b.onclick=()=>openChat(b.dataset.room, b.dataset.title, b.dataset.kind));
   bindPushNudge();
@@ -3682,7 +3680,7 @@ async function pollChat(first){
   let L; try{ L=await rpc('get_msgs',{room_:room, after_:CH.last, lim:80}); }catch(e){ if(first) $('chatBox').innerHTML=`<div class="socEmpty">${esc(socErr2(e))}</div>`; return; }
   if(room!==CH.room) return;
   const box=$('chatBox'); if(!box) return;
-  if(first){ box.innerHTML = L.length ? '' : `<div class="socEmpty chEmpty">${tr('Анхны мессежээ бичээрэй','Write the first message')} 🌱</div>`; }
+  if(first){ box.innerHTML = L.length ? '' : `<div class="socEmpty emptyS chEmpty">${tr('Анхны мессежээ бичээрэй','Write the first message')} 🌱</div>`; }
   if(!L.length) return;
   const nearBottom = box.scrollHeight - box.scrollTop - box.clientHeight < 120 || first;
   const em=box.querySelector('.chEmpty'); if(em) em.remove();
@@ -3699,7 +3697,7 @@ async function pollChat(first){
 
 /* ===================== Санал хүсэлт ===================== */
 const FB={kind:'bug', newCount:0, mine:null, seenAt:0};
-const APP_NAME='6.9';
+const APP_NAME='7.0';
 const FB_K={bug:['🐞',()=>tr('Алдаа','Problem')], idea:['💡',()=>tr('Санаа','Idea')], other:['💬',()=>tr('Бусад','Other')]};
 const fbPlat=()=>{ try{ if(N.hasBg && N.hasBg()) return 'android-app'; }catch(e){} return /iPhone|iPad|iPod/.test(navigator.userAgent)?'ios-pwa':'web'; };
 const fbDev=()=>`${navigator.userAgent.slice(0,260)} | ${screen.width}x${screen.height}@${window.devicePixelRatio||1} | ${LANG} | ${view}`;
@@ -3765,7 +3763,7 @@ async function fbInbox(){
       ${f.reply?`<p class="fbReply">${esc(f.reply)}</p>`:''}
       ${f.nick?`<div class="fbAct"><textarea placeholder="${tr('Хариу бичих','Write a reply')}" maxlength="1000"></textarea><button class="sm main" data-a="reply">${tr('Хариулах','Reply')}</button></div>`:''}
       <div class="fbAct" style="justify-content:flex-end">${f.status!=='done'?`<button class="sm" data-a="done">✓ ${tr('Шийдсэн','Resolved')}</button>`:`<button class="sm ghost" data-a="seen">${tr('Буцааж нээх','Reopen')}</button>`}</div>
-    </div>`).join(''):`<div class="socEmpty">${tr('Одоогоор санал хүсэлт ирээгүй байна.','No feedback yet.')}</div>`);
+    </div>`).join(''):`<div class="socEmpty emptyS">${tr('Одоогоор санал хүсэлт ирээгүй байна.','No feedback yet.')}</div>`);
   $('socX').onclick=closeSocSheet;
   $('socSheetIn').querySelectorAll('.fbItem').forEach(it=>it.querySelectorAll('button[data-a]').forEach(b=>b.onclick=async()=>{
     const id=+it.dataset.id, a=b.dataset.a, ta=it.querySelector('textarea'), rep=a==='reply'?(ta&&ta.value.trim()):null;
@@ -3959,6 +3957,28 @@ function openFromAlert(kind){
 }
 try{ const q=new URLSearchParams(location.search).get('open'); if(q) openFromAlert(q); }catch(e){}
 if('serviceWorker' in navigator) navigator.serviceWorker.addEventListener('message', e=>{ if(e.data && e.data.gegeeOpen) openFromAlert(e.data.gegeeOpen.kind); });
+
+/* ===================== Доош татаж шинэчлэх (Хамт хэсэгт) ===================== */
+(function(){
+  const ind=document.createElement('div'); ind.id='ptr'; ind.innerHTML='<i>↻</i>'; document.body.appendChild(ind);
+  let y0=null, d=0, busy=false;
+  const active=()=>{ const v=$('vSoc'); return v && !v.hidden && $('socSheet').hidden && !(typeof CH!=='undefined' && CH.room); };
+  const top=()=>(window.scrollY||document.documentElement.scrollTop||0)<=0;
+  const set=(px,spin)=>{ ind.style.transform=`translate(-50%,${Math.min(px,90)-50}px) rotate(${px*3}deg)`; ind.style.opacity=Math.min(1,px/60); ind.classList.toggle('spin',!!spin); ind.classList.toggle('ready',px>=70); };
+  window.addEventListener('touchstart',e=>{ if(busy||!active()||!top()||e.touches.length!==1){ y0=null; return; } y0=e.touches[0].clientY; d=0; },{passive:true});
+  window.addEventListener('touchmove',e=>{ if(y0===null) return; d=(e.touches[0].clientY-y0)*0.5; if(d<=0||!top()){ set(0); return; } set(d); },{passive:true});
+  window.addEventListener('touchend',async()=>{ if(y0===null) return; y0=null;
+    if(d<70){ set(0); return; }
+    busy=true; set(70,true);
+    try{
+      if(typeof SOC!=='undefined'){ SOC.rows=null; SOC.hall=null; }
+      if(typeof FR!=='undefined') FR.list=null; if(typeof GR!=='undefined') GR.mine=null; if(typeof CH!=='undefined') CH.list=null;
+      renderSoc(); try{ chatUnread(); }catch(e){}
+      await new Promise(r=>setTimeout(r,900));
+    }catch(e){}
+    busy=false; set(0);
+  });
+})();
 
 </script>
 </body>
