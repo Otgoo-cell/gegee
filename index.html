@@ -499,7 +499,7 @@ body.running #gemLive,body:has(#lock:not([hidden])) #gemLive{visibility:hidden}
 #medalModal{position:fixed;inset:0;z-index:55;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:10px;padding:32px;background:var(--veil);-webkit-backdrop-filter:blur(22px);backdrop-filter:blur(22px);opacity:0;transition:opacity .45s var(--ease);text-align:center}
 #medalModal.on{opacity:1}
 #mdHead{font-size:12px;letter-spacing:3px;text-transform:uppercase;color:var(--accent);min-height:14px}
-#mdBig{width:min(360px,90vw);height:min(360px,90vw);margin:-30px 0 -20px;perspective:700px;line-height:0;position:relative}
+#mdBig{width:min(360px,90vw);height:min(470px,56vh);margin:-18px 0 -8px;-webkit-mask:radial-gradient(closest-side,#000 80%,transparent);mask:radial-gradient(closest-side,#000 80%,transparent);perspective:700px;line-height:0;position:relative}
 #mdBig svg{width:100%;height:100%;overflow:visible;transform-style:preserve-3d;filter:drop-shadow(0 18px 22px rgba(80,50,0,.28));animation:mfloat 7s ease-in-out infinite}
 #mdBig.spin svg{animation:mspin 1.6s cubic-bezier(.2,.7,.2,1) 1,mfloat 7s ease-in-out 1.6s infinite}
 @keyframes mspin{0%{transform:rotateY(-540deg) scale(.4);opacity:0}60%{opacity:1}100%{transform:rotateY(0) scale(1)}}
@@ -3660,7 +3660,7 @@ async function openGroup(id){
 function socBadges(){ if(!socOn()||!S||!S.soc) return; chatUnread(); rpc('my_friends').then(l=>{ FR.list=l; FR.incoming=l.filter(f=>f.state==='incoming').length; }).catch(()=>{}); rpc('my_invites').then(l=>{ GR.inv=l; }).catch(()=>{}); }
 
 /* ===================== шинэчлэлийн мэдэгдэл (Android) ===================== */
-const APP_VER=67, SITE='https://otgoo-cell.github.io/gegee';
+const APP_VER=68, SITE='https://otgoo-cell.github.io/gegee';
 async function checkUpdate(){
   if(!N.openUrl) return;
   try{ const r=await fetch(SITE+'/version.json?t='+Date.now(),{cache:'no-store'}); const v=await r.json();
@@ -3732,7 +3732,7 @@ async function pollChat(first){
 
 /* ===================== Санал хүсэлт ===================== */
 const FB={kind:'bug', newCount:0, mine:null, seenAt:0};
-const APP_NAME='7.7';
+const APP_NAME='7.8';
 const FB_K={bug:['🐞',()=>tr('Алдаа','Problem')], idea:['💡',()=>tr('Санаа','Idea')], other:['💬',()=>tr('Бусад','Other')]};
 const fbPlat=()=>{ try{ if(N.hasBg && N.hasBg()) return 'android-app'; }catch(e){} return /iPhone|iPad|iPod/.test(navigator.userAgent)?'ios-pwa':'web'; };
 const fbDev=()=>`${navigator.userAgent.slice(0,260)} | ${screen.width}x${screen.height}@${window.devicePixelRatio||1} | ${LANG} | ${view}`;
