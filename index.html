@@ -975,6 +975,8 @@ body:has(#doneBar:not([hidden])) .toast{bottom:calc(148px + env(safe-area-inset-
 .rcBox{text-align:center}.rcCode{font-family:var(--thin);font-weight:300;font-size:44px;letter-spacing:.12em;margin:14px 0;font-variant-numeric:tabular-nums;color:var(--fg)}
 .acRc{display:flex;justify-content:space-between;align-items:center;padding:10px 12px;margin:4px 0 8px;border-radius:12px;background:var(--glass);border:1px dashed var(--edge)}.acRc span{font-size:13px;color:var(--muted)}.acRc b{font-family:var(--thin);font-weight:300;font-size:20px;letter-spacing:.1em}
 .admMv{font-size:12px;color:#c0632b;margin-top:2px}
+.pushRow{display:flex;align-items:center;gap:12px;margin-top:14px;padding:12px;border-radius:14px;background:var(--glass);border:1px solid var(--edge)}.pushRow>div{flex:1;min-width:0}.pushRow b{display:block;font-size:14px}.pushRow small{display:block;font-size:12px;color:var(--muted);margin-top:2px}.pushRow button{flex:none;width:auto;padding:8px 14px;font-size:13px}
+.pushNudge{display:flex;align-items:center;gap:10px;padding:10px 12px;margin:0 0 10px}.pushNudge>span{font-size:20px}.pushNudge>div{flex:1;min-width:0}.pushNudge b{display:block;font-size:14px}.pushNudge small{font-size:12px;color:var(--muted)}.pushNudge .main{width:auto;padding:8px 14px;font-size:13px;margin:0}.pushNudge .x{background:none;border:0;color:var(--muted);font-size:14px;padding:6px;width:auto}
 </style>
 </head>
 <body>
@@ -1101,7 +1103,7 @@ body:has(#doneBar:not([hidden])) .toast{bottom:calc(148px + env(safe-area-inset-
     <div class="week" id="week"></div>
   </div>
   <div class="row settings">
-    <label for="remind" class="muted">Хөмсөгний дунд эргэн төвлөрөх хонх</label>
+    <label for="remind" class="muted">Эргэн төвлөрөх хонх</label>
     <select id="remind">
       <option value="0">Унтраах</option>
       <option value="5">5 мин тутам</option>
@@ -2115,7 +2117,7 @@ function renderMed(){
   const wm=Math.ceil(wMiss/60), left=Math.ceil(Math.max(0,DAY-d.t)/60), st=$('status');
   if(d.t>=DAY && !wm){ st.className='note glass'; st.innerHTML=tr('Өнөөдрийн 150 минут бүрэн. Энэ долоо хоногт дутуу өдөр алга. Мэдэрснээ тэмдэглэлдээ бичээрэй.','Today\'s 150 minutes are complete and no day is short this week. Write down what you experienced.'); }
   else if(wm){ st.className='note glass miss'; st.innerHTML=tr(`Энэ долоо хоногт өнгөрсөн өдрүүдээс <strong>${wm} минут</strong> дутуу байна.${left?` Өнөөдөр <strong>${left} минут</strong> үлдсэн.`:''}`,`This week you are <strong>${wm} min</strong> short from past days.${left?` <strong>${left} min</strong> left today.`:''}`); }
-  else { st.className='note glass'; st.innerHTML=tr(`Өнөөдөр <strong>${left} минут</strong> үлдсэн. Хөмсөгний дунд, билгийн мэлмийдээ анхаарлаа тогтоо.`,`<strong>${left} min</strong> left today. Rest your attention between the eyebrows, on the wisdom eye.`); }
+  else { st.className='note glass'; st.innerHTML=tr(`Өнөөдөр <strong>${left} минут</strong> үлдсэн.`,`<strong>${left} min</strong> left today.`); }
   if(!running){ renderDuties(); renderQuote(false); }
   updateAura();
 }
@@ -2496,7 +2498,7 @@ $('rtOk').addEventListener('click', ()=>{
 const EN = {
   'Нууц кодоо оруулна уу':'Enter your passcode', 'Тохиргоо':'Settings', 'Хөнгөн горим':'Light mode', 'Утас халж эсвэл гацвал асаагаарай. Хөдөлгөөн, бүдгэрүүлэлтийг багасгаж зай хэмнэнэ':'Turn on if your phone gets hot or slow. Reduces motion and blur to save battery', 'Нэргүй статистик илгээх':'Send anonymous stats', 'Апп-ыг сайжруулахын тулд нэр, тэмдэглэлгүйгээр зөвхөн суусан минут, цаг, апп-ын хувилбарыг илгээнэ':'To improve the app, sends only minutes sat, times and app version, with no name or notes', 'Санал хүсэлт илгээх':'Send feedback', 'Алдаа, санаа, асуултаа шууд хэлээрэй':'Tell us about problems, ideas or questions', 'Ирсэн санал хүсэлт':'Feedback inbox', 'Зөвхөн эзэмшигчид харагдана':'Visible only to the owner', 'Статистик':'Statistics', 'Хамт':'Together', 'Апп нээх бүрт кодын оронд хурууны хээгээ хүргэхэд л нээгдэнэ':'Each time you open the app, just touch your fingerprint instead of typing the code', 'Чимээгүй':'Silent', 'Чичиргээ':'Vibrate', 'Өдрийн дадлын цаг':'Daily practice time', 'Өдөр бүр яг энэ цагтаа сууснаар дадал бэхждэг':'Sitting at exactly this time every day is what makes the habit hold', 'Дадлын цаг · өдөр · орой':'Practice time · day · evening', 'Батлах':'Confirm', 'Болих':'Cancel', 'Дадлын цагаа байн байн солих нь дадлыг сулруулдаг. Шинэ цагаа сайтар бодож сонгоорой. Солисны дараа 30 хоног өөрчлөх боломжгүй болно.':'Changing your practice time often weakens the habit. Choose the new time with care. After changing it, it stays locked for 30 days.', 'Өнөөдрийн суулт бүрэн · Аяыг зогсоох':'Today complete · Stop the music', 'Нөөц хуулбараас сэргээх':'Restore from backup', 'Дарж үргэлжлүүлнэ үү':'Tap to continue',
   'Суулт':'Sit', 'Өдрийн 150 минут':'Daily 150 min', 'Чөлөөт суулт':'Free sitting', 'Алтан харьцаа':'Golden ratio', 'Дан гэрэл':'Light only', 'Дан аялгуу':'Sound only',
-  'Гэрэл':'Light', 'Аялгуу':'Sound', 'Эхлэх':'Begin', 'Энэ долоо хоног':'This week', 'Хөмсөгний дунд эргэн төвлөрөх хонх':'Bell to return focus between the eyebrows',
+  'Гэрэл':'Light', 'Аялгуу':'Sound', 'Эхлэх':'Begin', 'Энэ долоо хоног':'This week', 'Эргэн төвлөрөх хонх':'Bell to return focus between the eyebrows',
   'Унтраах':'Off', '5 мин тутам':'Every 5 min', '10 мин тутам':'Every 10 min', '15 мин тутам':'Every 15 min', '21 мин тутам':'Every 21 min',
   'Хяналт':'Progress', 'Дараалсан бүрэн өдөр':'Full days in a row', 'Нийт суусан':'Total sat', 'Нийт дутуу':'Total short', 'Сарын суулт':'This month', 'Бүрэн өдөр':'Full days',
   'Сарын дутуу':'Month short', 'Жилийн суулт':'This year', 'Жилийн дутуу':'Year short', 'Тэмдэглэл':'Journal', 'Миний тэмдэглэл':'My notes', 'Багшийн үгс':'Master\'s words',
@@ -3127,6 +3129,7 @@ async function socSync(force){
       rows.push({user_id:S.soc.uid, day:k, light:Math.min(86400,l), sound:Math.min(86400,s), first_start:Number.isFinite(x.fs)?x.fs:null}); });
     for(let i=0;i<rows.length;i+=300) await sreq('/rest/v1/days',rows.slice(i,i+300),'POST',{Prefer:'resolution=merge-duplicates,return=minimal'});
     const gems=myGems();
+    if(!pushBoot.done){ pushBoot.done=true; pushBoot(); }
     await sreq('/rest/v1/profiles?id=eq.'+S.soc.uid,{last_seen:new Date().toISOString(), routine:routineMin(), iid:iid(), avatar:charPref(), gems, gem_count:gems.reduce((t,g)=>t+(g.c||1),0)},'PATCH',{Prefer:'return=minimal'});
   }catch(e){}
 }
@@ -3367,7 +3370,8 @@ function drawAcct(){
     <label>${tr('Утас (бүртгэлээ сэргээхэд хэрэгтэй)','Phone (needed to restore your account)')}<input id="acPhone" maxlength="20" inputmode="tel" value="${esc(S.soc.phone||'')}" placeholder="${tr('Солих бол бичнэ үү','Type to change')}" autocomplete="off"></label>
     <div class="acRc"><span>${tr('Сэргээх код','Recovery code')}</span><b id="acRc">${S.soc.rcode?esc(String(S.soc.rcode).replace(/^(\d{3})/,'$1 ')):'••• •••'}</b></div>
     <div class="acMsg" id="acMsg"></div>
-    <button class="main" id="acSave">${tr('Хадгалах','Save')}</button>`;
+    <button class="main" id="acSave">${tr('Хадгалах','Save')}</button><div id="pushBox">${pushRow()}</div>`;
+  const rp=()=>{ const pb=$('pushBox'); if(pb){ pb.innerHTML=pushRow(); bindPushRow(rp); } }; bindPushRow(rp);
   if(!S.soc.rcode) (async()=>{ try{ await socLogin(); const c=await sreq('/rest/v1/rpc/my_rcode',{}); if(c){ S.soc.rcode=c; save(); const el=$('acRc'); if(el) el.textContent=String(c).replace(/^(\d{3})/,'$1 '); } }catch(e){} })();
   $('acSave').onclick=async()=>{
     const nick=$('acNick').value.trim(), real=$('acReal').value.trim(), phone=$('acPhone').value.trim(), msg=$('acMsg');
@@ -3623,7 +3627,7 @@ async function openGroup(id){
 function socBadges(){ if(!socOn()||!S||!S.soc) return; chatUnread(); rpc('my_friends').then(l=>{ FR.list=l; FR.incoming=l.filter(f=>f.state==='incoming').length; }).catch(()=>{}); rpc('my_invites').then(l=>{ GR.inv=l; }).catch(()=>{}); }
 
 /* ===================== шинэчлэлийн мэдэгдэл (Android) ===================== */
-const APP_VER=57, SITE='https://otgoo-cell.github.io/gegee';
+const APP_VER=59, SITE='https://otgoo-cell.github.io/gegee';
 async function checkUpdate(){
   if(!N.openUrl) return;
   try{ const r=await fetch(SITE+'/version.json?t='+Date.now(),{cache:'no-store'}); const v=await r.json();
@@ -3647,10 +3651,11 @@ function drawChats(){
       <span class="chAv ${c.kind}">${c.kind==='group'?'👥':flag(c.country)}${c.sitting?'<i class="sitDot"></i>':''}</span>
       <span class="socWho"><b>${esc(c.title)} ${c.kind==='group'&&c.cls?clsBadge(c.cls):''}</b><small>${c.last_body?`${c.last_nick===S.soc.nick?tr('Та: ','You: '):(c.kind==='group'?esc(c.last_nick)+': ':'')}${esc(c.last_body.slice(0,70))}`:tr('Хараахан бичээгүй байна','No messages yet')}</small></span>
       <span class="chMeta">${c.last_at?`<small>${chTime(c.last_at)}</small>`:''}${c.unread?`<i class="dotN">${c.unread}</i>`:''}</span></button>`).join('');
-  box.innerHTML=socTabs()+(CH.err?`<div class="socEmpty">${esc(CH.err)}</div>`:'')+
+  box.innerHTML=socTabs()+pushNudge()+(CH.err?`<div class="socEmpty">${esc(CH.err)}</div>`:'')+
     `<div class="socList">${rows||`<div class="socEmpty">${tr('Найз нэмэх эсвэл группт нэгдвэл энд чат нээгдэнэ.','Add a friend or join a group to start chatting.')}</div>`}</div>`;
   bindTabs();
   box.querySelectorAll('.chatRow').forEach(b=>b.onclick=()=>openChat(b.dataset.room, b.dataset.title, b.dataset.kind));
+  bindPushNudge();
 }
 
 async function openChatWith(nick){ try{ const r=await rpc('dm_room',{who:nick}); openChat(r, nick, 'dm'); }catch(e){ toast(socErr2(e)); } }
@@ -3694,7 +3699,7 @@ async function pollChat(first){
 
 /* ===================== Санал хүсэлт ===================== */
 const FB={kind:'bug', newCount:0, mine:null, seenAt:0};
-const APP_NAME='6.7';
+const APP_NAME='6.9';
 const FB_K={bug:['🐞',()=>tr('Алдаа','Problem')], idea:['💡',()=>tr('Санаа','Idea')], other:['💬',()=>tr('Бусад','Other')]};
 const fbPlat=()=>{ try{ if(N.hasBg && N.hasBg()) return 'android-app'; }catch(e){} return /iPhone|iPad|iPod/.test(navigator.userAgent)?'ios-pwa':'web'; };
 const fbDev=()=>`${navigator.userAgent.slice(0,260)} | ${screen.width}x${screen.height}@${window.devicePixelRatio||1} | ${LANG} | ${view}`;
@@ -3869,6 +3874,91 @@ async function openStats(){
 /* ---------- хөнгөн горимын сонголт ---------- */
 $('liteSel').value=LITE?'1':'0';
 $('liteSel').addEventListener('change', e=>{ try{ localStorage.setItem('gegee_lite', e.target.value); }catch(_){} toast(tr('Аппыг дахин нээхэд хэрэгжинэ','Takes effect when you reopen the app')); setTimeout(()=>location.reload(), 1200); });
+/* ===================== Мэдэгдэл: апп хаалттай үед чат, хүсэлт ирэхэд ===================== */
+const VAPID='BLbAKkYwRoAdY5aU8FIx9ItGMzd7NKiWkFkf3eFIg_7OvxInx1_70AvY3EKrnJRPNkPvf4Ksqs-Tun3iP-azRrI';
+const isApk=()=>!!(window.Native && typeof window.Native.pushCfg==='function');
+const webPushOk=()=>'serviceWorker' in navigator && 'PushManager' in window && 'Notification' in window && /^B/.test(VAPID);
+const isIOS=/iPhone|iPad|iPod/.test(navigator.userAgent);
+const standalone=()=>{ try{ return matchMedia('(display-mode: standalone)').matches || navigator.standalone===true; }catch(e){ return false; } };
+const b64u=s=>{ const p='='.repeat((4-s.length%4)%4), b=atob((s+p).replace(/-/g,'+').replace(/_/g,'/')); return Uint8Array.from(b,c=>c.charCodeAt(0)); };
+
+// Android: тохиргоо ба "апп нээлттэй" дохиог Java руу дамжуулна
+function apkPush(){
+  if(!isApk() || !socOn() || !S || !S.soc || !S.acct) return;
+  try{ window.Native.pushCfg(JSON.stringify({url:SUPA.url, key:SUPA.key, e:S.acct.e, p:S.acct.p, uid:S.soc.uid, on:S.soc.push!==false})); }catch(e){}
+}
+setInterval(()=>{ if(!document.hidden) apkPush(); }, 60000);
+document.addEventListener('visibilitychange', ()=>{ if(!document.hidden) apkPush(); });
+
+function pushState(){
+  if(isApk()) return S.soc.push===false?'off':'on';
+  if(!webPushOk()) return isIOS && !standalone() ? 'ios-browser' : 'unsupported';
+  if(Notification.permission==='denied') return 'denied';
+  return S.soc.push && Notification.permission==='granted' ? 'on' : 'off';
+}
+async function pushEnable(){
+  if(isApk()){ S.soc.push=true; save(); apkPush(); return true; }
+  if(!webPushOk()) return false;
+  const perm=await Notification.requestPermission(); if(perm!=='granted') return false;
+  const reg=await navigator.serviceWorker.ready;
+  const sub=(await reg.pushManager.getSubscription()) || (await reg.pushManager.subscribe({userVisibleOnly:true, applicationServerKey:b64u(VAPID)}));
+  const j=sub.toJSON(); await socLogin();
+  await sreq('/rest/v1/rpc/push_sub',{endpoint_:j.endpoint, p256dh_:j.keys.p256dh, auth_:j.keys.auth});
+  S.soc.push=true; save(); return true;
+}
+async function pushDisable(){
+  S.soc.push=false; save();
+  if(isApk()){ apkPush(); return; }
+  try{ const reg=await navigator.serviceWorker.ready, sub=await reg.pushManager.getSubscription();
+    if(sub){ await socLogin(); await sreq('/rest/v1/rpc/push_unsub',{endpoint_:sub.endpoint}).catch(()=>{}); await sub.unsubscribe(); } }catch(e){}
+}
+// Нэвтэрсний дараа: Android-д тохиргоо өгнө, хөтөч дээр бүртгэлээ сэргээнэ
+async function pushBoot(){
+  if(!S || !S.soc) return;
+  if(isApk()){ apkPush(); return; }
+  if(S.soc.push && webPushOk() && Notification.permission==='granted'){ try{ await pushEnable(); }catch(e){} }
+}
+
+// Тохиргоо → Миний бүртгэл доор
+function pushRow(){
+  const st=pushState();
+  const txt={on:tr('Чат, найзын хүсэлт, группийн хүсэлт ирэхэд мэдэгдэнэ','You will be notified of chats and requests'),
+    off:tr('Апп хаалттай үед ч чат, хүсэлт ирэхэд мэдэгдэх','Get notified of chats and requests even when the app is closed'),
+    denied:tr('Утасны тохиргооноос энэ апп-ын мэдэгдлийг зөвшөөрнө үү','Allow notifications for this app in your phone settings'),
+    'ios-browser':tr('iPhone дээр Safari-ийн Хуваалцах → "Нүүр дэлгэцэнд нэмэх" хийсэн апп-аас л мэдэгдэл ирнэ','On iPhone, notifications work only from the app added to your Home Screen'),
+    unsupported:tr('Энэ хөтөч мэдэгдэл дэмжихгүй байна','This browser does not support notifications')}[st];
+  const btn=st==='on'?`<button id="pushBtn" class="ghost">${tr('Унтраах','Turn off')}</button>`:st==='off'?`<button id="pushBtn" class="main sm">${tr('Асаах','Turn on')}</button>`:'';
+  const apk=isApk()&&st==='on'?`<small class="muted">${tr('Android дээр 15 минут орчим дотор ирнэ','On Android it arrives within about 15 minutes')}</small>`:'';
+  return `<div class="pushRow"><div><b>🔔 ${tr('Мэдэгдэл','Notifications')}</b><small>${txt}</small>${apk}</div>${btn}</div>`;
+}
+function bindPushRow(redraw){
+  const b=$('pushBtn'); if(!b) return;
+  b.onclick=async()=>{ b.disabled=true;
+    try{ if(pushState()==='on') await pushDisable(); else if(!(await pushEnable())) toast(tr('Мэдэгдэл зөвшөөрөгдсөнгүй','Notifications not allowed')); }
+    catch(e){ toast(socErr(e)); }
+    redraw(); };
+}
+// Чатын жагсаалтын дээр нэг удаа санал болгоно
+function pushNudge(){
+  if(!S||!S.soc||S.soc.push||S.soc.pushAsked||pushState()!=='off') return '';
+  return `<div class="glass pushNudge"><span>🔔</span><div><b>${tr('Шинэ чат ирэхэд мэдэгдэх үү?','Get notified of new chats?')}</b><small>${tr('Апп хаалттай байсан ч','Even when the app is closed')}</small></div><button id="pnYes" class="main sm">${tr('Асаах','Turn on')}</button><button id="pnNo" class="x">✕</button></div>`;
+}
+function bindPushNudge(){
+  const y=$('pnYes'), n=$('pnNo'); if(!y) return;
+  y.onclick=async()=>{ y.disabled=true; S.soc.pushAsked=true; try{ if(await pushEnable()) toast(tr('Мэдэгдэл асаалаа 🔔','Notifications on 🔔')); else toast(tr('Мэдэгдэл зөвшөөрөгдсөнгүй','Notifications not allowed')); }catch(e){ toast(socErr(e)); } save(); drawChats(); };
+  n.onclick=()=>{ S.soc.pushAsked=true; save(); drawChats(); };
+}
+
+// Мэдэгдэл дээр дарахад Хамт → тохирох хэсэг рүү
+function openFromAlert(kind){
+  const go=()=>{ if(!S || !S.soc || (!$('lock').hidden && !$('lock').classList.contains('out'))){ setTimeout(go,700); return; }
+    SOC.tab = kind==='msg' ? 'chat' : kind==='greq'||kind==='ginv' ? 'groups' : 'friends';
+    if(SOC.tab==='chat') CH.list=null; if(SOC.tab==='friends') FR.list=null; if(SOC.tab==='groups') GR.mine=null;
+    const t=document.querySelector('#tabs button[data-v="vSoc"]'); if(t) t.click(); try{ renderSoc(); }catch(e){} };
+  go();
+}
+try{ const q=new URLSearchParams(location.search).get('open'); if(q) openFromAlert(q); }catch(e){}
+if('serviceWorker' in navigator) navigator.serviceWorker.addEventListener('message', e=>{ if(e.data && e.data.gegeeOpen) openFromAlert(e.data.gegeeOpen.kind); });
 
 </script>
 </body>
