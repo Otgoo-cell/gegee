@@ -1541,7 +1541,7 @@ async function submitPinInner(){
     firstPin=p; lmode = lmode==='new1'?'new2':'chg2'; entry=''; drawDots(); lockMessage();
   } else {
     if(p!==firstPin){ lmode = lmode==='new2'?'new1':'chg1'; firstPin=''; shake(tr('Хоёр код таарсангүй, эхнээс нь оруулна уу','The codes did not match. Start again.')); return; }
-    if(lmode==='new2'){ await N.setup(p); curPin=p; S=normalize({}); save(); afterUnlock(); }
+    if(lmode==='new2'){ await N.setup(p); curPin=p; S=normalize({}); try{ const pd=JSON.parse(localStorage.getItem('gegee_pending')||'null'); if(pd){ if(pd.acct) S.acct=pd.acct; if(pd.soc) S.soc=pd.soc; localStorage.removeItem('gegee_pending'); } }catch(e){} save(); afterUnlock(); }
     else { await N.changePin(p); curPin=p; if(bioReady()) await Promise.resolve(N.bioSave(p)); save(); lmode='unlock'; hideLock(); toast(tr('Нууц код солигдлоо','Passcode changed')); }
   }
 }
@@ -2513,6 +2513,7 @@ applyTheme(true);
 updateAura();
 buildPad();
 showLock(N.hasData() ? 'unlock' : 'new1');
+if(!N.hasData()) setTimeout(()=>{ try{ if(window.preJoin) preJoin(); }catch(e){} }, 400);
 applyStatic();
 /* ===================== Шагнал: бясалгалын медалиуд ===================== */
 /* Медаль бүр: металл хүрээ + өнгөт гадаргуу + товойсон дүрс, гэрлийн туяа гүйнэ, дарахад 3D эргэнэ. */
@@ -3002,17 +3003,30 @@ function socErr(e){
   if(/Failed to fetch|NetworkError|Load failed/.test(m)) return tr('Интернэт холболтоо шалгана уу.','Check your internet connection.');
   return tr('Алдаа гарлаа: ','Error: ')+m;
 }
+// Код тохируулахаас өмнө бүртгүүлэхэд S алга тул түр хадгална
+let PEND=null; try{ PEND=JSON.parse(localStorage.getItem('gegee_pending')||'null'); }catch(e){}
+const T_=()=>S||(PEND=PEND||{});
+const saveT=()=>{ if(S) save(); else try{ localStorage.setItem('gegee_pending', JSON.stringify(PEND)); }catch(e){} };
 async function socJoin(nick, country, real, phone, share){
-  if(!S.acct){
+  const T=T_();
+  if(!T.acct){
     const acct={e:'g'+rid(12)+'@gegee.app', p:rid(28)};
     const j=await sreq('/auth/v1/signup',{email:acct.e,password:acct.p});
     if(!j || !j.access_token) throw new Error(tr('Бүртгэл идэвхжсэнгүй','Account not activated'));
-    socTok=j.access_token; socTokAt=Date.now(); S.acct=acct; save();
-  } else await socLogin();
+    socTok=j.access_token; socTokAt=Date.now(); T.acct=acct; saveT();
+  } else if(S) await socLogin(); else if(!socTok || Date.now()-socTokAt>40*60e3){ const j=await sreq('/auth/v1/token?grant_type=password',{email:T.acct.e,password:T.acct.p}); socTok=j.access_token; socTokAt=Date.now(); }
   const uid=jwtSub(socTok);
-  await sreq('/rest/v1/profiles',{id:uid,nick,country,routine:routineMin(),tz:-new Date().getTimezoneOffset(),share},'POST',{Prefer:'resolution=merge-duplicates,return=minimal'});
+  await sreq('/rest/v1/profiles',{id:uid,nick,country,routine:routineMin(),tz:-new Date().getTimezoneOffset(),share,iid:iid()},'POST',{Prefer:'resolution=merge-duplicates,return=minimal'});
   await sreq('/rest/v1/rpc/set_private',{real_:real, phone_:phone||null});
-  S.soc={nick,country,share,uid,real,phone:phone||''}; save(); await socSync(true);
+  T.soc={nick,country,share,uid,real,phone:phone||''}; saveT(); if(S) await socSync(true);
+  try{ pingInstall(true); }catch(e){}
+}
+// Апп анх нээгдэхэд, код тохируулахаас ч өмнө бүртгүүлнэ
+function preJoin(){
+  if(!socOn() || S || (PEND && PEND.soc) || N.hasData()) return;
+  openSocSheet(''); drawJoin($('socSheetIn'), true);
+  const msg=document.createElement('p'); msg.className='hint'; msg.style.textAlign='center';
+  msg.textContent=tr('Бүртгүүлсний дараа өөрийн нууц кодоо тохируулна','After joining you will set your own passcode'); $('socSheetIn').appendChild(msg);
 }
 async function socSync(force){
   if(!socOn() || !S || !S.soc) return;
@@ -3074,7 +3088,7 @@ function drawJoin(box, first){
     if(real.toLowerCase().split(/[\s.\-]+/).some(w=>w.length>=3 && nick.toLowerCase().includes(w))){ $('jMsg').textContent=tr('Хоч таны жинхэнэ нэртэй төстэй байна. Өөр хоч сонгоорой.','Your nickname looks like your real name. Please choose another.'); return; }
     if(real.length<2){ $('jMsg').textContent=tr('Жинхэнэ нэрээ оруулна уу. Үүнийг зөвхөн апп эзэмшигч харна.','Please enter your real name. Only the app owner sees it.'); return; }
     $('jGo').disabled=true; $('jMsg').textContent=tr('Түр хүлээнэ үү...','One moment...');
-    try{ await socJoin(nick,$('jCtry').value,real,ph,true); SOC.rows=null; SOC.c='all'; if(first){ SOC.mustJoin=false; closeSocSheet(); } renderSoc(); toast(tr(`Тавтай морил, ${nick}`,`Welcome, ${nick}`)); }
+    try{ await socJoin(nick,$('jCtry').value,real,ph,true); SOC.rows=null; SOC.c='all'; if(first){ SOC.mustJoin=false; closeSocSheet(); } if(S) renderSoc(); toast(tr(`Тавтай морил, ${nick}`,`Welcome, ${nick}`)); }
     catch(e){ $('jMsg').textContent=socErr(e); $('jGo').disabled=false; if(first && /Failed to fetch|NetworkError|Load failed|network/i.test(String(e&&e.message))) $('jLater').hidden=false; }
   };
   if(first){ SOC.mustJoin=true; $('jLater').onclick=()=>{ SOC.mustJoin=false; closeSocSheet(); toast(tr('Интернэтэд холбогдмогц нэгдэх цонх дахин гарна','The join screen will return once you are online')); }; }
@@ -3494,7 +3508,7 @@ async function openGroup(id){
 function socBadges(){ if(!socOn()||!S||!S.soc) return; chatUnread(); rpc('my_friends').then(l=>{ FR.list=l; FR.incoming=l.filter(f=>f.state==='incoming').length; }).catch(()=>{}); rpc('my_invites').then(l=>{ GR.inv=l; }).catch(()=>{}); }
 
 /* ===================== шинэчлэлийн мэдэгдэл (Android) ===================== */
-const APP_VER=51, SITE='https://otgoo-cell.github.io/gegee';
+const APP_VER=52, SITE='https://otgoo-cell.github.io/gegee';
 async function checkUpdate(){
   if(!N.openUrl) return;
   try{ const r=await fetch(SITE+'/version.json?t='+Date.now(),{cache:'no-store'}); const v=await r.json();
@@ -3565,7 +3579,7 @@ async function pollChat(first){
 
 /* ===================== Санал хүсэлт ===================== */
 const FB={kind:'bug', newCount:0, mine:null, seenAt:0};
-const APP_NAME='6.1';
+const APP_NAME='6.2';
 const FB_K={bug:['🐞',()=>tr('Алдаа','Problem')], idea:['💡',()=>tr('Санаа','Idea')], other:['💬',()=>tr('Бусад','Other')]};
 const fbPlat=()=>{ try{ if(N.hasBg && N.hasBg()) return 'android-app'; }catch(e){} return /iPhone|iPad|iPod/.test(navigator.userAgent)?'ios-pwa':'web'; };
 const fbDev=()=>`${navigator.userAgent.slice(0,260)} | ${screen.width}x${screen.height}@${window.devicePixelRatio||1} | ${LANG} | ${view}`;
@@ -3702,6 +3716,8 @@ async function openStats(){
   openSocSheet(sheetHead(tr('Статистик','Statistics'))+`<div class="socEmpty">${tr('Ачааллаж байна...','Loading...')}</div>`);
   let s; try{ await fbAuth(); s=await sreq('/rest/v1/rpc/admin_stats',{}); }catch(e){ $('socSheetIn').innerHTML=sheetHead('')+`<div class="socEmpty">${esc(socErr(e))}</div>`; $('socX').onclick=closeSocSheet; return; }
   if(!s){ closeSocSheet(); return; }
+  let regN='—'; try{ const u=await sreq('/rest/v1/rpc/admin_users',{}); regN=(u||[]).length; }catch(e){}
+  const PLc=s.platforms||{}, webN=PLc.web||0, appN=(s.installs||0)-webN;
   const st=(v,l)=>`<div class="pStat"><b>${v}</b><span>${l}</span></div>`;
   const chips=o=>Object.entries(o||{}).sort((a,b)=>b[1]-a[1]).map(([k,v])=>`<span>${esc(PLAT[k]||cityOf(k)||k)} <b>${v}</b></span>`).join('');
   const P=s.pages||{}, PA=s.pages_all||{};
@@ -3709,7 +3725,9 @@ async function openStats(){
   $('socSheetIn').innerHTML=sheetHead(tr('Статистик','Statistics'))+`
     <p class="hint" style="margin:-6px 0 0">${tr('Хэн болох нь хэнд ч үл мэдэгдэнэ. Суулгалт бүр санамсаргүй дугаартай.','No one is identified. Each install has a random tag.')}</p>
     <div class="pGrid">
-      ${st(s.installs, tr('Нийт суулгалт','Total installs'))}
+      ${st(regN, tr('Бүртгүүлсэн хүн','Registered people'))}
+      ${st(appN, tr('Апп суулгасан','App installs'))}
+      ${st(webN, tr('Хөтөчөөр үзсэн (суулгаагүй)','Browser views (not installed)'))}
       ${st(s.with_pin, tr('Код тохируулсан','Set a passcode'))}
       ${st(s.active1, tr('Өнөөдөр нээсэн','Opened today'))}
       ${st(s.active7, tr('7 хоногт нээсэн','Opened this week'))}
@@ -3718,6 +3736,7 @@ async function openStats(){
       ${st(hmin(s.min_today), tr('Өнөөдөр нийт суусан','Sat today in total'))}
       ${st(hmin(s.avg_7), tr('7 хоногт нэг хүн дунджаар','Per person this week'))}
     </div>
+    <button class="ghostlink" id="stUsers">${tr('Бүртгүүлсэн хүмүүсийн нэр, утсыг харах →','See registered names and phones →')}</button>
     <div class="glass pChart"><b>${tr('Сонирхол · сүүлийн 30 хоног','Interest · last 30 days')}</b>
       <div class="funnel"><div><b>${P.get_view||0}</b><span>${tr('татах хуудас үзсэн','viewed the page')}</span></div><i>→</i><div><b>${(P.apk_click||0)+(P.ios_open||0)}</b><span>${tr('татах / нээх дарсан','tapped download')}</span></div><i>→</i><div><b>${(s.new_by_day||[]).reduce((a,x)=>a+x.n,0)}</b><span>${tr('суулгасан','installed')}</span></div></div>
       <small>${tr('Бүх цаг үед','All time')}: ${PA.get_view||0} ${tr('үзсэн','views')} · Android ${PA.apk_click||0} · iPhone ${PA.ios_open||0}</small></div>
@@ -3729,7 +3748,7 @@ async function openStats(){
       <small>${tr('Хамт-д нэгдсэн','Joined Together')} ${s.joined} · ${tr('чимээгүй горим','silent mode')} ${s.silent} · ${tr('хурууны хээ','fingerprint')} ${s.bio}</small></div>
     <div class="socH">${tr('Суулгалт бүр','Each install')} <small>${(s.list||[]).length}</small><small class="r">${tr('7 хоног','week')}</small></div>
     <div class="socList">${(s.list||[]).map(r=>`<div class="socRow"><span class="socRank">#${esc(r.tag)}</span><span class="socWho"><b>${PLAT[r.platform]||esc(r.platform||'?')} · v${esc(r.app_ver||'?')} · ${esc(cityOf(r.tz))}</b><small>${r.routine!=null?`${tr('дадлын цаг','practice')} ${hm(r.routine)} · `:''}${r.avg_start!=null?`${tr('эхэлдэг','starts')} ${hm(r.avg_start)} · `:''}${tr('нийт','total')} ${hmin(r.total)} · ${r.full_days} ${tr('бүрэн өдөр','full days')}${r.joined?' · Хамт':''}${r.has_pin?'':' · '+tr('код тохируулаагүй','no passcode yet')}<br>${tr('анх','first')} ${String(r.first).replace(/-/g,'.')} · ${tr('сүүлд','last')} ${fbDate(r.last_seen)} · ${r.opens} ${tr('удаа нээсэн','opens')}</small></span><span class="socMin">${hmin(r.m7)}</span></div>`).join('')||`<div class="socEmpty">${tr('Одоогоор мэдээлэл алга','No data yet')}</div>`}</div>`;
-  $('socX').onclick=closeSocSheet;
+  $('socX').onclick=closeSocSheet; if($('stUsers')) $('stUsers').onclick=openAdmin;
 }
 
 /* ---------- хөнгөн горимын сонголт ---------- */
