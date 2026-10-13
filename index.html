@@ -987,6 +987,10 @@ body:has(#doneBar:not([hidden])) .toast{bottom:calc(148px + env(safe-area-inset-
 .pCalH{display:flex;align-items:center;justify-content:space-between;margin-bottom:8px}.pCalH b{font-family:var(--serif);font-size:17px;font-weight:500}.pcNav{width:34px;height:34px;padding:0;border-radius:50%;font-size:18px}.pcNav:disabled{opacity:.3}
 .pcGrid{padding:0!important;background:none!important;border:0!important;box-shadow:none!important;-webkit-backdrop-filter:none!important;backdrop-filter:none!important}.pcGrid .cell{cursor:default}
 .pcSum{display:flex;justify-content:center;gap:16px;margin-top:10px;font-size:12.5px;color:var(--muted)}.pcSum b{color:var(--fg);font-weight:600}
+#gemFull{position:fixed;inset:0;z-index:400;background:radial-gradient(ellipse at 50% 42%,#2a1840 0%,#120a1e 55%,#05030a 100%);opacity:0;transition:opacity .25s;touch-action:none}
+#gemFull.on{opacity:1}#gemFull .gfStage{position:absolute;inset:0}#gemFull .gfStage canvas{display:block;touch-action:none}
+#gemFull .gfX{position:absolute;top:calc(env(safe-area-inset-top,0px) + 14px);right:16px;width:42px;height:42px;padding:0;border-radius:50%;background:rgba(255,255,255,.12);border:1px solid rgba(255,255,255,.2);color:#fff;font-size:18px;z-index:2}
+#gemFull .gfHint{position:absolute;left:0;right:0;bottom:calc(env(safe-area-inset-bottom,0px) + 22px);text-align:center;color:rgba(255,255,255,.55);font-size:12.5px;pointer-events:none;padding:0 20px}
 </style>
 </head>
 <body>
@@ -1263,7 +1267,7 @@ body:has(#doneBar:not([hidden])) .toast{bottom:calc(148px + env(safe-area-inset-
 </div>
 <button class="setBtn" id="setBtn" aria-label="Тохиргоо"><i class="setDot" id="setDot" hidden></i><svg viewBox="0 0 24 24" fill="currentColor"><circle cx="12" cy="5.5" r="1.7"/><circle cx="12" cy="12" r="1.7"/><circle cx="12" cy="18.5" r="1.7"/></svg></button>
 <div class="sheet" id="socSheet" hidden><div class="sheetIn" id="socSheetIn"></div></div>
-<div id="medalModal" hidden><div id="mdHead"></div><div id="mdBig"></div><div id="mdName"></div><div id="mdDesc"></div><div id="mdInfo"></div><div class="mdBtns"><button id="mdFlip">Эргүүлж ар талыг харах</button><button id="mdClose">Хаах</button></div><div class="mdHint">Чирж эргүүлнэ</div></div>
+<div id="medalModal" hidden><div id="mdHead"></div><div id="mdBig"></div><div id="mdName"></div><div id="mdDesc"></div><div id="mdInfo"></div><div class="mdBtns"><button id="mdFull">⤢ Томоор</button><button id="mdFlip">↻ Ар тал</button><button id="mdClose">Хаах</button></div><div class="mdHint">Чирж эргүүлнэ · хоёр хуруугаар томруулна</div></div>
 <button class="updbar glass" id="updBar" hidden><span class="updDot">✦</span><span id="updTxt"></span><i id="updX">✕</i></button>
 <button class="donebar glass" id="doneBar" hidden><span class="eq"><i></i><i></i><i></i></span><span id="doneTxt">Өнөөдрийн суулт бүрэн · Аяыг зогсоох</span></button>
 <nav class="tabs glass hide" id="tabs">
@@ -2513,7 +2517,7 @@ const EN = {
   'Өнөөдөр гэрлийн үед...':'Today during the light...', 'Тэмдэглэлээс хайх':'Search notes', 'Үгээ энд буулгана уу':'Paste the words here', 'Эх сурвалж (ном, хуудас) заавал биш':'Source (book, page), optional',
   'Дэлгэц дээр дарж удирдлага харна':'Tap the screen for controls', 'Түр зогсоох':'Pause', 'Гэрэл':'Brightness', 'Аялгуу руу шилжих цаг боллоо':'Time to switch to the sound', 'Дарж баталгаажуулна уу':'Tap to confirm', 'Хамтрагч':'Companion', 'Суултын үеэр хамт байх амьд дүрээ сонго. Дээр нь дарвал баярлана.':'Choose the little friend who sits with you. Tap it and it bounces.',
   'Соёолж':'Sprout', 'Бадам':'Lotus', 'Үүлхэн':'Cloudy', '30м':'30m', '1ц':'1h', '2ц':'2h', '3ц':'3h', '5ц':'5h', '7ц':'7h', '9ц':'9h', '12ц':'12h',
-  'Шагнал':'Awards', 'Өдрийн сануулга':'Daily reminders', 'Асаалттай':'On', 'Унтраалттай':'Off', 'Өглөө · өдөр · орой':'Morning · day · evening', 'Хаах':'Close', 'Шагналын чулуу':'Award gems', 'Хамтрагчийг тойрно':'Circle my companion', 'Хамтрагчид зохирсон өнгөөр':'In my companion\'s colors', 'Нуух':'Hide', 'Эргүүлж ар талыг харах':'Turn to see the back', 'Чирж эргүүлнэ':'Drag to turn', 'Өмнөх сар':'Previous month', 'Дараагийн сар':'Next month', 'Өмнөх жил':'Previous year', 'Дараагийн жил':'Next year'
+  'Шагнал':'Awards', 'Өдрийн сануулга':'Daily reminders', 'Асаалттай':'On', 'Унтраалттай':'Off', 'Өглөө · өдөр · орой':'Morning · day · evening', 'Хаах':'Close', 'Шагналын чулуу':'Award gems', 'Хамтрагчийг тойрно':'Circle my companion', 'Хамтрагчид зохирсон өнгөөр':'In my companion\'s colors', 'Нуух':'Hide', '⤢ Томоор':'⤢ Full view', '↻ Ар тал':'↻ Back side', 'Чирж эргүүлнэ · хоёр хуруугаар томруулна':'Drag to turn · pinch to zoom', 'Эргүүлж ар талыг харах':'Turn to see the back', 'Чирж эргүүлнэ':'Drag to turn', 'Өмнөх сар':'Previous month', 'Дараагийн сар':'Next month', 'Өмнөх жил':'Previous year', 'Дараагийн жил':'Next year'
 };
 const _orig = new WeakMap();
 function applyStatic(){
@@ -2773,6 +2777,7 @@ function openMedal(id, celebrate){
   const big=$('mdBig'); big.classList.remove('spin'); void big.offsetWidth; big.classList.add('spin');
   requestAnimationFrame(()=>m.classList.add('on'));
 }
+if($('mdFull')) $('mdFull').onclick=e=>{ e.stopPropagation(); if(window.Gem && Gem.fullOn) Gem.fullOn(); };
 function closeMedal(){ const m=$('medalModal'); m.classList.remove('on'); setTimeout(()=>{ m.hidden=true; if(window.Gem){ Gem.hide(); Gem.livePause(false); } if(achQueue.length) setTimeout(celebrateNext,500); },350); }
 $('achList').addEventListener('click', e=>{ const b=e.target.closest('.mcell'); if(b) openMedal(b.dataset.id); });
 $('mdFlip').addEventListener('click', e=>{ e.stopPropagation(); if(window.Gem) Gem.flip(); });
@@ -3654,7 +3659,7 @@ async function openGroup(id){
 function socBadges(){ if(!socOn()||!S||!S.soc) return; chatUnread(); rpc('my_friends').then(l=>{ FR.list=l; FR.incoming=l.filter(f=>f.state==='incoming').length; }).catch(()=>{}); rpc('my_invites').then(l=>{ GR.inv=l; }).catch(()=>{}); }
 
 /* ===================== шинэчлэлийн мэдэгдэл (Android) ===================== */
-const APP_VER=62, SITE='https://otgoo-cell.github.io/gegee';
+const APP_VER=63, SITE='https://otgoo-cell.github.io/gegee';
 async function checkUpdate(){
   if(!N.openUrl) return;
   try{ const r=await fetch(SITE+'/version.json?t='+Date.now(),{cache:'no-store'}); const v=await r.json();
@@ -3726,7 +3731,7 @@ async function pollChat(first){
 
 /* ===================== Санал хүсэлт ===================== */
 const FB={kind:'bug', newCount:0, mine:null, seenAt:0};
-const APP_NAME='7.2';
+const APP_NAME='7.3';
 const FB_K={bug:['🐞',()=>tr('Алдаа','Problem')], idea:['💡',()=>tr('Санаа','Idea')], other:['💬',()=>tr('Бусад','Other')]};
 const fbPlat=()=>{ try{ if(N.hasBg && N.hasBg()) return 'android-app'; }catch(e){} return /iPhone|iPad|iPod/.test(navigator.userAgent)?'ios-pwa':'web'; };
 const fbDev=()=>`${navigator.userAgent.slice(0,260)} | ${screen.width}x${screen.height}@${window.devicePixelRatio||1} | ${LANG} | ${view}`;
