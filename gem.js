@@ -3,12 +3,12 @@
 window.Gem = (function(){
   if(!window.THREE) return null;
   const GEMC = {
-    gold:  {c:0xffbf2a, e:0x7a4600, f:0xfff0b8, a:[0xffd23a,0xff5fa8,0xff6a3d]},   // шар молор (цитрин)
-    rose:  {c:0xe8458a, e:0x5a0828, f:0xffe0ec, a:[0xff5fa8,0xffb347,0xb47aff]},   // ягаан болор
-    violet:{c:0x7a40ee, e:0x2a0a78, f:0xe9dcff, a:[0xb47aff,0xff6fcf,0x5fd0ff]},   // номин ягаан (аметист)
+    gold:  {c:0xffb01a, e:0x6a3200, f:0xfff0b8, a:[0xffd23a,0xff5fa8,0xff6a3d]},   // шар молор (цитрин)
+    rose:  {c:0xec2f7e, e:0x4a0420, f:0xffe0ec, a:[0xff5fa8,0xffb347,0xb47aff]},   // ягаан болор
+    violet:{c:0x7030f0, e:0x1e0660, f:0xe9dcff, a:[0xb47aff,0xff6fcf,0x5fd0ff]},   // номин ягаан (аметист)
     sky:   {c:0x1fa2ec, e:0x053a66, f:0xdcf3ff, a:[0x4fc8ff,0xb47aff,0x5fffc0]},   // усан цэнхэр (аквамарин)
-    jade:  {c:0x10b46a, e:0x03452a, f:0xd4ffe9, a:[0x3dffaa,0xffe94a,0x4fc8ff]},   // маргад
-    silver:{c:0xaebfe0, e:0x2a3450, f:0xffffff, a:[0xff9fd8,0x7fd0ff,0xc69bff]},   // сарны чулуу
+    jade:  {c:0x00b866, e:0x02381f, f:0xd4ffe9, a:[0x3dffaa,0xffe94a,0x4fc8ff]},   // маргад
+    silver:{c:0x7393f2, e:0x0f1846, f:0xffffff, a:[0xff9fd8,0x7fd0ff,0xc69bff]},   // сарны чулуу
     dawn:  {c:0xff7a3a, e:0x6a2006, f:0xffe4d4, a:[0xff8a3d,0xff5f9e,0xffd23a]},   // нарны чулуу
     cosmos:{c:0x4426c8, e:0x12065a, f:0xd9ccff, a:[0x9b6bff,0xff5fcf,0x4fe0ff]},   // танзанит
     stone: {c:0x9aa3b0, e:0x1a1e26, f:0xf2f5fa, a:[0x888888,0x888888,0x888888]}    // өнгөлөөгүй
@@ -211,20 +211,21 @@ window.Gem = (function(){
       vec3 warm=mix(lite, vec3(1.,.78,.66), .6);
       if(isBack>.5){
         vec3 fire=vec3(env(refract(-V,N,.40)).r, env(refract(-V,N,.43)).g, env(refract(-V,N,.46)).b);
-        vec3 body=mix(deep*1.2, C*1.35, .25+.55*hy) * (1.-rimD*.55);
+        vec3 body=mix(deep*1.05, C*1.2, .18+.5*hy) * (1.-rimD*.5);
         body=mix(body, mix(C,a2,.35)*1.2, smoothstep(.2,.9,hy)*.25);        // дээр нь бага зэрэг өөр туяа
         vec3 inR=env(reflect(-V,N));
         float lf=max(dot(N,normalize(vec3(-.5,.6,.65))),0.), lf2=max(dot(N,normalize(vec3(.7,.2,.5))),0.);
         body*= .45 + lf*.75 + lf2*.35;
         c = body*(.4+fh*1.)+ C*fire*.55 + au*.7 + inR*C*.35 + vec3(1.)*pow(max(dot(inR,vec3(.33)),0.),3.)*.12;
-        c = mix(c, lite*1.08, cloud*.3);
-        c += warm*heart*1.3 + mix(C,vec3(1.,.75,.65),.35)*halo2*.4;
+        c = mix(c, mix(lite,C,.5)*1.05, cloud*.14);
+        c += mix(warm,C*1.4,.45)*heart*1.05 + mix(C,vec3(1.,.75,.65),.35)*halo2*.4;
         c += vec3(1.)*glit;
         c = mix(c, vec3(1.,.68,.22)*1.9, clamp(vg,0.,1.)*.85);
         c += C*(eglow*.35) + vec3(1.)*core*.12;
         c = mix(c, c*.45, ogl*.55);
         c += vec3(1.,.8,.45)*(max(ob,0.)*3.2 + ogl*.42) + C*max(-ob,0.)*.8;
-        a = clamp(.56 + cloud*.1 + heart*.18 + glit*.3 + vg*.2 + rimD*.1, 0., .95);
+        a = clamp(.66 + cloud*.08 + heart*.18 + glit*.3 + vg*.2 + rimD*.1, 0., .95);
+        { float lu=dot(c,vec3(.3,.59,.11)); c=max(mix(vec3(lu),c,1.35),0.); }
         if(lk>.5){ c=mix(c, vec3(.55,.57,.62)*(.7+fh*.4), .7); a=.7; }
       } else {
         // ---- гадаргуу: тал бүр өөрөөр гялалзана, нарийн ирмэг, ойлт ----
@@ -233,7 +234,7 @@ window.Gem = (function(){
         vec3 rf=env(R);
         float spec=pow(max(dot(R,normalize(vec3(-.4,.7,.6))),0.),40.)*2.6 + pow(max(dot(R,normalize(vec3(.7,.3,.6))),0.),80.)*3.2 + pow(max(dot(R,normalize(vec3(.1,-.3,.95))),0.),30.)*.9;
         float flash=pow(fh,6.)*.6*(.6+.4*sin(time*.9+fh*20.));
-        c = rf*(.10+fr*.9) + vec3(1.)*spec + C*.04 + vec3(1.)*core*.17 + mix(C,vec3(1.),.6)*eglow*.18 + vec3(1.)*flash*.22;
+        c = rf*mix(vec3(1.),C*1.3+.15,.45)*(.06+fr*.8) + vec3(1.)*spec + C*.08 + vec3(1.)*core*.17 + mix(C,vec3(1.),.6)*eglow*.18 + vec3(1.)*flash*.22;
         c += vec3(1.,.74,.32)*vg*.55 + vec3(1.,.84,.55)*(ogl*.38 + max(ob,0.)*2.4);
         a = clamp(.02 + fr*.55 + spec*.35 + core*.32 + eglow*.12 + flash*.2 + vg*.3 + ogl*.22 + max(ob,0.)*.4, 0., .95);
         if(lk>.5){ c = mix(c, vec3(.82,.84,.88), .5); a = a*.7+.08; }
@@ -416,7 +417,7 @@ window.Gem = (function(){
     // чулууны өөрийнх нь хэлбэрийг дагасан гэрлийн аура (ард асаасан гэрэл биш)
     let halo=null;
     if(!o.mini && !o.locked){
-      halo=new THREE.Sprite(new THREE.SpriteMaterial({map:haloTex(), color:new THREE.Color(P.c).lerp(new THREE.Color(0xffb89a),.4), transparent:true, opacity:.3, blending:THREE.AdditiveBlending, depthWrite:false}));
+      halo=new THREE.Sprite(new THREE.SpriteMaterial({map:haloTex(), color:new THREE.Color(P.c).lerp(new THREE.Color(0xffb89a),.2), transparent:true, opacity:.3, blending:THREE.AdditiveBlending, depthWrite:false}));
       halo.scale.set(2.,2.9,1); halo.position.set(0,-.1,0); halo.renderOrder=0; halo.userData={ph:o.phase||0, base:2.2}; grp.add(halo);
     }
     grp.userData={back,front,glyph,glow,halo,gc:new THREE.Color(o.locked?0x777777:P.c).lerp(new THREE.Color(P.a[1]),.25)};
