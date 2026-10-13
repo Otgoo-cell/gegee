@@ -135,7 +135,7 @@ window.Gem = (function(){
   /* ---------- чулууны гэрэл хугарал (өөрийн shader) ---------- */
   const GVS='attribute vec3 bary; varying vec3 vB; varying vec3 vW; varying vec3 vL; void main(){ vB=bary; vL=position; vec4 w=modelMatrix*vec4(position,1.); vW=w.xyz; gl_Position=projectionMatrix*viewMatrix*w; }';
   const GFS=`
-    uniform vec3 col; uniform vec3 deep; uniform vec3 lite; uniform float time; uniform float phase; uniform float isBack; uniform float locked;
+    uniform sampler2D orn; uniform vec3 col; uniform vec3 deep; uniform vec3 lite; uniform float time; uniform float phase; uniform float isBack; uniform float locked;
     varying vec3 vW; varying vec3 vL; varying vec3 vB;
     /* дотор нь амьд мэт хөвөх олон өнгийн аура ба гэрэлт тоосонцор */
     uniform vec3 a1; uniform vec3 a2; uniform vec3 a3;
@@ -203,6 +203,11 @@ window.Gem = (function(){
       float tw=pow(max(0.,sin(time*(1.2+gh*2.5)+gh*40.)),10.);
       float glit=step(.88,gh)*smoothstep(.2,0.,gd)*(.7+tw*3.)*(1.-lk);
       float vg=vein(vL)*(1.-lk);
+      // угалз хээ: биеийг тойруулан хоёр давтагдана, ховилын ирмэг алтлаг гэрэлтэнэ
+      vec2 ouv=vec2(atan(vL.z,vL.x)/6.2832*2.+.25, clamp((vL.y+1.18)/1.95,0.,1.));
+      float om=smoothstep(-1.28,-1.12,vL.y)*(1.-smoothstep(.62,.8,vL.y));
+      float og=texture2D(orn,ouv).r*om, ob=(og-texture2D(orn,ouv+vec2(.0025,-.004)).r*om);
+      float ogl=og*(1.-lk*.6);
       vec3 warm=mix(lite, vec3(1.,.78,.66), .6);
       if(isBack>.5){
         vec3 fire=vec3(env(refract(-V,N,.40)).r, env(refract(-V,N,.43)).g, env(refract(-V,N,.46)).b);
@@ -217,6 +222,8 @@ window.Gem = (function(){
         c += vec3(1.)*glit;
         c = mix(c, vec3(1.,.68,.22)*1.9, clamp(vg,0.,1.)*.85);
         c += C*(eglow*.35) + vec3(1.)*core*.12;
+        c = mix(c, c*.45, ogl*.55);
+        c += vec3(1.,.8,.45)*(max(ob,0.)*3.2 + ogl*.42) + C*max(-ob,0.)*.8;
         a = clamp(.56 + cloud*.1 + heart*.18 + glit*.3 + vg*.2 + rimD*.1, 0., .95);
         if(lk>.5){ c=mix(c, vec3(.55,.57,.62)*(.7+fh*.4), .7); a=.7; }
       } else {
@@ -227,18 +234,67 @@ window.Gem = (function(){
         float spec=pow(max(dot(R,normalize(vec3(-.4,.7,.6))),0.),40.)*2.6 + pow(max(dot(R,normalize(vec3(.7,.3,.6))),0.),80.)*3.2 + pow(max(dot(R,normalize(vec3(.1,-.3,.95))),0.),30.)*.9;
         float flash=pow(fh,6.)*.6*(.6+.4*sin(time*.9+fh*20.));
         c = rf*(.10+fr*.9) + vec3(1.)*spec + C*.04 + vec3(1.)*core*.28 + mix(C,vec3(1.),.6)*eglow*.18 + vec3(1.)*flash*.35;
-        c += vec3(1.,.74,.32)*vg*.55;
-        a = clamp(.02 + fr*.55 + spec*.35 + core*.32 + eglow*.12 + flash*.2 + vg*.3, 0., .95);
+        c += vec3(1.,.74,.32)*vg*.55 + vec3(1.,.84,.55)*(ogl*.38 + max(ob,0.)*2.4);
+        a = clamp(.02 + fr*.55 + spec*.35 + core*.32 + eglow*.12 + flash*.2 + vg*.3 + ogl*.22 + max(ob,0.)*.4, 0., .95);
         if(lk>.5){ c = mix(c, vec3(.82,.84,.88), .5); a = a*.7+.08; }
       }
       c = vec3(1.)-exp(-c*1.35);
       gl_FragColor=vec4(c,a);
     }`;
+  /* ---------- сийлсэн угалз хээ ---------- */
+  // Монгол угалз хээ: сийлбэрийн бүтэц (цагаан шугам = ховил)
+  function drawOrnament(cv){
+    const W=cv.width, H=cv.height, x=cv.getContext('2d');
+    x.fillStyle='#000'; x.fillRect(0,0,W,H); x.strokeStyle='#fff'; x.fillStyle='#fff'; x.lineCap='round'; x.lineJoin='round';
+    // угалз: логарифм мушгиа
+    function spiral(cx,cy,r0,turns,dir,rot,lw){
+      x.lineWidth=lw; x.beginPath();
+      const N=120; for(let i=0;i<=N;i++){ const t=i/N, a=rot+dir*t*turns*Math.PI*2, r=r0*Math.pow(1-t,1.35)+r0*.06;
+        const px=cx+Math.cos(a)*r, py=cy+Math.sin(a)*r; i?x.lineTo(px,py):x.moveTo(px,py); }
+      x.stroke();
+    }
+    // эвэр угалз: хоёр тийш мушгирсан хос
+    function horn(cx,cy,s,flip){
+      const d=flip?-1:1;
+      x.lineWidth=s*.06; x.beginPath(); x.moveTo(cx-s*.9,cy+s*.35*d); x.bezierCurveTo(cx-s*.45,cy-s*.55*d, cx+s*.45,cy-s*.55*d, cx+s*.9,cy+s*.35*d); x.stroke();
+      spiral(cx-s*.9+s*.32, cy+s*.35*d-s*.02*d, s*.34, 1.55, -d, Math.PI*(d>0?0:1), s*.05);
+      spiral(cx+s*.9-s*.32, cy+s*.35*d-s*.02*d, s*.34, 1.55, d, Math.PI*(d>0?1:0), s*.05);
+      // дунд нь навч / дусал
+      x.lineWidth=s*.045; x.beginPath(); x.moveTo(cx,cy-s*.42*d); x.quadraticCurveTo(cx+s*.16,cy-s*.15*d,cx,cy+s*.05*d); x.quadraticCurveTo(cx-s*.16,cy-s*.15*d,cx,cy-s*.42*d); x.stroke();
+    }
+    // үүлэн хээ
+    function cloud(cx,cy,s){
+      spiral(cx-s*.28,cy,s*.3,1.2,1,0,s*.06); spiral(cx+s*.28,cy,s*.3,1.2,-1,Math.PI,s*.06);
+      x.lineWidth=s*.06; x.beginPath(); x.arc(cx,cy-s*.18,s*.22,Math.PI*1.05,Math.PI*1.95); x.stroke();
+    }
+    // алхан хээ (хүрээ)
+    function meander(y0,h){
+      const u=h/4; x.lineWidth=u*.55; x.beginPath(); let px=0; x.moveTo(0,y0+h);
+      while(px<W+u*4){ x.lineTo(px,y0); x.lineTo(px+u*3,y0); x.lineTo(px+u*3,y0+u*2.4); x.lineTo(px+u*1.5,y0+u*2.4); x.lineTo(px+u*1.5,y0+u*1.2);
+        x.moveTo(px+u*3,y0+u*2.4); x.lineTo(px+u*3,y0+h); x.lineTo(px+u*4.5,y0+h); px+=u*4.5; }
+      x.stroke();
+      x.lineWidth=u*.3; x.beginPath(); x.moveTo(0,y0-u*.8); x.lineTo(W,y0-u*.8); x.moveTo(0,y0+h+u*.8); x.lineTo(W,y0+h+u*.8); x.stroke();
+    }
+    meander(H*.06,H*.06); meander(H*.88,H*.06);
+    const s=W/2.6;
+    horn(W*.25,H*.34,s*.62,false); horn(W*.75,H*.34,s*.62,false);
+    cloud(W*.5,H*.47,s*.5); cloud(W*0,H*.47,s*.5); cloud(W*1,H*.47,s*.5);
+    horn(W*.25,H*.62,s*.62,true); horn(W*.75,H*.62,s*.62,true);
+    // нарийн чимэглэл цэгүүд
+    for(const [px,py] of [[.5,.25],[0,.25],[1,.25],[.5,.72],[0,.72],[1,.72]]){ x.beginPath(); x.arc(W*px,H*py,W*.018,0,Math.PI*2); x.fill(); }
+  }
+  let _orn=null;
+  function ornTex(){
+    if(_orn) return _orn;
+    const cv=document.createElement('canvas'); cv.width=cv.height=1024; drawOrnament(cv);
+    const b=document.createElement('canvas'); b.width=b.height=1024; const bx=b.getContext('2d'); bx.filter='blur(2.5px)'; bx.drawImage(cv,0,0);
+    _orn=new THREE.CanvasTexture(b); _orn.wrapS=THREE.RepeatWrapping; _orn.wrapT=THREE.ClampToEdgeWrapping; _orn.anisotropy=4; return _orn;
+  }
   const gemMats=[], TIME={value:0};
   function gemMat(P, locked, back, ph){
     const m=new THREE.ShaderMaterial({vertexShader:GVS, fragmentShader:GFS, transparent:true, depthWrite:back, side:back?THREE.BackSide:THREE.FrontSide,
       extensions:{derivatives:true},
-      uniforms:{col:{value:new THREE.Color(P.c)}, deep:{value:new THREE.Color(P.e)}, lite:{value:new THREE.Color(P.c).lerp(new THREE.Color(P.f),.6).multiplyScalar(1.15)}, time:TIME, phase:{value:ph||0}, a1:{value:new THREE.Color(P.a[0])}, a2:{value:new THREE.Color(P.a[1])}, a3:{value:new THREE.Color(P.a[2])}, isBack:{value:back?1:0}, locked:{value:locked?1:0}}});
+      uniforms:{orn:{value:ornTex()}, col:{value:new THREE.Color(P.c)}, deep:{value:new THREE.Color(P.e)}, lite:{value:new THREE.Color(P.c).lerp(new THREE.Color(P.f),.6).multiplyScalar(1.15)}, time:TIME, phase:{value:ph||0}, a1:{value:new THREE.Color(P.a[0])}, a2:{value:new THREE.Color(P.a[1])}, a3:{value:new THREE.Color(P.a[2])}, isBack:{value:back?1:0}, locked:{value:locked?1:0}}});
     gemMats.push(m); if(gemMats.length>60) gemMats.shift(); return m;
   }
 
