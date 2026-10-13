@@ -135,7 +135,7 @@ window.Gem = (function(){
   /* ---------- чулууны гэрэл хугарал (өөрийн shader) ---------- */
   const GVS='attribute vec3 bary; varying vec3 vB; varying vec3 vW; varying vec3 vL; void main(){ vB=bary; vL=position; vec4 w=modelMatrix*vec4(position,1.); vW=w.xyz; gl_Position=projectionMatrix*viewMatrix*w; }';
   const GFS=`
-    uniform sampler2D orn; uniform vec3 col; uniform vec3 deep; uniform vec3 lite; uniform float time; uniform float phase; uniform float isBack; uniform float locked;
+    uniform sampler2D orn; uniform float ornRep; uniform vec3 col; uniform vec3 deep; uniform vec3 lite; uniform float time; uniform float phase; uniform float isBack; uniform float locked;
     varying vec3 vW; varying vec3 vL; varying vec3 vB;
     /* дотор нь амьд мэт хөвөх олон өнгийн аура ба гэрэлт тоосонцор */
     uniform vec3 a1; uniform vec3 a2; uniform vec3 a3;
@@ -204,8 +204,8 @@ window.Gem = (function(){
       float glit=step(.88,gh)*smoothstep(.2,0.,gd)*(.7+tw*3.)*(1.-lk);
       float vg=vein(vL)*(1.-lk);
       // угалз хээ: биеийг тойруулан хоёр давтагдана, ховилын ирмэг алтлаг гэрэлтэнэ
-      vec2 ouv=vec2(atan(vL.z,vL.x)/6.2832*2.+.25, clamp((vL.y+1.18)/1.95,0.,1.));
-      float om=smoothstep(-1.28,-1.12,vL.y)*(1.-smoothstep(.62,.8,vL.y));
+      vec2 ouv=vec2((-atan(vL.z,vL.x)/6.2832+.5)*ornRep, clamp((vL.y+1.18)/1.95,0.,1.));
+      float om=smoothstep(-1.28,-1.12,vL.y)*(1.-smoothstep(.62,.8,vL.y))*(isBack>.5&&ornRep<1.5?.2:1.);
       float og=texture2D(orn,ouv).r*om, ob=(og-texture2D(orn,ouv+vec2(.0025,-.004)).r*om);
       float ogl=og*(1.-lk*.6);
       vec3 warm=mix(lite, vec3(1.,.78,.66), .6);
@@ -290,11 +290,71 @@ window.Gem = (function(){
     const b=document.createElement('canvas'); b.width=b.height=1024; const bx=b.getContext('2d'); bx.filter='blur(2.5px)'; bx.drawImage(cv,0,0);
     _orn=new THREE.CanvasTexture(b); _orn.wrapS=THREE.RepeatWrapping; _orn.wrapT=THREE.ClampToEdgeWrapping; _orn.anisotropy=4; return _orn;
   }
+
+  /* ---------- чулуу бүрийн түүх: өөрийн бэлгэдэл, тоо, огноо, ар талд нь Багшийн бадам ба үг ---------- */
+  const storyCache={}, storyKeys=[];
+  async function storyTex(o){
+    const key=[o.gid,o.date,o.locked?1:0,(o.quote&&o.quote.text)||'',o.title,((o.engrave&&o.engrave.lines)||[]).join('/')].join('|');
+    if(storyCache[key]) return storyCache[key];
+    try{ await document.fonts.ready; }catch(e){}
+    const W=2048, H=1024, cv=document.createElement('canvas'); cv.width=W; cv.height=H; const x=cv.getContext('2d');
+    x.fillStyle='#000'; x.fillRect(0,0,W,H); x.strokeStyle='#fff'; x.fillStyle='#fff'; x.lineCap='round'; x.lineJoin='round';
+    const spiral=(cx,cy,r0,turns,dir,rot,lw)=>{ x.lineWidth=lw; x.beginPath(); for(let i=0;i<=90;i++){ const t=i/90, a=rot+dir*t*turns*Math.PI*2, r=r0*Math.pow(1-t,1.35)+r0*.06; const px=cx+Math.cos(a)*r, py=cy+Math.sin(a)*r; i?x.lineTo(px,py):x.moveTo(px,py); } x.stroke(); };
+    const scroll=(cx,cy,s,d)=>{ x.lineWidth=s*.05; x.beginPath(); x.moveTo(cx-s*.9,cy+s*.35*d); x.bezierCurveTo(cx-s*.45,cy-s*.55*d,cx+s*.45,cy-s*.55*d,cx+s*.9,cy+s*.35*d); x.stroke();
+      spiral(cx-s*.58,cy+s*.33*d,s*.32,1.5,-d,d>0?0:Math.PI,s*.045); spiral(cx+s*.58,cy+s*.33*d,s*.32,1.5,d,d>0?Math.PI:0,s*.045); };
+    const ring=(cx,cy,r,lw)=>{ x.lineWidth=lw; x.beginPath(); x.arc(cx,cy,r,0,Math.PI*2); x.stroke(); };
+    const beads=(cx,cy,r,n,br)=>{ for(let i=0;i<n;i++){ const a=-Math.PI/2+i/n*Math.PI*2; x.beginPath(); x.arc(cx+Math.cos(a)*r, cy+Math.sin(a)*r, br, 0, Math.PI*2); x.fill(); } };
+    // ---- дээд хүрээ: шагналын төрлөөр ----
+    const sec=o.sec||'', y0=70, bh=70;
+    x.lineWidth=5; x.beginPath(); x.moveTo(0,y0-22); x.lineTo(W,y0-22); x.moveTo(0,y0+bh+22); x.lineTo(W,y0+bh+22); x.stroke();
+    if(sec==='streak'){ for(let px=30;px<W;px+=70){ x.lineWidth=7; x.beginPath(); x.ellipse(px,y0+bh/2,32,20,0,0,Math.PI*2); x.stroke(); } }          // тасралтгүй гинж
+    else if(sec==='month'){ for(let i=0,px=60;px<W;px+=128,i++){ const ph=i%8; x.beginPath(); x.arc(px,y0+bh/2,28,0,Math.PI*2); x.lineWidth=4; x.stroke();      // сарны хувьсал
+        if(ph){ x.save(); x.beginPath(); x.arc(px,y0+bh/2,28,0,Math.PI*2); x.clip(); x.fillRect(px-28+ (ph<4?56-ph*14:0), y0+bh/2-28, ph<4?ph*14:(8-ph)*14+ (ph===4?56:0), 56); x.restore(); } } }
+    else if(sec==='hours'){ for(let px=20;px<W;px+=34){ x.beginPath(); x.arc(px,y0+bh/2,11,0,Math.PI*2); x.fill(); } x.lineWidth=3; x.beginPath(); x.moveTo(0,y0+bh/2); x.lineTo(W,y0+bh/2); x.stroke(); }  // эрих
+    else if(sec==='duty'){ x.lineWidth=6; x.beginPath(); x.moveTo(0,y0+bh); for(let px=0;px<W;px+=120){ x.lineTo(px+40,y0+8); x.lineTo(px+70,y0+38); x.lineTo(px+90,y0+20); x.lineTo(px+120,y0+bh); } x.stroke(); }   // уулс
+    else { const u=bh/4; x.lineWidth=u*.5; x.beginPath(); let px=0; x.moveTo(0,y0+bh); while(px<W+u*5){ x.lineTo(px,y0); x.lineTo(px+u*3,y0); x.lineTo(px+u*3,y0+u*2.4); x.lineTo(px+u*1.5,y0+u*2.4); x.lineTo(px+u*1.5,y0+u*1.2); x.moveTo(px+u*3,y0+u*2.4); x.lineTo(px+u*3,y0+bh); x.lineTo(px+u*4.5,y0+bh); px+=u*4.5; } x.stroke(); }  // алхан хээ
+    // ---- урд тал: медаль, бэлгэдэл, тоогоор эрих ----
+    const fx=W*.25, fy=470;
+    ring(fx,fy,250,7); ring(fx,fy,196,4);
+    const n=o.count?Math.min(108,Math.max(3,o.count>36?108:o.count)):27;
+    beads(fx,fy,223,n,n>60?6:n>30?8:11);
+    if(o.svg){ const im=await svgImg(o.svg); if(im) x.drawImage(im, fx-170, fy-170, 340, 340); }
+    else if(o.num!=null){ x.textAlign='center'; x.font='600 190px Cormorant, Georgia, serif'; x.fillText(String(o.num),fx,fy+62); }
+    scroll(fx-430,fy-120,150,1); scroll(fx+430,fy-120,150,1); scroll(fx-430,fy+130,150,-1); scroll(fx+430,fy+130,150,-1);
+    // ---- ар тал: Багшийн бадамлянхуа, гэрлийн туяа ----
+    const bx=W*.75, by=400;
+    x.lineWidth=4; for(let i=0;i<15;i++){ const a=-Math.PI+i/14*Math.PI; x.beginPath(); x.moveTo(bx+Math.cos(a)*150,by-20+Math.sin(a)*150); x.lineTo(bx+Math.cos(a)*240,by-20+Math.sin(a)*240); x.stroke(); }
+    x.lineWidth=7; const petal=(ang,len,wid)=>{ x.save(); x.translate(bx,by+90); x.rotate(ang); x.beginPath(); x.moveTo(0,0); x.bezierCurveTo(wid,-len*.35,wid*.6,-len*.8,0,-len); x.bezierCurveTo(-wid*.6,-len*.8,-wid,-len*.35,0,0); x.stroke(); x.restore(); };
+    petal(0,230,70); petal(-.55,200,66); petal(.55,200,66); petal(-1.05,160,58); petal(1.05,160,58);
+    x.lineWidth=6; x.beginPath(); x.moveTo(bx-200,by+98); x.quadraticCurveTo(bx,by+150,bx+200,by+98); x.stroke();
+    scroll(bx-470,by,140,1); scroll(bx+470,by,140,1);
+    // Багшийн үг (хэрэглэгчийн өөрийн хадгалсан үгнээс)
+    const q=o.quote&&o.quote.text?o.quote.text:(o.desc||'');
+    if(q){ x.textAlign='center'; x.font='italic 500 46px Cormorant, Georgia, serif';
+      const words=q.replace(/\s+/g,' ').trim().split(' '), lines=[]; let ln='';
+      for(const w of words){ const t=ln?ln+' '+w:w; if(x.measureText(t).width>820 && ln){ lines.push(ln); ln=w; } else ln=t; } if(ln) lines.push(ln);
+      const L=lines.slice(0,3); if(lines.length>3) L[2]=L[2].replace(/\s*\S+$/,'')+' …';
+      L.forEach((l,i)=>x.fillText(l,bx,640+i*58));
+      if(o.quote&&o.quote.src){ x.font='500 30px Manrope, system-ui, sans-serif'; x.fillText('— '+o.quote.src,bx,640+L.length*58+12); } }
+    // ---- доод бичээс: нэр ба хүртсэн огноо ----
+    x.textAlign='center'; x.font='600 54px Cormorant, Georgia, serif';
+    const line=[o.title||'', o.date?String(o.date).replace(/-/g,'.'):''].filter(Boolean).join('  ·  ');
+    if(line) x.fillText(line, fx, 758);
+    // хичнээн хүчин чармайлт гаргаж авсныг сийлнэ
+    const eff=((o.engrave&&o.engrave.lines)||[]).filter(l=>!/^(Хүртсэн|Earned)/.test(l)).slice(0,2).join('  ·  ');
+    if(eff){ x.font='500 38px Manrope, system-ui, sans-serif'; x.fillText(eff, fx, 822); }
+    x.lineWidth=5; x.beginPath(); x.moveTo(0,870); x.lineTo(W,870); x.moveTo(0,935); x.lineTo(W,935); x.stroke();
+    for(let px=0;px<W;px+=48){ x.beginPath(); x.moveTo(px,902); x.lineTo(px+24,880); x.lineTo(px+48,902); x.lineTo(px+24,925); x.closePath(); x.stroke(); }
+    const b=document.createElement('canvas'); b.width=W; b.height=H; const bx2=b.getContext('2d'); bx2.filter='blur(2.2px)'; bx2.drawImage(cv,0,0);
+    const t=new THREE.CanvasTexture(b); t.wrapS=THREE.RepeatWrapping; t.anisotropy=4;
+    storyCache[key]=t; storyKeys.push(key); if(storyKeys.length>8){ const k=storyKeys.shift(); storyCache[k].dispose(); delete storyCache[k]; }
+    return t;
+  }
   const gemMats=[], TIME={value:0};
   function gemMat(P, locked, back, ph){
     const m=new THREE.ShaderMaterial({vertexShader:GVS, fragmentShader:GFS, transparent:true, depthWrite:back, side:back?THREE.BackSide:THREE.FrontSide,
       extensions:{derivatives:true},
-      uniforms:{orn:{value:ornTex()}, col:{value:new THREE.Color(P.c)}, deep:{value:new THREE.Color(P.e)}, lite:{value:new THREE.Color(P.c).lerp(new THREE.Color(P.f),.6).multiplyScalar(1.15)}, time:TIME, phase:{value:ph||0}, a1:{value:new THREE.Color(P.a[0])}, a2:{value:new THREE.Color(P.a[1])}, a3:{value:new THREE.Color(P.a[2])}, isBack:{value:back?1:0}, locked:{value:locked?1:0}}});
+      uniforms:{orn:{value:ornTex()}, ornRep:{value:2.}, col:{value:new THREE.Color(P.c)}, deep:{value:new THREE.Color(P.e)}, lite:{value:new THREE.Color(P.c).lerp(new THREE.Color(P.f),.6).multiplyScalar(1.15)}, time:TIME, phase:{value:ph||0}, a1:{value:new THREE.Color(P.a[0])}, a2:{value:new THREE.Color(P.a[1])}, a3:{value:new THREE.Color(P.a[2])}, isBack:{value:back?1:0}, locked:{value:locked?1:0}}});
     gemMats.push(m); if(gemMats.length>60) gemMats.shift(); return m;
   }
 
@@ -345,6 +405,7 @@ window.Gem = (function(){
     glow.position.z=-.05; glow.renderOrder=2; grp.add(glow);
     const front=new THREE.Mesh(g, gemMat(P,o.locked,false,o.phase));
     front.renderOrder=3; grp.add(front);
+    if(!o.mini && o.gid && o.engrave){ try{ const st=await storyTex(o); [back,front].forEach(m=>{ m.material.uniforms.orn.value=st; m.material.uniforms.ornRep.value=1.; }); }catch(e){ console.log('storyErr', e && e.message); } }
     if(o.engrave){
       // болор дотор лазераар сийлсэн мэт бичээс (ар талаас харагдана)
       const eng=new THREE.Mesh(new THREE.PlaneGeometry(.78,1.56), new THREE.MeshBasicMaterial({map:engraveTex(o.engrave), transparent:true, depthWrite:false, opacity:o.locked?.6:.95}));
@@ -578,5 +639,5 @@ window.Gem = (function(){
         g.rotation.set(.3*Math.sin(t*.6+i), t*.8+i, 0); g.scale.setScalar(.19*(1+.06*Math.sin(t*1.7+i))); }); };
     return grp;
   }
-  return {thumb, show, hide, flip, live, liveStop, livePause, orbit, fullOn, fullOff, isFull:()=>full};
+  return {_story:storyTex, thumb, show, hide, flip, live, liveStop, livePause, orbit, fullOn, fullOff, isFull:()=>full};
 })();

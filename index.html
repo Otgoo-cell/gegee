@@ -2723,7 +2723,8 @@ function renderAch(){
   loadGemThumbs(); syncOrbit();
 }
 /* ---------- эрдэнийн чулуу ---------- */
-const gemSpec=(a,locked)=>({shape:a.shape, pal:a.pal, num:a.num, unit:a.unit, svg:a.glyph?GLYPH[a.glyph]:null, locked:!!locked, seed:a.id.replace(/^mo\d+-/,'mo')+(a.id.startsWith('mo')?a.id.split('-').pop():'')});
+function gemQuote(id){ if(!S||!S.quotes||!S.quotes.length) return null; let h=0; for(const ch of id) h=(h*31+ch.charCodeAt(0))|0; return S.quotes[Math.abs(h)%S.quotes.length]; }
+const gemSpec=(a,locked)=>({gid:a.id, sec:a.sec, title:a.name, desc:a.desc, count:a.num||a.goal||null, date:(S&&S.ach&&S.ach[a.id])||'', quote:gemQuote(a.id), shape:a.shape, pal:a.pal, num:a.num, unit:a.unit, svg:a.glyph?GLYPH[a.glyph]:null, locked:!!locked, seed:a.id.replace(/^mo\d+-/,'mo')+(a.id.startsWith('mo')?a.id.split('-').pop():'')});
 const gemKey=(a,locked)=>[a.id,a.shape,a.pal,a.num,a.unit,a.glyph,locked?1:0].join('|');
 function gemCell(a,locked){
   if(!window.Gem) return medal({...a, locked});
@@ -2755,7 +2756,7 @@ function engraving(a){
   else if(a.goal){ L.push(`${Math.min(a.val,a.goal)} / ${a.goal}`); }
   if(got) L.push(tr(`Хүртсэн ${dTxt(got)}`,`Earned ${dTxt(got)}`));
   else if(!a.earned && a.goal) L.push(tr(`Одоогоор ${Math.min(a.val,a.goal)} / ${a.goal}`,`So far ${Math.min(a.val,a.goal)} / ${a.goal}`));
-  return {title:a.name, ring:a.name.toUpperCase(), ring2:tr('ГЭГЭЭ · БИЛГИЙН МЭЛМИЙ','GEGEE · WISDOM EYE'), lines:L};
+  return {title:a.name, ring:a.name.toUpperCase(), ring2:tr('ГЭГЭЭ','GEGEE'), lines:L};
 }
 function openMedal(id, celebrate){
   const a=achCache.find(x=>x.id===id); if(!a) return;
@@ -3659,7 +3660,7 @@ async function openGroup(id){
 function socBadges(){ if(!socOn()||!S||!S.soc) return; chatUnread(); rpc('my_friends').then(l=>{ FR.list=l; FR.incoming=l.filter(f=>f.state==='incoming').length; }).catch(()=>{}); rpc('my_invites').then(l=>{ GR.inv=l; }).catch(()=>{}); }
 
 /* ===================== шинэчлэлийн мэдэгдэл (Android) ===================== */
-const APP_VER=66, SITE='https://otgoo-cell.github.io/gegee';
+const APP_VER=67, SITE='https://otgoo-cell.github.io/gegee';
 async function checkUpdate(){
   if(!N.openUrl) return;
   try{ const r=await fetch(SITE+'/version.json?t='+Date.now(),{cache:'no-store'}); const v=await r.json();
@@ -3731,7 +3732,7 @@ async function pollChat(first){
 
 /* ===================== Санал хүсэлт ===================== */
 const FB={kind:'bug', newCount:0, mine:null, seenAt:0};
-const APP_NAME='7.6';
+const APP_NAME='7.7';
 const FB_K={bug:['🐞',()=>tr('Алдаа','Problem')], idea:['💡',()=>tr('Санаа','Idea')], other:['💬',()=>tr('Бусад','Other')]};
 const fbPlat=()=>{ try{ if(N.hasBg && N.hasBg()) return 'android-app'; }catch(e){} return /iPhone|iPad|iPod/.test(navigator.userAgent)?'ios-pwa':'web'; };
 const fbDev=()=>`${navigator.userAgent.slice(0,260)} | ${screen.width}x${screen.height}@${window.devicePixelRatio||1} | ${LANG} | ${view}`;
