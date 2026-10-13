@@ -55,7 +55,7 @@ window.Gem = (function(){
     let pos=m.pos, bar=m.bar;
     // хажуудаа наалдсан жижиг талст (зурган дээрх шиг доод хэсэгт)
     const R=rng('side|'+kind+'|'+seed);
-    if(R()<.85){
+    if(false){   // хажуугийн жижиг талстыг хассан
       const c=crystalPos(kind, seed, true); orient(c.pos, c.bar);
       const sc=F.side*(.85+R()*.3), side=R()<.5?-1:1, rz=side*(.55+R()*.35), ry=(R()*2-1)*.6;
       const mtx=new THREE.Matrix4().makeRotationY(ry).premultiply(new THREE.Matrix4().makeRotationZ(rz)).premultiply(new THREE.Matrix4().makeScale(sc,sc,sc))
