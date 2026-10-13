@@ -195,7 +195,7 @@ window.Gem = (function(){
       float cl=fbm(vL*2.3+vec3(1.7));
       float cloud=smoothstep(.42,.82,cl);
       float hd=length(vec2(vL.x*1.15, (vL.y+.12)*.8));
-      float heart=exp(-hd*hd*7.)*(.85+.15*sin(time*1.3+phase))*(1.-lk);
+      float heart=exp(-hd*hd*6.)*(.8+.2*sin(time*.8+phase))*(1.-lk);
       float halo2=exp(-hd*hd*1.6)*(1.-lk);
       vec3 gq=vL*22.+vec3(phase); vec3 gp=floor(gq); float gh=hash(gp);
       vec3 go=vec3(hash(gp+1.7),hash(gp+3.1),hash(gp+5.3))*.6+.2;
@@ -203,7 +203,7 @@ window.Gem = (function(){
       float tw=pow(max(0.,sin(time*(1.2+gh*2.5)+gh*40.)),10.);
       float glit=step(.88,gh)*smoothstep(.2,0.,gd)*(.7+tw*3.)*(1.-lk);
       float vg=vein(vL)*(1.-lk);
-      vec3 warm=mix(lite, vec3(1.,.86,.62), .55);
+      vec3 warm=mix(lite, vec3(1.,.78,.66), .6);
       if(isBack>.5){
         vec3 fire=vec3(env(refract(-V,N,.40)).r, env(refract(-V,N,.43)).g, env(refract(-V,N,.46)).b);
         vec3 body=mix(deep*1.2, C*1.35, .25+.55*hy) * (1.-rimD*.55);
@@ -213,7 +213,7 @@ window.Gem = (function(){
         body*= .45 + lf*.75 + lf2*.35;
         c = body*(.4+fh*1.)+ C*fire*.55 + au*.7 + inR*C*.35 + vec3(1.)*pow(max(dot(inR,vec3(.33)),0.),3.)*.12;
         c = mix(c, lite*1.08, cloud*.3);
-        c += warm*heart*1.5 + C*halo2*.35;
+        c += warm*heart*1.85 + mix(C,vec3(1.,.75,.65),.35)*halo2*.4;
         c += vec3(1.)*glit;
         c = mix(c, vec3(1.,.68,.22)*1.9, clamp(vg,0.,1.)*.85);
         c += C*(eglow*.35) + vec3(1.)*core*.12;
@@ -274,7 +274,7 @@ window.Gem = (function(){
     return new THREE.ShaderMaterial({vertexShader:AVS, fragmentShader:AFS, transparent:true, depthWrite:false, side:THREE.BackSide,
       uniforms:{c1:{value:new THREE.Color(P.c)}, c2:{value:new THREE.Color(P.a[0])}, c3:{value:new THREE.Color(P.a[1])}, time:TIME, phase:{value:ph}, strength:{value:mini?.9:.5}}});
   }
-  function pulseHalo(gr,s){ const h=gr.userData.halo; if(!h) return; const k=.5+.5*Math.sin(s*1.25+h.userData.ph); h.material.opacity=.3+.22*k; const sc=h.userData.base||(h.userData.base=h.scale.x), f=.93+.1*k; h.scale.set(sc*f, sc*1.4*f, 1); }
+  function pulseHalo(gr,s){ const h=gr.userData.halo; if(!h) return; const k=.5+.5*Math.sin(s*.75+h.userData.ph); h.material.opacity=.3+.22*k; const sc=h.userData.base||(h.userData.base=h.scale.x), f=.93+.1*k; h.scale.set(sc*f, sc*1.4*f, 1); }
   /* ---------- нэг чулууны бүтэц ---------- */
   async function build(o, env){
     const kind=o.shape==='circle'?'round':o.shape||'round', g=geo(kind, o.seed||'');
@@ -297,7 +297,7 @@ window.Gem = (function(){
     // чулууны өөрийнх нь хэлбэрийг дагасан гэрлийн аура (ард асаасан гэрэл биш)
     let halo=null;
     if(!o.mini && !o.locked){
-      halo=new THREE.Sprite(new THREE.SpriteMaterial({map:haloTex(), color:new THREE.Color(P.c).lerp(new THREE.Color(P.a[1]),.3), transparent:true, opacity:.5, blending:THREE.AdditiveBlending, depthWrite:false}));
+      halo=new THREE.Sprite(new THREE.SpriteMaterial({map:haloTex(), color:new THREE.Color(P.c).lerp(new THREE.Color(0xffb89a),.4), transparent:true, opacity:.5, blending:THREE.AdditiveBlending, depthWrite:false}));
       halo.scale.set(2.,2.9,1); halo.position.set(0,-.1,0); halo.renderOrder=0; halo.userData={ph:o.phase||0, base:2.2}; grp.add(halo);
     }
     grp.userData={back,front,glyph,glow,halo,gc:new THREE.Color(o.locked?0x777777:P.c).lerp(new THREE.Color(P.a[1]),.25)};
@@ -351,8 +351,17 @@ window.Gem = (function(){
       R=new THREE.WebGLRenderer({canvas:cv, antialias:true, alpha:true}); R.setPixelRatio(Math.min(window.__lite?1.5:2.5, window.devicePixelRatio||1)); R.outputEncoding=THREE.sRGBEncoding; R.toneMapping=THREE.ACESFilmicToneMapping; R.toneMappingExposure=1.05; R.setClearColor(0,0);
       env=envFor(R); sc=new THREE.Scene(); dl=lights(sc); cam=new THREE.PerspectiveCamera(30,1,.1,50); cam.position.set(0,-.06,5.0); bsh=shadow(); sc.add(bsh);
       const st=starTex();
-      for(let i=0;i<16;i++){ const s=new THREE.Sprite(new THREE.SpriteMaterial({map:st, transparent:true, blending:THREE.AdditiveBlending, depthWrite:false, opacity:0}));
-        const a=Math.random()*Math.PI*2, r=1.05+Math.random()*.5; s.position.set(Math.cos(a)*r, Math.sin(a)*r, (Math.random()-.5)*.6); s.userData={p:Math.random()*7, sp:.6+Math.random()*1.2, sz:.09+Math.random()*.14}; sc.add(s); sparks.push(s); }
+      // ид шидийн гялбаа: чулуун дээрх одон гялбаа, эргэн тойрны од, дээш хөвөх гэрэлт тоос
+      const dot=haloTex(), lite=!!window.__lite;
+      for(let i=0;i<(lite?10:18);i++){ const s=new THREE.Sprite(new THREE.SpriteMaterial({map:st, transparent:true, blending:THREE.AdditiveBlending, depthWrite:false, opacity:0}));
+        s.position.set((Math.random()-.5)*.62, (Math.random()-.5)*2.3, .55); s.userData={k:'glint', p:Math.random()*20, sp:.35+Math.random()*.9, sz:.16+Math.random()*.2, rot:(Math.random()-.5)*.6}; s.renderOrder=6; sc.add(s); sparks.push(s); }
+      for(let i=0;i<(lite?8:16);i++){ const s=new THREE.Sprite(new THREE.SpriteMaterial({map:st, transparent:true, blending:THREE.AdditiveBlending, depthWrite:false, opacity:0}));
+        const a=Math.random()*Math.PI*2, r=.75+Math.random()*.45; s.position.set(Math.cos(a)*r*.75, Math.sin(a)*r*1.5, (Math.random()-.5)*.8); s.userData={k:'star', p:Math.random()*20, sp:.4+Math.random()*.8, sz:.07+Math.random()*.1, rot:0}; s.renderOrder=6; sc.add(s); sparks.push(s); }
+      // хайрын зөөлөн долгион: дулаан гэрэл чулуунаас аажуухан цацарна
+      for(let i=0;i<3;i++){ const w=new THREE.Sprite(new THREE.SpriteMaterial({map:dot, color:0xffb89a, transparent:true, blending:THREE.AdditiveBlending, depthWrite:false, opacity:0}));
+        w.position.set(0,-.08,-.4); w.userData={k:'wave', p:i/3}; w.renderOrder=0; sc.add(w); sparks.push(w); }
+      for(let i=0;i<(lite?14:34);i++){ const s=new THREE.Sprite(new THREE.SpriteMaterial({map:dot, transparent:true, blending:THREE.AdditiveBlending, depthWrite:false, opacity:0}));
+        s.position.set((Math.random()-.5)*1.7, -1.7+Math.random()*3.4, (Math.random()-.5)*1.2); s.userData={k:'dust', p:Math.random()*20, sp:.08+Math.random()*.16, sz:.025+Math.random()*.045, sw:Math.random()*6}; s.renderOrder=5; sc.add(s); sparks.push(s); }
       const cvs=R.domElement;
       // нэг хуруу: эргүүлэх · хоёр хуруу: томруулах / жижигрүүлэх
       const pts=new Map(); let pinch=null;
@@ -397,7 +406,24 @@ window.Gem = (function(){
     dl.position.set(Math.cos(s*.4)*3, 3, Math.sin(s*.4)*3+2);
     pulseHalo(cur,s);
     const u=cur.userData; if(u.glyph) u.glyph.material.opacity=u.glyph.userData.base*(.82+.18*Math.sin(s*1.7));
-    sparks.forEach(sp=>{ const d=sp.userData, v=Math.pow(Math.max(0,Math.sin(s*d.sp+d.p)),10); sp.material.opacity=0; sp.scale.setScalar(d.sz*(.5+v)); });
+    const dt=Math.min(.05, s-(frame.ls||s)); frame.ls=s; const sh=1/Math.max(1,zoom*.8);
+    sparks.forEach(sp=>{ const d=sp.userData, m=sp.material;
+      if(d.k==='wave'){
+        const ph=(s/5.5+d.p)%1, e=Math.sin(ph*Math.PI);
+        m.opacity=(cur&&!cur.userData.locked)?e*e*.32*sh:0; const sz=1.2+ph*3.;
+        sp.scale.set(sz, sz*1.35, 1); return;
+      }
+      if(d.k==='dust'){
+        sp.position.y+=dt*d.sp; sp.position.x+=Math.sin(s*.6+d.sw)*dt*.04;
+        if(sp.position.y>1.8){ sp.position.y=-1.7; sp.position.x=(Math.random()-.5)*1.7; }
+        const edge=Math.min(1,(1.8-sp.position.y)*1.5, (sp.position.y+1.7)*1.5);
+        m.opacity=(cur&&!cur.userData.locked)?edge*(.35+.35*Math.sin(s*2.+d.p))*sh:0; sp.scale.setScalar(d.sz);
+      } else {
+        const v=Math.pow(Math.max(0,Math.sin(s*d.sp+d.p)), d.k==='glint'?16:8);
+        m.opacity=(cur&&!cur.userData.locked)?v*(d.k==='glint'?1:.8)*sh:0; m.rotation=d.rot+s*.25;
+        sp.scale.setScalar(d.sz*(.3+v*1.3));
+      }
+    });
     TIME.value=s;
     R.render(sc,cam);
   }
@@ -426,7 +452,9 @@ window.Gem = (function(){
     const g=await build(o, env); if(host!==el){ return true; }
     g.userData.locked=!!o.locked; g.userData.glyph.userData.base=g.userData.glyph.material.opacity;
     if(g.userData.halo){ g.userData.halo.userData.base=1.95; }
-    cur=g; sc.add(g); zoom=zoomT=1; rx=.1; vy=0; drag=null; target=0;
+    cur=g; sc.add(g); zoom=zoomT=1;
+    { const tint=new THREE.Color(g.userData.gc).lerp(new THREE.Color(0xffd2b8),.6), warm=new THREE.Color(g.userData.gc).lerp(new THREE.Color(0xffb08a),.65);
+      sparks.forEach(sp=>sp.material.color.copy(sp.userData.k==='glint'?new THREE.Color(0xfff6ee):sp.userData.k==='wave'?warm:tint)); } rx=.1; vy=0; drag=null; target=0;
     if(celebrate){ spin=1; born=performance.now(); } else { ry=-.9; spin=0; cur.scale.setScalar(1); }
     if(!raf) raf=requestAnimationFrame(frame);
     return true;
