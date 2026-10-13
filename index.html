@@ -2028,7 +2028,7 @@ function renderMed(){
     const openNow = !!(sess && sess.open && sess.e<sess.T);
     if(openNow){
       const e=sess.e, isL=sess.open==='light', other=isL?Math.round(e/PHI):Math.round(e*PHI);
-      $('phase').textContent=isL?tr('Гэрэл · хугацаагүй','Light · no limit'):tr('Аялгуу · хугацаагүй','Sound · no limit'); $('phase').style.color=isL?'var(--light)':'var(--sound)';
+      $('phase').textContent=isL?tr('Гэрэл ∞','Light ∞'):tr('Аялгуу ∞','Sound ∞'); $('phase').style.color=isL?'var(--light)':'var(--sound)';
       $('remain').textContent=fmt(e);
       $('sub').classList.remove('tapGo');
       $('sub').textContent= e>0 ? (isL?tr(`аялгуу ≈ ${fmt(other)}`,`sound ≈ ${fmt(other)}`):tr(`гэрэл ≈ ${fmt(other)}`,`light ≈ ${fmt(other)}`)) : '';
@@ -2047,7 +2047,7 @@ function renderMed(){
       $('remain').textContent = m===0 ? '00:00' : m>=60 ? `${Math.floor(m/60)}${tr('ц','h')} ${pad2(m%60)}${tr('м','m')}` : `${m} ${tr('мин','min')}`;
       const noLim = m===0 && (S.freeMode==='light'||S.freeMode==='sound');
       if(noLim){ $('remain').textContent='∞'; setRing(0,0); }
-      $('sub').textContent = noLim ? tr('шууд дарвал хугацаагүй · эсвэл цагираг эргүүлж тохируул','tap to start with no limit · or turn the ring') : m===0 ? tr('цагираг дээр гулсуулж сонго','slide around the ring') : tr('голд нь дарж эхлүүл','tap the center to start');
+      $('sub').textContent = noLim ? tr('дарж эхлүүл','tap to start') : m===0 ? tr('цагираг дээр гулсуулж сонго','slide around the ring') : tr('голд нь дарж эхлүүл','tap the center to start');
       $('sub').classList.toggle('tapGo', m>0||noLim);
     } else { $('sub').classList.remove('tapGo'); setRing(Math.min(sp.e,sp.Tl)/sp.T, Math.max(0,sp.e-sp.Tl)/sp.T); }
     if(!openNow){ $('sitToSound').hidden=true; }
@@ -3508,7 +3508,7 @@ async function openGroup(id){
 function socBadges(){ if(!socOn()||!S||!S.soc) return; chatUnread(); rpc('my_friends').then(l=>{ FR.list=l; FR.incoming=l.filter(f=>f.state==='incoming').length; }).catch(()=>{}); rpc('my_invites').then(l=>{ GR.inv=l; }).catch(()=>{}); }
 
 /* ===================== шинэчлэлийн мэдэгдэл (Android) ===================== */
-const APP_VER=52, SITE='https://otgoo-cell.github.io/gegee';
+const APP_VER=53, SITE='https://otgoo-cell.github.io/gegee';
 async function checkUpdate(){
   if(!N.openUrl) return;
   try{ const r=await fetch(SITE+'/version.json?t='+Date.now(),{cache:'no-store'}); const v=await r.json();
@@ -3579,7 +3579,7 @@ async function pollChat(first){
 
 /* ===================== Санал хүсэлт ===================== */
 const FB={kind:'bug', newCount:0, mine:null, seenAt:0};
-const APP_NAME='6.2';
+const APP_NAME='6.3';
 const FB_K={bug:['🐞',()=>tr('Алдаа','Problem')], idea:['💡',()=>tr('Санаа','Idea')], other:['💬',()=>tr('Бусад','Other')]};
 const fbPlat=()=>{ try{ if(N.hasBg && N.hasBg()) return 'android-app'; }catch(e){} return /iPhone|iPad|iPod/.test(navigator.userAgent)?'ios-pwa':'web'; };
 const fbDev=()=>`${navigator.userAgent.slice(0,260)} | ${screen.width}x${screen.height}@${window.devicePixelRatio||1} | ${LANG} | ${view}`;
