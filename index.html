@@ -984,6 +984,9 @@ body:has(#doneBar:not([hidden])) .toast{bottom:calc(148px + env(safe-area-inset-
 .quote.empty{background:none!important;border:0!important;box-shadow:none!important;-webkit-backdrop-filter:none!important;backdrop-filter:none!important;text-align:center}
 #ptr{position:fixed;left:50%;top:calc(env(safe-area-inset-top,0px) + 6px);z-index:60;width:38px;height:38px;border-radius:50%;display:flex;align-items:center;justify-content:center;background:var(--glass);border:1px solid var(--edge);box-shadow:var(--shadow);-webkit-backdrop-filter:blur(14px);backdrop-filter:blur(14px);color:var(--accent);font-size:20px;opacity:0;transform:translate(-50%,-50px);pointer-events:none;transition:opacity .15s}
 #ptr.ready{color:var(--fg)}#ptr.spin i{display:block;animation:ptrSpin .8s linear infinite}@keyframes ptrSpin{to{transform:rotate(360deg)}}
+.pCalH{display:flex;align-items:center;justify-content:space-between;margin-bottom:8px}.pCalH b{font-family:var(--serif);font-size:17px;font-weight:500}.pcNav{width:34px;height:34px;padding:0;border-radius:50%;font-size:18px}.pcNav:disabled{opacity:.3}
+.pcGrid{padding:0!important;background:none!important;border:0!important;box-shadow:none!important;-webkit-backdrop-filter:none!important;backdrop-filter:none!important}.pcGrid .cell{cursor:default}
+.pcSum{display:flex;justify-content:center;gap:16px;margin-top:10px;font-size:12.5px;color:var(--muted)}.pcSum b{color:var(--fg);font-weight:600}
 </style>
 </head>
 <body>
@@ -3285,6 +3288,30 @@ function drawSoc(){
 function openSocSheet(html){ const el=$('socSheet'); $('socSheetIn').innerHTML=html; el.hidden=false; document.body.classList.add('sheetOpen'); el.scrollTop=0; requestAnimationFrame(()=>el.classList.add('on')); const x=$('socX'); if(x) x.onclick=closeSocSheet; }
 function closeSocSheet(){ if(CH.room) stopChat(); const el=$('socSheet'); el.classList.remove('on'); document.body.classList.remove('sheetOpen'); setTimeout(()=>{ if(!el.classList.contains('on')) el.hidden=true; },320); }
 const sheetHead=t=>`<header><h1>${t}</h1><button class="sheetX" id="socX" aria-label="${tr('Хаах','Close')}"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><path d="M6 6l12 12M18 6L6 18"/></svg></button></header>`;
+// Бусдын сарын солонгон хуанли: жинхэнэ нэргүй, зөвхөн суултын дүн
+async function profCal(k, who, cur){
+  const now=new Date(); cur=cur||new Date(now.getFullYear(),now.getMonth(),1);
+  const y=cur.getFullYear(), m=cur.getMonth(), g=$('pcGrid'); if(!g) return;
+  $('pcT').textContent=tr(`${y} оны ${MN[m]}`,`${MN[m]} ${y}`);
+  const nx=$('pcNext'); nx.disabled = y===now.getFullYear() && m===now.getMonth();
+  $('pcPrev').onclick=()=>profCal(k,who,new Date(y,m-1,1)); nx.onclick=()=>{ if(!nx.disabled) profCal(k,who,new Date(y,m+1,1)); };
+  let r=null; try{ r=await sreq('/rest/v1/rpc/profile_month',{k_:k, who, mon:key(cur)}); }catch(e){}
+  if(!$('pcGrid')) return;
+  const map={}; ((r&&r.days)||[]).forEach(x=>map[String(x.d).slice(0,10)]=x.m);
+  const since=r&&r.since?String(r.since).slice(0,10):null, t=today();
+  const first=new Date(y,m,1), last=new Date(y,m+1,0), lead=(first.getDay()+6)%7;
+  let h=DN.map(d=>`<div class="h">${d}</div>`).join(''); for(let i=0;i<lead;i++) h+='<div class="cell empty"></div>';
+  let full=0, tot=0, rbn=0;
+  for(let d=1; d<=last.getDate(); d++){
+    const dk=key(new Date(y,m,d)), mn=map[dk]||0, sec=mn*60, rb=mn>=720;
+    const st = dk>t ? 'fut' : (!since||dk<since) && !mn ? 'pre' : mn>=150 ? 'full' : mn>0 ? 'short' : 'none';
+    if(mn>=150) full++; tot+=mn; if(rb) rbn++;
+    const rw=rewardsFor(sec).map(x=>'rw-'+x.id).join(' ')+(rb?' rw-rainbow':'');
+    h+=`<div class="cell ${st} ${dk===t?'today':''} ${rw}">${rb?`<i class="rbring"></i><i class="rbcore"></i><i class="rbow">${IC('rainbow')}</i>`:''}${badges(sec)}${st!=='full'&&mn?`<span class="fill" style="height:${Math.min(100,mn/150*100)}%"></span>`:''}<span class="n">${d}</span>${mn&&st!=='full'?`<span class="m">${mn}</span>`:''}</div>`;
+  }
+  $('pcGrid').innerHTML=h;
+  $('pcSum').innerHTML=`<span>☀️ ${tr('Бүрэн','Full')} <b>${full}</b> ${tr('өдөр','d')}</span><span>⏱ <b>${hmin(tot)}</b></span>${rbn?`<span>🌈 <b>${rbn}</b></span>`:''}`;
+}
 async function openProfile(nick, pk, rt){
   let T=pk?tr('Профайл','Profile'):esc(nick);
   openSocSheet(sheetHead(T)+`<div class="socEmpty">${tr('Ачааллаж байна...','Loading...')}</div>`);
@@ -3300,7 +3327,7 @@ async function openProfile(nick, pk, rt){
     const st=(v,l)=>`<div class="pStat"><b>${v}</b><span>${l}</span></div>`;
     const isMe=S.soc && p.nick===S.soc.nick, tier=Number.isFinite(rt)?rt:profTier(p); if(pk) T=(p.nick&&p.nick!=='•••••••')?esc(p.nick):tierName(tier); if(isMe) SOC.myTier=tier;
     $('socSheetIn').innerHTML=sheetHead(pk&&!isMe?T:esc(p.nick))+`
-      <div class="pHero">${avatar(p.avatar, tier, (p.gems||[]).map(g=>({s:g.s,p:g.p})), 'lg')}<div class="pTier">✦ ${tierName(tier)}</div></div><div class="pTop"><div><b>${p.country?flag(p.country)+' '+cname(p.country):'🌐 '+tr('Нууц','Private')}</b><small>${tr('Нэгдсэн','Joined')} ${String(p.since).replace(/-/g,'.')}</small></div></div>
+      <div class="pHero">${avatar(p.avatar, tier, (p.gems||[]).map(g=>({s:g.s,p:g.p})), 'lg')}<div class="pTier">✦ ${tierName(tier)}${(p.awards||[]).length?` · 🏆 ${(p.awards||[]).length}`:''}${(p.gem_count||(p.gems||[]).length)?` · 💎 ${p.gem_count||p.gems.length}`:''}</div></div><div class="pTop"><div><b>${p.country?flag(p.country)+' '+cname(p.country):'🌐 '+tr('Нууц','Private')}</b><small>${tr('Нэгдсэн','Joined')} ${String(p.since).replace(/-/g,'.')}</small></div></div>
       ${cupShelf(p.awards)}
       <div class="pGrid">
         ${st(p.routine!=null?hm(p.routine):'—',tr('Дадлын цаг','Practice time'))}
@@ -3311,7 +3338,7 @@ async function openProfile(nick, pk, rt){
         ${st(hmin(p.total_min),tr('Нийт суусан','Total sat'))}
       </div>
       ${(p.gems&&p.gems.length)?`<div class="glass pChart"><b>💎 ${tr('Шагналын чулуу','Award gems')} · ${p.gem_count||p.gems.length}</b><div class="pGems">${p.gems.slice(0,30).map((g,ix)=>`<div class="pGem" data-ix="${ix}"><img alt="" src="data:image/gif;base64,R0lGODlhAQABAAAAACH5BAEKAAEALAAAAAABAAEAAAICTAEAOw=="><span>${esc(gemName(g))}${g.c>1?` ×${g.c}`:''}</span></div>`).join('')}</div></div>`:''}
-      <div class="glass pChart"><b>${tr('Сүүлийн 30 хоног','Last 30 days')}</b><svg viewBox="0 0 300 72" preserveAspectRatio="none">${bars}<line x1="0" x2="300" y1="${70-Math.round(150/mx*64)}" y2="${70-Math.round(150/mx*64)}" class="goal"/></svg><small>${tr('Шугам: өдрийн 150 минут','Line: the daily 150 minutes')}</small></div>
+      <div class="glass pChart pCal"><div class="pCalH"><button class="pcNav" id="pcPrev" aria-label="prev">‹</button><b id="pcT"></b><button class="pcNav" id="pcNext" aria-label="next">›</button></div><div class="cal pcGrid" id="pcGrid"><div class="socEmpty">${tr('Ачааллаж байна...','Loading...')}</div></div><div class="pcSum" id="pcSum"></div></div>
       <div class="glass pChart"><b>${tr('Хэдэн цагт суудаг вэ','When they sit')}</b><svg viewBox="0 0 288 46" preserveAspectRatio="none">${hbars}</svg><div class="pHrs"><span>00</span><span>06</span><span>12</span><span>18</span><span>24</span></div></div>
       <div id="relBox"></div>
       <p class="hint" style="text-align:center">${tr('Хэн болох нь нууц. Зөвхөн дадлыг нь судлах боломжтой.','Who they are stays private. Only the practice is shared.')}</p>`;
@@ -3321,6 +3348,7 @@ async function openProfile(nick, pk, rt){
     if(p.gems && p.gems.length && window.Gem && !LITE) $('socSheetIn').querySelectorAll('.pHero .avG').forEach((el,ix)=>{ const g=p.gems[ix]; if(!g) return; const a={id:g.i,shape:g.s,pal:g.p,num:g.n,unit:g.u,glyph:g.g};
       Gem.thumb(gemSpec(a,false), 'pf'+gemKey(a,false)).then(u=>{ if(u){ el.style.backgroundImage=`url(${u})`; el.classList.add('img'); } }); });
     if(!pk && p.nick.toLowerCase()!==S.soc.nick.toLowerCase()) drawRel(p.nick);
+    profCal(pk||null, pk?null:p.nick);
   }catch(e){ $('socSheetIn').innerHTML=sheetHead(T)+`<div class="socEmpty">${esc(socErr(e))}</div>`; $('socX').onclick=closeSocSheet; }
 }
 
@@ -3625,7 +3653,7 @@ async function openGroup(id){
 function socBadges(){ if(!socOn()||!S||!S.soc) return; chatUnread(); rpc('my_friends').then(l=>{ FR.list=l; FR.incoming=l.filter(f=>f.state==='incoming').length; }).catch(()=>{}); rpc('my_invites').then(l=>{ GR.inv=l; }).catch(()=>{}); }
 
 /* ===================== шинэчлэлийн мэдэгдэл (Android) ===================== */
-const APP_VER=60, SITE='https://otgoo-cell.github.io/gegee';
+const APP_VER=61, SITE='https://otgoo-cell.github.io/gegee';
 async function checkUpdate(){
   if(!N.openUrl) return;
   try{ const r=await fetch(SITE+'/version.json?t='+Date.now(),{cache:'no-store'}); const v=await r.json();
@@ -3697,7 +3725,7 @@ async function pollChat(first){
 
 /* ===================== Санал хүсэлт ===================== */
 const FB={kind:'bug', newCount:0, mine:null, seenAt:0};
-const APP_NAME='7.0';
+const APP_NAME='7.1';
 const FB_K={bug:['🐞',()=>tr('Алдаа','Problem')], idea:['💡',()=>tr('Санаа','Idea')], other:['💬',()=>tr('Бусад','Other')]};
 const fbPlat=()=>{ try{ if(N.hasBg && N.hasBg()) return 'android-app'; }catch(e){} return /iPhone|iPad|iPod/.test(navigator.userAgent)?'ios-pwa':'web'; };
 const fbDev=()=>`${navigator.userAgent.slice(0,260)} | ${screen.width}x${screen.height}@${window.devicePixelRatio||1} | ${LANG} | ${view}`;
