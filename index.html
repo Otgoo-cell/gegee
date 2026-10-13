@@ -972,6 +972,9 @@ body:has(#doneBar:not([hidden])) .toast{bottom:calc(148px + env(safe-area-inset-
 .toast.on{opacity:1;transform:translate(-50%,0)}
 
 @media (prefers-reduced-motion:reduce){*,*::before,*::after{animation:none!important;transition:none!important}}
+.rcBox{text-align:center}.rcCode{font-family:var(--thin);font-weight:300;font-size:44px;letter-spacing:.12em;margin:14px 0;font-variant-numeric:tabular-nums;color:var(--fg)}
+.acRc{display:flex;justify-content:space-between;align-items:center;padding:10px 12px;margin:4px 0 8px;border-radius:12px;background:var(--glass);border:1px dashed var(--edge)}.acRc span{font-size:13px;color:var(--muted)}.acRc b{font-family:var(--thin);font-weight:300;font-size:20px;letter-spacing:.1em}
+.admMv{font-size:12px;color:#c0632b;margin-top:2px}
 </style>
 </head>
 <body>
@@ -3020,7 +3023,8 @@ const jwtSub=t=>{ try{ return JSON.parse(atob(t.split('.')[1].replace(/-/g,'+').
 async function socLogin(){
   if(!S || !S.acct) return false;
   if(socTok && Date.now()-socTokAt<45*60e3) return true;
-  const j=await sreq('/auth/v1/token?grant_type=password',{email:S.acct.e,password:S.acct.p});
+  let j; try{ j=await sreq('/auth/v1/token?grant_type=password',{email:S.acct.e,password:S.acct.p}); }
+  catch(e){ if(S.soc && e.status===400 && /invalid/i.test(String(e.message))){ showMoved(); throw new Error('MOVED'); } throw e; }
   socTok=j.access_token; socTokAt=Date.now(); return true;
 }
 function socErr(e){
@@ -3028,10 +3032,11 @@ function socErr(e){
   if(/NICK_REAL_NAME/.test(m)) return tr('Хоч таны жинхэнэ нэртэй төстэй байна. Өөр хоч сонгоорой.','Your nickname looks like your real name. Please choose another.');
   if(e&&e.code==='23505'||/profiles_nick_ci|duplicate/.test(m)) return tr('Энэ хочийг өөр хүн авсан байна.','Someone already has this nickname.');
   if(/nick_chars|nick_len/.test(m)) return tr('Хоч 3–20 тэмдэгт, зөвхөн үсэг, тоо, _ . - байна.','Nickname: 3–20 letters, digits, _ . -');
+  if(/MOVED/.test(m)) return tr('Таны бүртгэлээр өөр утаснаас нэвтэрсэн байна.','Your account was signed in on another phone.');
   if(/CLAIM_LIMIT/.test(m)) return tr('Олон удаа буруу оруулсан тул 1 цагийн дараа дахин оролдоно уу.','Too many tries. Please try again in an hour.');
   if(/CLAIM_NONE/.test(m)) return tr('Ийм хочтой бүртгэл олдсонгүй.','No account with this nickname.');
   if(/CLAIM_NOPHONE/.test(m)) return tr('Энэ бүртгэлд утас оруулаагүй тул өөрөө сэргээх боломжгүй. Апп эзэмшигчид хандана уу.','This account has no phone, so it cannot be restored here. Please contact the app owner.');
-  if(/CLAIM_MISMATCH/.test(m)) return tr('Нэр эсвэл утасны дугаар таарахгүй байна.','Name or phone does not match.');
+  if(/CLAIM_MISMATCH/.test(m)) return tr('Нэр, утас эсвэл сэргээх код таарахгүй байна.','Name, phone or recovery code does not match.');
   if(/Failed to fetch|NetworkError|Load failed/.test(m)) return tr('Интернэт холболтоо шалгана уу.','Check your internet connection.');
   return tr('Алдаа гарлаа: ','Error: ')+m;
 }
@@ -3061,16 +3066,49 @@ function mergeDays(T, arr){
     if(!first||k<first) first=k; });
   if(first && (!T.start || first<T.start)) T.start=first;
 }
-async function socClaim(nick, real, phone){
-  const pass=rid(28), j=await sreq('/rest/v1/rpc/claim_profile',{nick_:nick, real_:real, phone_:phone, newpass:pass});
+async function socClaim(nick, real, phone, code){
+  const pass=rid(28), j=await sreq('/rest/v1/rpc/claim_profile',{nick_:nick, real_:real, phone_:phone, code_:code, newpass:pass, my_iid:iid()});
   if(!j || j.err){ const e=new Error(j&&j.err||'CLAIM'); throw e; }
   const T=T_(); T.acct={e:j.email, p:pass};
   const t=await sreq('/auth/v1/token?grant_type=password',{email:j.email,password:pass}); socTok=t.access_token; socTokAt=Date.now();
-  T.soc={nick:j.nick, country:j.country, share:j.share!==false, uid:j.uid, real, phone};
+  T.soc={nick:j.nick, country:j.country, share:j.share!==false, uid:j.uid, real, phone, rcode:j.rcode, rcodeSeen:false};
   mergeDays(T, j.days); try{ localStorage.removeItem('gegee_jdraft'); }catch(e){}
   saveT(); if(S){ await socSync(true); }
   try{ pingInstall(true); }catch(e){}
   return j;
+}
+function hasLocalData(){ return !!(S && (Object.values(S.days||{}).some(d=>(d.l||0)+(d.s||0)>0) || (S.notes||[]).length)); }
+// Энэ утсан дээрх бүртгэлээр өөр утаснаас нэвтэрсэн үед
+function showMoved(){
+  if(showMoved.on || !S || !S.soc) return; showMoved.on=true;
+  openSocSheet(sheetHead(tr('Бүртгэл өөр утсанд шилжлээ','Account moved'))+`<div class="glass socIntro">
+    <p>${tr(`<b>${esc(S.soc.nick)}</b> бүртгэлээр тань өөр утаснаас нэвтэрлээ.`,`Someone signed in to <b>${esc(S.soc.nick)}</b> on another phone.`)}</p>
+    <p class="hint">${tr('Хэрэв тэр нь та өөрөө байсан бол энэ утсыг бүртгэлээс салгана уу. Та биш бол доорх мэдээллээр буцааж аваарай. Тэгвэл нөгөө утас бүртгэлээс гарна.','If that was you, unlink this phone. If not, take it back below and the other phone will be signed out.')}</p>
+    <label class="socF"><span>${tr('Жинхэнэ нэр','Real name')}</span><input id="mvReal" maxlength="60" value="${esc(S.soc.real||'')}"></label>
+    <label class="socF"><span>${tr('Утас','Phone')}</span><input id="mvPhone" maxlength="20" inputmode="tel" value="${esc(S.soc.phone||'')}"></label>
+    <label class="socF"><span>${tr('Сэргээх код','Recovery code')}</span><input id="mvCode" maxlength="7" inputmode="numeric" value="${esc(S.soc.rcode||'')}"></label>
+    <div class="socMsg" id="mvMsg"></div>
+    <button class="main" id="mvGo">${tr('Бүртгэлээ буцааж авах','Take my account back')}</button>
+    <button class="ghostlink" id="mvMine">${tr('Би өөрөө байсан, энэ утсыг салгах','It was me, unlink this phone')}</button></div>`);
+  $('socX').onclick=()=>{ showMoved.on=false; closeSocSheet(); };
+  $('mvMine').onclick=()=>{ delete S.soc; delete S.acct; socTok=null; save(); showMoved.on=false; closeSocSheet(); SOC.rows=null; try{ renderSoc(); }catch(e){} toast(tr('Энэ утас бүртгэлээс салгагдлаа','This phone was unlinked')); };
+  $('mvGo').onclick=async()=>{ $('mvGo').disabled=true; $('mvMsg').textContent=tr('Түр хүлээнэ үү...','One moment...');
+    try{ await socClaim(S.soc.nick, $('mvReal').value.trim(), $('mvPhone').value.trim(), $('mvCode').value.trim()); showMoved.on=false; closeSocSheet(); SOC.rows=null; try{ renderSoc(); }catch(e){} rcodeSheet(); }
+    catch(e){ $('mvMsg').textContent=socErr(e); $('mvGo').disabled=false; } };
+}
+// Сэргээх кодоо нэг удаа заавал харуулна
+async function rcodeSheet(force){
+  if(!S || !S.soc || (!force && S.soc.rcodeSeen) || !$('socSheet').hidden && !force) return;
+  try{ if(!S.soc.rcode){ await socLogin(); S.soc.rcode=await sreq('/rest/v1/rpc/my_rcode',{}); save(); } }catch(e){ return; }
+  if(!S.soc.rcode) return;
+  const c=String(S.soc.rcode);
+  openSocSheet(sheetHead(tr('Сэргээх код','Recovery code'))+`<div class="glass socIntro rcBox">
+    <p class="hint">${tr('Утсаа солих, апп-аа дахин суулгах үед бүртгэлээ энэ кодоор буцааж авна. Зураг дарж эсвэл бичиж аваарай.','Use this code to get your account back on a new phone or after reinstalling. Take a screenshot or write it down.')}</p>
+    <div class="rcCode">${c.slice(0,3)} ${c.slice(3)}</div>
+    <p class="hint">${tr('Тохиргоо → Миний бүртгэл хэсгээс дахин харж болно. Хэнд ч бүү хэлээрэй.','You can see it again in Settings → My account. Do not share it.')}</p>
+    <button class="main" id="rcOk">${tr('Тэмдэглэж авлаа','Got it')}</button></div>`);
+  const done=()=>{ S.soc.rcodeSeen=true; save(); closeSocSheet(); };
+  $('rcOk').onclick=done; $('socX').onclick=done;
 }
 // Апп анх нээгдэхэд, код тохируулахаас ч өмнө бүртгүүлнэ
 function preJoin(){
@@ -3093,7 +3131,7 @@ async function socSync(force){
   }catch(e){}
 }
 async function socLoad(){
-  if(SOC.busy) return; SOC.busy=true; SOC.err=''; drawSoc();
+  if(SOC.busy) return; SOC.busy=true; SOC.err=''; drawSoc(); if(!S.soc.rcodeSeen) setTimeout(()=>rcodeSheet(),900);
   try{
     await socLogin();
     SOC.rows=await sreq('/rest/v1/rpc/board2',{period:SOC.p, ctry:SOC.c==='all'?null:SOC.c, lim:100, my_iid:iid()});
@@ -3153,22 +3191,25 @@ function drawJoin(box, first){
 function drawLogin(box, first){
   box=box||$('socBody'); let dr={}; try{ dr=JSON.parse(localStorage.getItem('gegee_jdraft')||'{}'); }catch(e){}
   box.innerHTML=(first?`<header><h1>${tr('Тавтай морил','Welcome')}</h1></header>`:'')+`<div class="glass socIntro">
-    <div class="socHero"><span class="socOrb">✦</span><div><b>${tr('Бүртгэлтэй хаягаар нэвтрэх','Sign in to your account')}</b><p class="hint">${tr('Бүртгүүлэхдээ оруулсан хоч, жинхэнэ нэр, утасны дугаараа бичнэ үү. Таны суулт, шагнал, групп бүгд хэвээрээ үлдэнэ.','Enter the nickname, real name and phone you joined with. Your sittings, awards and groups stay as they were.')}</p></div></div>
+    <div class="socHero"><span class="socOrb">✦</span><div><b>${tr('Бүртгэлтэй хаягаар нэвтрэх','Sign in to your account')}</b><p class="hint">${tr('Бүртгүүлэхдээ оруулсан хоч, нэр, утас болон сэргээх кодоо бичнэ үү. Таны суулт, шагнал, групп бүгд хэвээрээ үлдэнэ.','Enter the nickname, real name and phone you joined with. Your sittings, awards and groups stay as they were.')}</p></div></div>
     <label class="socF"><span>${tr('Хоч','Nickname')}</span><input id="lNick" maxlength="20" autocomplete="off"></label>
     <label class="socF"><span>${tr('Жинхэнэ нэр','Real name')}</span><input id="lReal" maxlength="60" autocomplete="name"></label>
     <label class="socF"><span>${tr('Утас','Phone')}</span><input id="lPhone" maxlength="20" inputmode="tel" autocomplete="tel"></label>
+    <label class="socF"><span>${tr('Сэргээх код (6 оронтой)','Recovery code (6 digits)')}</span><input id="lCode" maxlength="7" inputmode="numeric" autocomplete="off"></label>
+    <p class="hint socNote">${tr('Код нь хуучин утсан дээр тань Тохиргоо → Миний бүртгэл хэсэгт бий. Кодоо мэдэхгүй бол апп эзэмшигчид хандаарай.','Find the code on your old phone under Settings → My account. If you do not have it, contact the app owner.')}</p>
     <div class="socMsg" id="lMsg"></div>
     <button class="main" id="lGo">${tr('Нэвтрэх','Sign in')}</button>
     <button class="ghostlink" id="lBack">${tr('Шинээр бүртгүүлэх','Join as new')}</button>
-    <p class="hint socNote">${tr('Өмнөх утсан дээрх апп чинь энэ бүртгэлээс гарна.','The app on your previous phone will be signed out of this account.')}</p>
+    <p class="hint socNote">${tr('Нэвтэрсний дараа өмнөх утас тань бүртгэлээс гарч, шинэ сэргээх код өгнө.','After signing in, your previous phone is signed out and you get a new recovery code.')}</p>
   </div>`;
   $('lNick').value=dr.jNick||''; $('lReal').value=dr.jReal||''; $('lPhone').value=dr.jPhone||'';
   $('lBack').onclick=()=>drawJoin(box, first);
   $('lGo').onclick=async()=>{
-    const nick=$('lNick').value.trim(), real=$('lReal').value.trim(), ph=$('lPhone').value.trim();
-    if(nick.length<3 || real.length<2 || ph.replace(/\D/g,'').length<6){ $('lMsg').textContent=tr('Гурван талбарыг бүгдийг нь бөглөнө үү.','Please fill in all three fields.'); return; }
+    const nick=$('lNick').value.trim(), real=$('lReal').value.trim(), ph=$('lPhone').value.trim(), code=$('lCode').value.replace(/\D/g,'');
+    if(hasLocalData()){ $('lMsg').textContent=tr('Энэ утсанд өөр хүний суулт, тэмдэглэл хадгалагдсан байна. Хоёр хүний мэдээлэл холилдохгүйн тулд өөрийнхөө утсаар эсвэл шинээр суулгасан апп дээр нэвтэрнэ үү.','This phone already holds someone else\'s sittings or notes. To keep them separate, sign in on your own phone or a fresh install.'); return; }
+    if(nick.length<3 || real.length<2 || ph.replace(/\D/g,'').length<6 || code.length!==6){ $('lMsg').textContent=tr('Бүх талбарыг бөглөнө үү.','Please fill in every field.'); return; }
     $('lGo').disabled=true; $('lMsg').textContent=tr('Түр хүлээнэ үү...','One moment...');
-    try{ const j=await socClaim(nick, real, ph); SOC.rows=null; SOC.c='all';
+    try{ const j=await socClaim(nick, real, ph, code); SOC.rows=null; SOC.c='all';
       if(first){ SOC.mustJoin=false; closeSocSheet(); } if(S){ save(); renderSoc(); try{ renderMed(); }catch(e){} }
       toast(tr(`Буцаад тавтай морил, ${j.nick}`,`Welcome back, ${j.nick}`)); }
     catch(e){ $('lMsg').textContent=socErr(e); $('lGo').disabled=false; }
@@ -3296,7 +3337,7 @@ async function openAdmin(){
   openSocSheet(sheetHead(tr('Бүх бүртгэл','All members'))+`<div class="socEmpty">${tr('Ачааллаж байна...','Loading...')}</div>`);
   try{
     await socLogin(); const u=await sreq('/rest/v1/rpc/admin_users',{});
-    const rows=u.map(x=>`<div class="glass admRow${x.hidden?' off':''}"><div><b>${esc(x.nick)}</b> <small>${flag(x.country)}</small><div class="hint">${esc(x.real_name||'—')} · ${esc(x.phone||'—')}</div><small class="muted">${String(x.created_at).slice(0,10)} · ${hmin(x.total_min)} · ${tr('сүүлд','last')} ${String(x.last_seen).slice(0,10)}</small></div>
+    const rows=u.map(x=>`<div class="glass admRow${x.hidden?' off':''}"><div><b>${esc(x.nick)}</b> <small>${flag(x.country)}</small><div class="hint">${esc(x.real_name||'—')} · ${esc(x.phone||'—')} · ${tr('код','code')} ${esc(x.rcode||'—')}</div>${x.moves?`<div class="admMv">⇄ ${tr(`${x.moves} удаа өөр утсанд шилжсэн, сүүлд ${String(x.moved_at).slice(0,10)}`,`moved ${x.moves}× · last ${String(x.moved_at).slice(0,10)}`)}</div>`:''}<small class="muted">${String(x.created_at).slice(0,10)} · ${hmin(x.total_min)} · ${tr('сүүлд','last')} ${String(x.last_seen).slice(0,10)}</small></div>
       <div class="admBtns"><button data-id="${x.id}" data-a="hide">${x.hidden?tr('Харуулах','Unhide'):tr('Нуух','Hide')}</button><button data-id="${x.id}" data-a="rename">${tr('Хоч солиулах','Reset nick')}</button></div></div>`).join('');
     $('socSheetIn').innerHTML=sheetHead(tr('Бүх бүртгэл','All members'))+`<p class="hint">${tr(`Нийт ${u.length} хүн. Жинхэнэ нэр, утсыг зөвхөн та харж байна.`,`${u.length} members. Only you can see real names and phones.`)}</p>`+rows;
     $('socX').onclick=closeSocSheet;
@@ -3324,8 +3365,10 @@ function drawAcct(){
     <label>${tr('Улс','Country')}<select id="acCtry">${countryOpts(S.soc.country)}</select></label>
     <label>${tr('Жинхэнэ нэр (зөвхөн эзэмшигч харна)','Real name (only the owner sees it)')}<input id="acReal" maxlength="60" value="${esc(S.soc.real||'')}" placeholder="${tr('Солих бол бичнэ үү','Type to change')}" autocomplete="off"></label>
     <label>${tr('Утас (бүртгэлээ сэргээхэд хэрэгтэй)','Phone (needed to restore your account)')}<input id="acPhone" maxlength="20" inputmode="tel" value="${esc(S.soc.phone||'')}" placeholder="${tr('Солих бол бичнэ үү','Type to change')}" autocomplete="off"></label>
+    <div class="acRc"><span>${tr('Сэргээх код','Recovery code')}</span><b id="acRc">${S.soc.rcode?esc(String(S.soc.rcode).replace(/^(\d{3})/,'$1 ')):'••• •••'}</b></div>
     <div class="acMsg" id="acMsg"></div>
     <button class="main" id="acSave">${tr('Хадгалах','Save')}</button>`;
+  if(!S.soc.rcode) (async()=>{ try{ await socLogin(); const c=await sreq('/rest/v1/rpc/my_rcode',{}); if(c){ S.soc.rcode=c; save(); const el=$('acRc'); if(el) el.textContent=String(c).replace(/^(\d{3})/,'$1 '); } }catch(e){} })();
   $('acSave').onclick=async()=>{
     const nick=$('acNick').value.trim(), real=$('acReal').value.trim(), phone=$('acPhone').value.trim(), msg=$('acMsg');
     msg.className='acMsg'; msg.textContent=tr('Хадгалж байна...','Saving...'); $('acSave').disabled=true;
@@ -3580,7 +3623,7 @@ async function openGroup(id){
 function socBadges(){ if(!socOn()||!S||!S.soc) return; chatUnread(); rpc('my_friends').then(l=>{ FR.list=l; FR.incoming=l.filter(f=>f.state==='incoming').length; }).catch(()=>{}); rpc('my_invites').then(l=>{ GR.inv=l; }).catch(()=>{}); }
 
 /* ===================== шинэчлэлийн мэдэгдэл (Android) ===================== */
-const APP_VER=56, SITE='https://otgoo-cell.github.io/gegee';
+const APP_VER=57, SITE='https://otgoo-cell.github.io/gegee';
 async function checkUpdate(){
   if(!N.openUrl) return;
   try{ const r=await fetch(SITE+'/version.json?t='+Date.now(),{cache:'no-store'}); const v=await r.json();
@@ -3651,7 +3694,7 @@ async function pollChat(first){
 
 /* ===================== Санал хүсэлт ===================== */
 const FB={kind:'bug', newCount:0, mine:null, seenAt:0};
-const APP_NAME='6.6';
+const APP_NAME='6.7';
 const FB_K={bug:['🐞',()=>tr('Алдаа','Problem')], idea:['💡',()=>tr('Санаа','Idea')], other:['💬',()=>tr('Бусад','Other')]};
 const fbPlat=()=>{ try{ if(N.hasBg && N.hasBg()) return 'android-app'; }catch(e){} return /iPhone|iPad|iPod/.test(navigator.userAgent)?'ios-pwa':'web'; };
 const fbDev=()=>`${navigator.userAgent.slice(0,260)} | ${screen.width}x${screen.height}@${window.devicePixelRatio||1} | ${LANG} | ${view}`;
