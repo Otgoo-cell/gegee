@@ -1,0 +1,79 @@
+<!doctype html>
+<html lang="mn">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="robots" content="noindex,nofollow">
+<meta name="theme-color" content="#fbf6ea">
+<title>Гэгээ · суулгах</title>
+<link rel="icon" href="icon-192.png">
+<style>
+:root{--bg:#fbf6ea;--card:rgba(255,253,247,.85);--fg:#2c2416;--muted:#8a7c62;--line:rgba(140,100,25,.14);--accent:#a87810;--grad:linear-gradient(135deg,#f7d15e,#e9b331 55%,#d99c1c)}
+@media (prefers-color-scheme:dark){:root{--bg:#0d1511;--card:rgba(32,47,39,.85);--fg:#e3ebe4;--muted:#8ea395;--line:rgba(170,215,185,.14);--accent:#78bd8f;--grad:linear-gradient(135deg,#8fd0a2,#68ad80)}}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--fg);font:16px/1.6 system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;min-height:100vh}
+main{max-width:480px;margin:0 auto;padding:40px 18px 60px;display:flex;flex-direction:column;gap:18px}
+.hero{text-align:center;display:flex;flex-direction:column;align-items:center;gap:6px}
+.hero img{width:88px;height:88px;border-radius:22px;box-shadow:0 12px 30px rgba(168,120,16,.25)}
+h1{margin:10px 0 0;font:500 34px/1.1 Georgia,"Times New Roman",serif}
+.sub{color:var(--muted);margin:0}
+.tabs{display:grid;grid-template-columns:1fr 1fr;gap:4px;padding:4px;border-radius:16px;background:var(--card);border:1px solid var(--line)}
+.tabs button{font:inherit;border:0;background:transparent;color:var(--muted);padding:10px;border-radius:12px;cursor:pointer}
+.tabs button.on{background:var(--bg);color:var(--accent);font-weight:600;box-shadow:0 2px 8px rgba(0,0,0,.06)}
+.card{background:var(--card);border:1px solid var(--line);border-radius:22px;padding:20px;display:flex;flex-direction:column;gap:14px}
+.btn{display:block;text-align:center;text-decoration:none;font-weight:600;font-size:17px;color:#3a2805;background:var(--grad);padding:16px;border-radius:18px;box-shadow:0 10px 26px rgba(214,154,30,.3)}
+.btn small{display:block;font-weight:400;font-size:12.5px;opacity:.75}
+ol{margin:0;padding-left:22px;display:flex;flex-direction:column;gap:8px}
+li b{font-weight:600}
+.note{font-size:13.5px;color:var(--muted);margin:0;line-height:1.55}
+[hidden]{display:none!important}
+</style>
+</head>
+<body>
+<main>
+  <div class="hero">
+    <img src="icon-192.png" alt="">
+    <h1>Гэгээ</h1>
+    <p class="sub">Өдөр бүрийн суултын хамтрагч</p>
+    <p class="sub" id="ver"></p>
+  </div>
+  <div class="tabs" role="tablist"><button id="tA" class="on">Android</button><button id="tI">iPhone</button></div>
+
+  <section class="card" id="pA">
+    <a class="btn" id="dl" href="#">Android-д татах<small id="sz">APK файл</small></a>
+    <ol>
+      <li>Дээрх товчийг дарж файлаа татна.</li>
+      <li>Татаж дуусмагц мэдэгдэл дээрх <b>Gegee.apk</b>-г нээнэ.</li>
+      <li>Утас "Энэ эх сурвалжаас суулгахыг зөвшөөрөх үү" гэж асуувал <b>Тохиргоо → Зөвшөөрөх</b> гэж сонгоод буцаж ирнэ.</li>
+      <li><b>Суулгах</b> дарна. Google Play Protect анхааруулга гаргавал <b>Ямар ч байсан суулгах</b>-ыг сонгоно.</li>
+    </ol>
+    <p class="note">Өмнө нь суулгасан бол шинэ хувилбарыг дээр нь суулгахад бичсэн бүх зүйл чинь хэвээр үлдэнэ. Шинэ хувилбар гарахад апп өөрөө мэдэгдэнэ.</p>
+  </section>
+
+  <section class="card" id="pI" hidden>
+    <a class="btn" href="./">Апп-ыг нээх<small>Safari дээр нээгдэнэ</small></a>
+    <ol>
+      <li>Энэ хуудсыг <b>Safari</b>-гаар нээсэн эсэхээ шалгана. Chrome дээр ажиллахгүй.</li>
+      <li>Дээрх товчоор апп-ыг нээнэ.</li>
+      <li>Доод талын <b>Share</b> (дөрвөлжин дээрээ сумтай) товч → <b>Add to Home Screen</b> → <b>Add</b>.</li>
+      <li>Нүүр дэлгэц дээр гарсан <b>Гэгээ</b> дүрсээр нээнэ.</li>
+    </ol>
+    <p class="note">iPhone хувилбар өөрөө автоматаар шинэчлэгддэг. Шинэ хувилбар гарсан үед апп-аа бүрэн хаагаад дахин нээхэд хангалттай.</p>
+  </section>
+
+  <p class="note" style="text-align:center">Анх нээхдээ 6 оронтой нууц код сонгоно. Энэ кодыг мартвал сэргээх арга байхгүй тул сайн санаарай.</p>
+</main>
+<script>
+const ios=/iPhone|iPad|iPod/.test(navigator.userAgent)||(navigator.platform==='MacIntel'&&navigator.maxTouchPoints>1);
+function sel(i){ document.getElementById('tA').classList.toggle('on',!i); document.getElementById('tI').classList.toggle('on',i); document.getElementById('pA').hidden=i; document.getElementById('pI').hidden=!i; }
+document.getElementById('tA').onclick=()=>sel(false); document.getElementById('tI').onclick=()=>sel(true);
+sel(ios);
+const SU='https://exvtykqwqgvagakohoqs.supabase.co', SK='sb_publishable_7zX9wwIS6LStjT78-uFFnA_l1c6QctQ';
+const ev=k=>{ try{ fetch(SU+'/rest/v1/rpc/page_event',{method:'POST',keepalive:true,headers:{'apikey':SK,'Content-Type':'application/json'},body:JSON.stringify({kind_:k,platform_:ios?'ios':(/Android/.test(navigator.userAgent)?'android':'other')})}); }catch(e){} };
+ev('get_view');
+document.getElementById('dl').addEventListener('click',()=>ev('apk_click'));
+document.querySelector('#pI .btn').addEventListener('click',()=>ev('ios_open'));
+fetch('version.json',{cache:'no-store'}).then(r=>r.json()).then(v=>{ document.getElementById('ver').textContent='Хувилбар '+v.name; if(v.size) document.getElementById('sz').textContent='APK файл · '+v.size; if(v.apk) document.getElementById('dl').href=v.apk; }).catch(()=>{});
+</script>
+</body>
+</html>
