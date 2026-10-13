@@ -1560,7 +1560,7 @@ async function submitPinInner(){
     firstPin=p; lmode = lmode==='new1'?'new2':'chg2'; entry=''; drawDots(); lockMessage();
   } else {
     if(p!==firstPin){ lmode = lmode==='new2'?'new1':'chg1'; firstPin=''; shake(tr('Хоёр код таарсангүй, эхнээс нь оруулна уу','The codes did not match. Start again.')); return; }
-    if(lmode==='new2'){ await N.setup(p); curPin=p; S=normalize({}); try{ const pd=JSON.parse(localStorage.getItem('gegee_pending')||'null'); if(pd){ if(pd.acct) S.acct=pd.acct; if(pd.soc) S.soc=pd.soc; localStorage.removeItem('gegee_pending'); } }catch(e){} save(); afterUnlock(); }
+    if(lmode==='new2'){ await N.setup(p); curPin=p; S=normalize({}); try{ const pd=JSON.parse(localStorage.getItem('gegee_pending')||'null'); if(pd){ if(pd.acct) S.acct=pd.acct; if(pd.soc) S.soc=pd.soc; if(pd.days){ S.days={...pd.days,...S.days}; } if(pd.start && (!S.start || pd.start<S.start)) S.start=pd.start; localStorage.removeItem('gegee_pending'); } }catch(e){} save(); afterUnlock(); }
     else { await N.changePin(p); curPin=p; if(bioReady()) await Promise.resolve(N.bioSave(p)); save(); lmode='unlock'; hideLock(); toast(tr('Нууц код солигдлоо','Passcode changed')); }
   }
 }
@@ -3024,6 +3024,10 @@ function socErr(e){
   if(/NICK_REAL_NAME/.test(m)) return tr('Хоч таны жинхэнэ нэртэй төстэй байна. Өөр хоч сонгоорой.','Your nickname looks like your real name. Please choose another.');
   if(e&&e.code==='23505'||/profiles_nick_ci|duplicate/.test(m)) return tr('Энэ хочийг өөр хүн авсан байна.','Someone already has this nickname.');
   if(/nick_chars|nick_len/.test(m)) return tr('Хоч 3–20 тэмдэгт, зөвхөн үсэг, тоо, _ . - байна.','Nickname: 3–20 letters, digits, _ . -');
+  if(/CLAIM_LIMIT/.test(m)) return tr('Олон удаа буруу оруулсан тул 1 цагийн дараа дахин оролдоно уу.','Too many tries. Please try again in an hour.');
+  if(/CLAIM_NONE/.test(m)) return tr('Ийм хочтой бүртгэл олдсонгүй.','No account with this nickname.');
+  if(/CLAIM_NOPHONE/.test(m)) return tr('Энэ бүртгэлд утас оруулаагүй тул өөрөө сэргээх боломжгүй. Апп эзэмшигчид хандана уу.','This account has no phone, so it cannot be restored here. Please contact the app owner.');
+  if(/CLAIM_MISMATCH/.test(m)) return tr('Нэр эсвэл утасны дугаар таарахгүй байна.','Name or phone does not match.');
   if(/Failed to fetch|NetworkError|Load failed/.test(m)) return tr('Интернэт холболтоо шалгана уу.','Check your internet connection.');
   return tr('Алдаа гарлаа: ','Error: ')+m;
 }
@@ -3044,6 +3048,25 @@ async function socJoin(nick, country, real, phone, share){
   await sreq('/rest/v1/rpc/set_private',{real_:real, phone_:phone||null});
   T.soc={nick,country,share,uid,real,phone:phone||''}; saveT(); if(S) await socSync(true);
   try{ pingInstall(true); }catch(e){}
+}
+// Бүртгэлтэй хаягаа (өөр утас, дахин суулгасан апп) хоч + жинхэнэ нэр + утсаар сэргээнэ
+function mergeDays(T, arr){
+  T.days=T.days||{}; let first=null;
+  (arr||[]).forEach(r=>{ const k=String(r.d).slice(0,10), cur=T.days[k]||{l:0,s:0};
+    if((r.l||0)+(r.s||0) > (cur.l||0)+(cur.s||0)){ T.days[k]={...cur,l:r.l||0,s:r.s||0}; if(Number.isFinite(r.f)) T.days[k].fs=r.f; }
+    if(!first||k<first) first=k; });
+  if(first && (!T.start || first<T.start)) T.start=first;
+}
+async function socClaim(nick, real, phone){
+  const pass=rid(28), j=await sreq('/rest/v1/rpc/claim_profile',{nick_:nick, real_:real, phone_:phone, newpass:pass});
+  if(!j || j.err){ const e=new Error(j&&j.err||'CLAIM'); throw e; }
+  const T=T_(); T.acct={e:j.email, p:pass};
+  const t=await sreq('/auth/v1/token?grant_type=password',{email:j.email,password:pass}); socTok=t.access_token; socTokAt=Date.now();
+  T.soc={nick:j.nick, country:j.country, share:j.share!==false, uid:j.uid, real, phone};
+  mergeDays(T, j.days); try{ localStorage.removeItem('gegee_jdraft'); }catch(e){}
+  saveT(); if(S){ await socSync(true); }
+  try{ pingInstall(true); }catch(e){}
+  return j;
 }
 // Апп анх нээгдэхэд, код тохируулахаас ч өмнө бүртгүүлнэ
 function preJoin(){
@@ -3101,9 +3124,10 @@ function drawJoin(box, first){
     <label class="socF"><span>${tr('Улс','Country')}</span><select id="jCtry">${countryOpts('MN')}</select></label>
     <div class="socPriv"><div class="socLock">🔒 ${tr('Зөвхөн апп эзэмшигч харна','Seen only by the app owner')}</div>
       <label class="socF"><span>${tr('Жинхэнэ нэр','Real name')}</span><input id="jReal" maxlength="60" autocomplete="name"></label>
-      <label class="socF"><span>${tr('Утас (заавал биш)','Phone (optional)')}</span><input id="jPhone" maxlength="20" inputmode="tel" autocomplete="tel"></label></div>
+      <label class="socF"><span>${tr('Утас (бүртгэлээ сэргээхэд хэрэгтэй)','Phone (needed to restore your account)')}</span><input id="jPhone" maxlength="20" inputmode="tel" autocomplete="tel"></label></div>
     <div class="socMsg" id="jMsg"></div>
     <button class="main" id="jGo">${tr('Нэгдэх','Join')}</button>
+    <button class="ghostlink" id="jHave">${tr('Өмнө нь бүртгүүлсэн бол энд дарж нэвтэрнэ','Already joined? Sign in here')}</button>
     ${first?`<button class="ghostlink" id="jLater" hidden>${tr('Интернэтгүй байна · түр үргэлжлүүлэх','No internet · continue for now')}</button>`:''}
   </div>`;
   $('jGo').onclick=async()=>{
@@ -3112,10 +3136,39 @@ function drawJoin(box, first){
     if(real.toLowerCase().split(/[\s.\-]+/).some(w=>w.length>=3 && nick.toLowerCase().includes(w))){ $('jMsg').textContent=tr('Хоч таны жинхэнэ нэртэй төстэй байна. Өөр хоч сонгоорой.','Your nickname looks like your real name. Please choose another.'); return; }
     if(real.length<2){ $('jMsg').textContent=tr('Жинхэнэ нэрээ оруулна уу. Үүнийг зөвхөн апп эзэмшигч харна.','Please enter your real name. Only the app owner sees it.'); return; }
     $('jGo').disabled=true; $('jMsg').textContent=tr('Түр хүлээнэ үү...','One moment...');
-    try{ await socJoin(nick,$('jCtry').value,real,ph,true); SOC.rows=null; SOC.c='all'; if(first){ SOC.mustJoin=false; closeSocSheet(); } if(S) renderSoc(); toast(tr(`Тавтай морил, ${nick}`,`Welcome, ${nick}`)); }
-    catch(e){ $('jMsg').textContent=socErr(e); $('jGo').disabled=false; if(first && /Failed to fetch|NetworkError|Load failed|network/i.test(String(e&&e.message))) $('jLater').hidden=false; }
+    try{ await socJoin(nick,$('jCtry').value,real,ph,true); try{ localStorage.removeItem('gegee_jdraft'); }catch(e){} SOC.rows=null; SOC.c='all'; if(first){ SOC.mustJoin=false; closeSocSheet(); } if(S) renderSoc(); toast(tr(`Тавтай морил, ${nick}`,`Welcome, ${nick}`)); }
+    catch(e){ $('jMsg').textContent=socErr(e); $('jGo').disabled=false;
+      if(e&&e.code==='23505'||/profiles_nick_ci|duplicate/.test(String(e&&e.message))){ const b=document.createElement('button'); b.className='ghostlink'; b.textContent=tr('Энэ миний хоч, нэвтрэх','This is my nickname, sign in'); b.onclick=()=>drawLogin(box, first); $('jMsg').appendChild(document.createElement('br')); $('jMsg').appendChild(b); } if(first && /Failed to fetch|NetworkError|Load failed|network/i.test(String(e&&e.message))) $('jLater').hidden=false; }
   };
+  // бичсэн зүйл өөр апп руу шилжээд ирэхэд арилахгүй
+  const DR=['jNick','jCtry','jReal','jPhone']; let dr={}; try{ dr=JSON.parse(localStorage.getItem('gegee_jdraft')||'{}'); }catch(e){}
+  DR.forEach(id=>{ if(dr[id]) $(id).value=dr[id]; $(id).addEventListener('input',()=>{ dr[id]=$(id).value; try{ localStorage.setItem('gegee_jdraft',JSON.stringify(dr)); }catch(e){} }); });
+  $('jHave').onclick=()=>drawLogin(box, first);
   if(first){ SOC.mustJoin=true; $('jLater').onclick=()=>{ SOC.mustJoin=false; closeSocSheet(); toast(tr('Интернэтэд холбогдмогц нэгдэх цонх дахин гарна','The join screen will return once you are online')); }; }
+}
+function drawLogin(box, first){
+  box=box||$('socBody'); let dr={}; try{ dr=JSON.parse(localStorage.getItem('gegee_jdraft')||'{}'); }catch(e){}
+  box.innerHTML=(first?`<header><h1>${tr('Тавтай морил','Welcome')}</h1></header>`:'')+`<div class="glass socIntro">
+    <div class="socHero"><span class="socOrb">✦</span><div><b>${tr('Бүртгэлтэй хаягаар нэвтрэх','Sign in to your account')}</b><p class="hint">${tr('Бүртгүүлэхдээ оруулсан хоч, жинхэнэ нэр, утасны дугаараа бичнэ үү. Таны суулт, шагнал, групп бүгд хэвээрээ үлдэнэ.','Enter the nickname, real name and phone you joined with. Your sittings, awards and groups stay as they were.')}</p></div></div>
+    <label class="socF"><span>${tr('Хоч','Nickname')}</span><input id="lNick" maxlength="20" autocomplete="off"></label>
+    <label class="socF"><span>${tr('Жинхэнэ нэр','Real name')}</span><input id="lReal" maxlength="60" autocomplete="name"></label>
+    <label class="socF"><span>${tr('Утас','Phone')}</span><input id="lPhone" maxlength="20" inputmode="tel" autocomplete="tel"></label>
+    <div class="socMsg" id="lMsg"></div>
+    <button class="main" id="lGo">${tr('Нэвтрэх','Sign in')}</button>
+    <button class="ghostlink" id="lBack">${tr('Шинээр бүртгүүлэх','Join as new')}</button>
+    <p class="hint socNote">${tr('Өмнөх утсан дээрх апп чинь энэ бүртгэлээс гарна.','The app on your previous phone will be signed out of this account.')}</p>
+  </div>`;
+  $('lNick').value=dr.jNick||''; $('lReal').value=dr.jReal||''; $('lPhone').value=dr.jPhone||'';
+  $('lBack').onclick=()=>drawJoin(box, first);
+  $('lGo').onclick=async()=>{
+    const nick=$('lNick').value.trim(), real=$('lReal').value.trim(), ph=$('lPhone').value.trim();
+    if(nick.length<3 || real.length<2 || ph.replace(/\D/g,'').length<6){ $('lMsg').textContent=tr('Гурван талбарыг бүгдийг нь бөглөнө үү.','Please fill in all three fields.'); return; }
+    $('lGo').disabled=true; $('lMsg').textContent=tr('Түр хүлээнэ үү...','One moment...');
+    try{ const j=await socClaim(nick, real, ph); SOC.rows=null; SOC.c='all';
+      if(first){ SOC.mustJoin=false; closeSocSheet(); } if(S){ save(); renderSoc(); try{ renderMed(); }catch(e){} }
+      toast(tr(`Буцаад тавтай морил, ${j.nick}`,`Welcome back, ${j.nick}`)); }
+    catch(e){ $('lMsg').textContent=socErr(e); $('lGo').disabled=false; }
+  };
 }
 // апп анх нээгдэхэд (код тохируулсны дараа) Хамт-д нэгдэхийг шууд санал болгоно
 function maybeAskJoin(){
@@ -3266,7 +3319,7 @@ function drawAcct(){
     <label>${tr('Хоч (бусдад харагдахгүй, зөвхөн та болон найз нар)','Nickname (seen only by you and friends)')}<input id="acNick" maxlength="20" value="${esc(S.soc.nick)}" autocomplete="off"></label>
     <label>${tr('Улс','Country')}<select id="acCtry">${countryOpts(S.soc.country)}</select></label>
     <label>${tr('Жинхэнэ нэр (зөвхөн эзэмшигч харна)','Real name (only the owner sees it)')}<input id="acReal" maxlength="60" value="${esc(S.soc.real||'')}" placeholder="${tr('Солих бол бичнэ үү','Type to change')}" autocomplete="off"></label>
-    <label>${tr('Утас (заавал биш)','Phone (optional)')}<input id="acPhone" maxlength="20" inputmode="tel" value="${esc(S.soc.phone||'')}" placeholder="${tr('Солих бол бичнэ үү','Type to change')}" autocomplete="off"></label>
+    <label>${tr('Утас (бүртгэлээ сэргээхэд хэрэгтэй)','Phone (needed to restore your account)')}<input id="acPhone" maxlength="20" inputmode="tel" value="${esc(S.soc.phone||'')}" placeholder="${tr('Солих бол бичнэ үү','Type to change')}" autocomplete="off"></label>
     <div class="acMsg" id="acMsg"></div>
     <button class="main" id="acSave">${tr('Хадгалах','Save')}</button>`;
   $('acSave').onclick=async()=>{
@@ -3523,7 +3576,7 @@ async function openGroup(id){
 function socBadges(){ if(!socOn()||!S||!S.soc) return; chatUnread(); rpc('my_friends').then(l=>{ FR.list=l; FR.incoming=l.filter(f=>f.state==='incoming').length; }).catch(()=>{}); rpc('my_invites').then(l=>{ GR.inv=l; }).catch(()=>{}); }
 
 /* ===================== шинэчлэлийн мэдэгдэл (Android) ===================== */
-const APP_VER=54, SITE='https://otgoo-cell.github.io/gegee';
+const APP_VER=55, SITE='https://otgoo-cell.github.io/gegee';
 async function checkUpdate(){
   if(!N.openUrl) return;
   try{ const r=await fetch(SITE+'/version.json?t='+Date.now(),{cache:'no-store'}); const v=await r.json();
@@ -3594,7 +3647,7 @@ async function pollChat(first){
 
 /* ===================== Санал хүсэлт ===================== */
 const FB={kind:'bug', newCount:0, mine:null, seenAt:0};
-const APP_NAME='6.4';
+const APP_NAME='6.5';
 const FB_K={bug:['🐞',()=>tr('Алдаа','Problem')], idea:['💡',()=>tr('Санаа','Idea')], other:['💬',()=>tr('Бусад','Other')]};
 const fbPlat=()=>{ try{ if(N.hasBg && N.hasBg()) return 'android-app'; }catch(e){} return /iPhone|iPad|iPod/.test(navigator.userAgent)?'ios-pwa':'web'; };
 const fbDev=()=>`${navigator.userAgent.slice(0,260)} | ${screen.width}x${screen.height}@${window.devicePixelRatio||1} | ${LANG} | ${view}`;
