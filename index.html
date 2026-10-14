@@ -1080,6 +1080,92 @@ body:has(#doneBar:not([hidden])) .toast{bottom:calc(148px + env(safe-area-inset-
 #gemFull.on{opacity:1}#gemFull .gfStage{position:absolute;inset:0}#gemFull .gfStage canvas{display:block;touch-action:none}
 #gemFull .gfX{position:absolute;top:calc(env(safe-area-inset-top,0px) + 14px);right:16px;width:42px;height:42px;padding:0;border-radius:50%;background:rgba(255,255,255,.12);border:1px solid rgba(255,255,255,.2);color:#fff;font-size:18px;z-index:2}
 #gemFull .gfHint{position:absolute;left:0;right:0;bottom:calc(env(safe-area-inset-bottom,0px) + 22px);text-align:center;color:rgba(255,255,255,.55);font-size:12.5px;pointer-events:none;padding:0 20px}
+
+/* ---- Группийн хана, эвент, яриа ---- */
+.gHub{margin:22px 0 8px}
+.hubTabs{grid-template-columns:1fr 1fr 1fr;background:var(--soft);border:1px solid var(--line);margin-bottom:14px}
+.hubTabs button{position:relative;font-weight:500}
+.hubTabs button.on{background:var(--raised);color:var(--fg);box-shadow:0 2px 10px rgba(0,0,0,.06)}
+.hubLive{position:absolute;top:4px;right:8px;min-width:16px;height:16px;padding:0 4px;border-radius:9px;background:var(--ok);color:#fff;font-style:normal;font-size:10px;line-height:16px;font-weight:700;animation:hubP 2s ease-in-out infinite}
+@keyframes hubP{50%{box-shadow:0 0 0 5px rgba(95,154,98,.18)}}
+#hubBody{display:flex;flex-direction:column;gap:12px}
+.posts,.evs{display:flex;flex-direction:column;gap:12px}
+.postNew{padding:14px 16px;display:flex;flex-direction:column;gap:10px}
+.postNew textarea{border:0;background:transparent;resize:none;font:inherit;font-size:15px;line-height:1.5;color:var(--fg);outline:none;min-height:48px;padding:0}
+.postNewF{display:flex;align-items:center;justify-content:space-between;gap:10px}
+.postNewF small{font-size:11.5px}
+.post{padding:14px 16px 10px;position:relative}
+.post.pin{border-color:var(--leaf)}
+.postH{display:flex;align-items:baseline;gap:8px;position:relative}
+.postH b{font-size:14px}
+.postH small{color:var(--muted);font-size:12px}
+.postMore{margin-left:auto;border:0;background:transparent;box-shadow:none;color:var(--muted);padding:0 4px;font-size:18px;line-height:1}
+.postMenu{position:absolute;right:0;top:24px;z-index:5;display:flex;flex-direction:column;padding:6px;border-radius:14px;min-width:170px;background:var(--glass2)}
+.postMenu button{border:0;background:transparent;box-shadow:none;text-align:left;padding:10px 12px;font-size:14px;border-radius:10px}
+.postMenu .danger{color:var(--miss)}
+.postB{margin:8px 0 10px;font-size:15px;line-height:1.55;white-space:normal;word-break:break-word}
+.postA{display:flex;gap:6px;border-top:1px solid var(--line);padding-top:8px}
+.postA button{border:0;background:transparent;box-shadow:none;padding:6px 10px;border-radius:12px;font-size:14px;color:var(--muted);transition:transform .15s var(--ease),background .2s}
+.postA button:active{transform:scale(.92)}
+.postA .pr.on{background:var(--faint);color:var(--accent);font-weight:600}
+.postC{margin-top:8px;display:flex;flex-direction:column;gap:8px}
+.cmt{font-size:14px;line-height:1.45;background:var(--soft);padding:8px 12px;border-radius:14px}
+.cmt small{display:block;color:var(--muted);font-size:11px;margin-top:2px}
+.cmt a{color:var(--miss);cursor:pointer}
+.cmtNew{display:flex;gap:6px;align-items:center}
+.cmtNew input{flex:1;min-width:0;padding:9px 12px;border-radius:14px;border:1px solid var(--line);background:var(--raised);color:var(--fg);font:inherit;font-size:14px}
+.cmtNew button{padding:8px 14px}
+.emptyS{padding:30px 16px}
+.evNew{width:100%}
+.ev{display:flex;gap:14px;padding:14px 16px}
+.ev.past{opacity:.55}
+.ev.live{border-color:var(--ok);box-shadow:0 0 0 3px rgba(95,154,98,.12),var(--shadow)}
+.evDate{flex:none;width:54px;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:6px 0;border-radius:14px;background:var(--soft);border:1px solid var(--line)}
+.evDate b{font-family:var(--serif);font-size:26px;line-height:1;margin:2px 0}
+.evDate small{font-size:10px;color:var(--muted)}
+.evMain{flex:1;min-width:0;display:flex;flex-direction:column;gap:4px}
+.evMain>b{font-size:15px}
+.evMain>small{color:var(--muted);font-size:12.5px;font-variant-numeric:tabular-nums}
+.evMain p{margin:4px 0 0;font-size:13.5px;line-height:1.5}
+.evLive{color:var(--ok);font-weight:600}
+.evGo{display:flex;align-items:center;gap:8px;margin-top:6px}
+.evGo small{color:var(--muted);font-size:12px}
+.evWho{display:flex}
+.evWho i,.vcP i{display:grid;place-items:center;width:24px;height:24px;border-radius:50%;background:var(--accentBg);color:var(--on-accent);font-style:normal;font-size:11px;font-weight:700;border:2px solid var(--raised);margin-left:-6px}
+.evWho i:first-child{margin-left:0}
+.evBtns{display:flex;flex-wrap:wrap;gap:6px;margin-top:8px}
+.evBtns button.on{background:var(--faint)}
+.evDel{align-self:flex-start;font-size:12px;color:var(--miss);margin-top:4px;cursor:pointer}
+.evForm{padding:16px;display:flex;flex-direction:column;gap:14px}
+.evForm input,.evForm textarea{padding:10px 12px;border-radius:14px;border:1px solid var(--line);background:var(--raised);color:var(--fg);font:inherit;font-size:15px;resize:none}
+.efDays{display:flex;gap:6px;overflow-x:auto;padding-bottom:2px;scrollbar-width:none}
+.efDays button{flex:none;display:flex;flex-direction:column;align-items:center;gap:2px;min-width:58px;padding:8px 6px;border-radius:14px;box-shadow:none}
+.efDays button small{font-size:10px;color:var(--muted)}
+.efDays button b{font-size:17px}
+.efDays button.on,.efDur button.on{background:var(--accentBg);color:var(--on-accent);border-color:transparent}
+.efDays button.on small{color:inherit;opacity:.8}
+.efRow{display:grid;grid-template-columns:auto 1fr;gap:14px;align-items:start}
+.efDur{display:flex;flex-wrap:wrap;gap:6px}
+.efDur button{padding:8px 11px;border-radius:12px;font-size:13px;box-shadow:none}
+.voice{padding:20px 16px;display:flex;flex-direction:column;gap:16px;align-items:stretch}
+.voice.on{border-color:var(--ok)}
+.vcTop{display:flex;flex-direction:column;gap:4px;text-align:center}
+.vcTop b{font-size:15px}
+.vcTop small{color:var(--muted);font-size:12.5px;line-height:1.5}
+.vcPeople{display:flex;flex-wrap:wrap;justify-content:center;gap:16px;padding:8px 0}
+.vcP{display:flex;flex-direction:column;align-items:center;gap:6px;width:72px}
+.vcP i{width:56px;height:56px;font-size:22px;margin:0;border:3px solid transparent;transition:border-color .15s,box-shadow .15s,transform .15s}
+.vcP.talk i{border-color:var(--ok);box-shadow:0 0 0 5px rgba(95,154,98,.2);transform:scale(1.05)}
+.vcP small{font-size:11.5px;color:var(--muted);text-align:center;max-width:72px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.vcBtns{display:grid;grid-template-columns:1fr auto;gap:8px}
+.vcMute.off{background:var(--faint);color:var(--miss)}
+.vcLeave{background:var(--miss);color:#fff;border-color:transparent}
+.postNewF button,.evBtns button,.cmtNew button,.efDur button,.efDays button{width:auto;flex:none;margin:0}
+.postNewF button{padding:10px 22px}
+.cmtNew input{width:auto}
+.evDate{align-self:flex-start;min-height:72px}
+.evDel{border:0!important;background:none!important;padding:2px 0!important;box-shadow:none!important}
+.vcJoin{width:100%}
 </style>
 </head>
 <body>
@@ -1603,7 +1689,7 @@ function lockApp(){
   // нээлттэй байсан цонхнуудыг хаана: эс бөгөөс түгжээний дээр үлдэж апп гацсан мэт харагддаг
   try{ document.querySelectorAll('.sheet').forEach(x=>{ x.classList.remove('on'); x.hidden=true; }); document.body.classList.remove('sheetOpen'); }catch(e){}
   try{ closeSocSheet(); }catch(e){} try{ closeMedal(); }catch(e){} try{ if(window.Gem && Gem.isFull && Gem.isFull()) Gem.fullOff(); }catch(e){}
-  try{ const so=document.getElementById('slotOv'); if(so) so.remove(); }catch(e){} try{ if(typeof radioStop==='function') radioStop(); }catch(e){}
+  try{ const so=document.getElementById('slotOv'); if(so) so.remove(); }catch(e){} try{ if(typeof radioStop==='function') radioStop(); }catch(e){} try{ if(typeof voiceLeave==='function') voiceLeave(true); }catch(e){}
   $('nList').innerHTML=''; $('qList').innerHTML=''; $('nText').value=''; $('qIn').value=''; $('duties').innerHTML=''; $('qText').textContent=''; $('qSrc').textContent='';
   showLock('unlock');
 }
@@ -3776,6 +3862,7 @@ async function openGroup(id){
     ${g.about?`<p class="gAbout">${esc(g.about)}</p>`:''}
     ${g.sit_time!=null?`<div class="glass gSit"><span class="socOrb sm">🕯</span><div><b>${tr('Өдөр бүр','Every day at')} ${hm(g.sit_time)} ${tr('хамтдаа сууна','we sit together')}</b><small>${sittingN?`<span class="sitTxt">${sittingN} ${tr('хүн одоо сууж байна','sitting right now')}</span>`:tr('Одоогоор хэн ч суугаагүй байна','No one is sitting right now')}</small></div></div>`:(sittingN?`<div class="glass gSit"><span class="socOrb sm">🕯</span><div><b><span class="sitTxt">${sittingN} ${tr('хүн одоо сууж байна','sitting right now')}</span></b></div></div>`:'')}
     ${member?`<button class="main" id="gChat">💬 ${tr('Группийн чат','Group chat')}</button>`:''}
+    ${member?`<div class="gHub" id="gHub"></div>`:''}
     ${g.rules?`<div class="glass gRules"><b>${tr('Дотоод дүрэм','Group rules')}</b><p>${esc(g.rules).replace(/\n/g,'<br>')}</p></div>`:''}
     <div id="gAw"></div>
     ${crit}
@@ -3792,6 +3879,7 @@ async function openGroup(id){
   const B=(sel,fn)=>{ const e=$(sel); if(e) e.onclick=fn; };
   B('gEdit',()=>groupForm(g));
   B('gChat',()=>openChat('g:'+g.id, g.name, 'group'));
+  if(member && typeof hubInit==='function') hubInit(g);
   B('gjInv',()=>act(()=>rpc('group_join',{g:id,msg:''}),tr('Группт нэгдлээ','You joined the group'),re));
   B('gjOpen',()=>act(()=>rpc('group_join',{g:id,msg:''}),tr('Группт нэгдлээ','You joined the group'),re));
   B('gjCancel',()=>act(()=>rpc('group_cancel',{g:id}),tr('Хүсэлт цуцлагдлаа','Request cancelled'),re));
@@ -3826,7 +3914,7 @@ async function openGroup(id){
 function socBadges(){ if(!socOn()||!S||!S.soc) return; chatUnread(); rpc('my_friends').then(l=>{ FR.list=l; FR.incoming=l.filter(f=>f.state==='incoming').length; }).catch(()=>{}); rpc('my_invites').then(l=>{ GR.inv=l; }).catch(()=>{}); }
 
 /* ===================== шинэчлэлийн мэдэгдэл (Android) ===================== */
-const APP_VER=79, SITE='https://otgoo-cell.github.io/gegee';
+const APP_VER=80, SITE='https://otgoo-cell.github.io/gegee';
 async function checkUpdate(){
   if(!N.openUrl) return;
   try{ const r=await fetch(SITE+'/version.json?t='+Date.now(),{cache:'no-store'}); const v=await r.json();
@@ -3899,7 +3987,7 @@ async function pollChat(first){
 
 /* ===================== Санал хүсэлт ===================== */
 const FB={kind:'bug', newCount:0, mine:null, seenAt:0};
-const APP_NAME='8.9';
+const APP_NAME='9.0';
 const FB_K={bug:['🐞',()=>tr('Алдаа','Problem')], idea:['💡',()=>tr('Санаа','Idea')], other:['💬',()=>tr('Бусад','Other')]};
 const fbPlat=()=>{ try{ if(N.hasBg && N.hasBg()) return 'android-app'; }catch(e){} return /iPhone|iPad|iPod/.test(navigator.userAgent)?'ios-pwa':'web'; };
 const fbDev=()=>`${navigator.userAgent.slice(0,260)} | ${screen.width}x${screen.height}@${window.devicePixelRatio||1} | ${LANG} | ${view}`;
@@ -4151,9 +4239,9 @@ function bindPushNudge(){
 
 // Мэдэгдэл дээр дарахад Хамт → тохирох хэсэг рүү
 function openFromAlert(kind){
-  if(!/^(msg|friend|friend_ok|greq|ginv)$/.test(kind||'')) return;   // сануулга бол зүгээр апп нээгдэнэ
+  if(!/^(msg|friend|friend_ok|greq|ginv|gpost|gevent)$/.test(kind||'')) return;   // сануулга бол зүгээр апп нээгдэнэ
   const go=()=>{ if(!S || !S.soc || (!$('lock').hidden && !$('lock').classList.contains('out'))){ setTimeout(go,700); return; }
-    SOC.tab = kind==='msg' ? 'chat' : kind==='greq'||kind==='ginv' ? 'groups' : 'friends';
+    SOC.tab = kind==='msg' ? 'chat' : /^g(req|inv|post|event)$/.test(kind) ? 'groups' : 'friends';
     if(SOC.tab==='chat') CH.stale=true; if(SOC.tab==='friends') FR.stale=true; if(SOC.tab==='groups') GR.stale=true;
     const t=document.querySelector('#tabs button[data-v="vSoc"]'); if(t) t.click(); try{ renderSoc(); }catch(e){} };
   go();
@@ -4332,6 +4420,220 @@ function openSlot(o){
   const lv=$('slotLever'); lv.onclick=()=>{ lv.classList.add('pull'); $('slotM').classList.add('spin'); tickFx(); setTimeout(tickFx,120); setTimeout(tickFx,240);
     setTimeout(()=>{ lv.classList.remove('pull'); },360); setTimeout(done,560); };
 }
+/* ===================== Группийн хана, эвент, дуут өрөө ===================== */
+const HUB={g:null, tab:'wall', posts:null, events:null, open:{}, voiceWho:[]};
+const hubAgo=t=>{ const s=(Date.now()-new Date(t))/1000; if(s<60) return tr('дөнгөж сая','just now'); if(s<3600) return tr(`${Math.floor(s/60)} мин`,`${Math.floor(s/60)}m`);
+  if(s<86400) return tr(`${Math.floor(s/3600)} цаг`,`${Math.floor(s/3600)}h`); const d=new Date(t); return `${d.getMonth()+1}.${pad2(d.getDate())}`; };
+const hubTxt=s=>esc(s||'').replace(/\n/g,'<br>');
+const hubWD=()=>LANG==='en'?['Sun','Mon','Tue','Wed','Thu','Fri','Sat']:['Ням','Даваа','Мягмар','Лхагва','Пүрэв','Баасан','Бямба'];
+
+function hubInit(g){
+  const box=$('gHub'); if(!box) return;
+  HUB.g=g; HUB.posts=null; HUB.events=null; HUB.open={};
+  box.innerHTML=`<div class="seg2 hubTabs" id="hubTabs">
+      <button data-h="wall">${tr('Хана','Wall')}</button><button data-h="events">${tr('Эвент','Events')}</button><button data-h="voice">🔊 ${tr('Яриа','Talk')}<i class="hubLive" id="hubLive" hidden></i></button></div>
+    <div id="hubBody"></div>`;
+  $('hubTabs').onclick=e=>{ const b=e.target.closest('[data-h]'); if(!b) return; HUB.tab=b.dataset.h; hubDraw(); };
+  hubDraw(); voiceWho();
+}
+function hubDraw(){
+  document.querySelectorAll('#hubTabs button').forEach(b=>b.classList.toggle('on', b.dataset.h===HUB.tab));
+  if(HUB.tab==='wall') drawWall(); else if(HUB.tab==='events') drawEvents(); else drawVoice();
+}
+
+/* ---------- Хана ---------- */
+async function loadPosts(){ try{ HUB.posts=await rpc('g_posts',{g:HUB.g.id}); }catch(e){ HUB.posts=HUB.posts||[]; toast(socErr2(e)); } if(HUB.tab==='wall') drawWall(); }
+function postCard(p){
+  const admin=HUB.g.my_role==='admin';
+  return `<div class="glass post${p.pinned?' pin':''}" data-p="${p.id}">
+    <div class="postH"><b>${esc(p.nick||'')}</b><small>${p.pinned?'📌 ':''}${hubAgo(p.created_at)}</small>${(p.mine||admin)?`<button class="postMore" data-more="${p.id}">⋯</button>`:''}</div>
+    <div class="postB">${hubTxt(p.body)}</div>
+    <div class="postA"><button class="pr${p.reacted?' on':''}" data-react="${p.id}">🙏 <span>${p.reacts||''}</span></button><button data-cm="${p.id}">💬 <span>${p.comments||''}</span></button></div>
+    <div class="postC" id="pc${p.id}" ${HUB.open[p.id]?'':'hidden'}></div></div>`;
+}
+function drawWall(){
+  const b=$('hubBody'); if(!b) return;
+  if(HUB.posts===null){ b.innerHTML=`<div class="socEmpty">${tr('Ачааллаж байна...','Loading...')}</div>`; loadPosts(); return; }
+  b.innerHTML=`<div class="glass postNew"><textarea id="pnBody" rows="2" maxlength="2000" placeholder="${tr('Группдээ юу хуваалцах вэ? Өнөөдрийн суулт, урам өгөх үг, асуулт...','Share something with your group...')}"></textarea>
+      <div class="postNewF"><small class="muted">${tr('Зөвхөн группийн гишүүд харна','Only members can see this')}</small><button class="main sm" id="pnGo">${tr('Нийтлэх','Post')}</button></div></div>
+    <div class="posts">${HUB.posts.length?HUB.posts.map(postCard).join(''):`<div class="socEmpty emptyS">${tr('Хана хоосон байна. Эхний постоо бичээрэй.','The wall is empty. Write the first post.')}</div>`}</div>`;
+  const ta=$('pnBody'); ta.oninput=()=>{ ta.style.height='auto'; ta.style.height=Math.min(220,ta.scrollHeight)+'px'; };
+  $('pnGo').onclick=async()=>{ const v=ta.value.trim(); if(!v) return; $('pnGo').disabled=true;
+    try{ await rpc('g_post_add',{g:HUB.g.id, body_:v}); ta.value=''; await loadPosts(); }catch(e){ toast(/SLOW/.test(e.message)?tr('Түр хүлээгээд дахин бичээрэй','Please wait a moment'):socErr2(e)); }
+    const g=$('pnGo'); if(g) g.disabled=false; };
+  b.querySelector('.posts').onclick=async e=>{
+    const r=e.target.closest('[data-react]'); if(r){ const id=+r.dataset.react, p=HUB.posts.find(x=>x.id===id); if(!p) return;
+      p.reacted=!p.reacted; p.reacts=(+p.reacts||0)+(p.reacted?1:-1); r.classList.toggle('on',p.reacted); r.querySelector('span').textContent=p.reacts||''; try{ if(p.reacted) tickFx(); }catch(_){}
+      try{ const x=await rpc('g_post_react',{id_:id}); p.reacts=x.n; p.reacted=x.on; r.querySelector('span').textContent=x.n||''; }catch(err){ toast(socErr2(err)); } return; }
+    const c=e.target.closest('[data-cm]'); if(c){ const id=+c.dataset.cm; HUB.open[id]=!HUB.open[id]; const el=$('pc'+id); el.hidden=!HUB.open[id]; if(HUB.open[id]) loadComments(id); return; }
+    const m=e.target.closest('[data-more]'); if(m) postMenu(+m.dataset.more);
+  };
+  Object.keys(HUB.open).forEach(id=>{ if(HUB.open[id]) loadComments(+id); });
+}
+async function loadComments(id){
+  const el=$('pc'+id); if(!el) return; let list=[];
+  try{ list=await rpc('g_comments',{id_:id}); }catch(e){ el.innerHTML=`<small class="muted">${esc(socErr2(e))}</small>`; return; }
+  el.innerHTML=list.map(c=>`<div class="cmt"><b>${esc(c.nick||'')}</b> ${hubTxt(c.body)}<small>${hubAgo(c.at)}${c.mine?` · <a data-cdel="${c.id}">${tr('устгах','delete')}</a>`:''}</small></div>`).join('')+
+    `<div class="cmtNew"><input id="ci${id}" maxlength="1000" placeholder="${tr('Сэтгэгдэл бичих...','Write a comment...')}"><button class="sm main" data-csend="${id}">➤</button></div>`;
+  const send=async()=>{ const i=$('ci'+id), v=i.value.trim(); if(!v) return; i.value='';
+    try{ await rpc('g_comment_add',{id_:id, body_:v}); const p=(HUB.posts||[]).find(x=>x.id===id); if(p){ p.comments=(+p.comments||0)+1; const s=document.querySelector(`[data-cm="${id}"] span`); if(s) s.textContent=p.comments; } loadComments(id); }catch(e){ toast(socErr2(e)); } };
+  el.querySelector('[data-csend]').onclick=send; $('ci'+id).onkeydown=e=>{ if(e.key==='Enter') send(); };
+  el.querySelectorAll('[data-cdel]').forEach(a=>a.onclick=async()=>{ try{ await rpc('g_comment_del',{id_:+a.dataset.cdel}); const p=(HUB.posts||[]).find(x=>x.id===id); if(p) p.comments=Math.max(0,(+p.comments||0)-1); loadComments(id); }catch(e){ toast(socErr2(e)); } });
+}
+function postMenu(id){
+  const p=HUB.posts.find(x=>x.id===id); if(!p) return; const admin=HUB.g.my_role==='admin';
+  const card=document.querySelector(`.post[data-p="${id}"] .postH`); if(!card) return;
+  const old=card.querySelector('.postMenu'); if(old){ old.remove(); return; }
+  const m=document.createElement('div'); m.className='postMenu glass';
+  m.innerHTML=(admin?`<button data-pin>${p.pinned?tr('Тогтоосныг болиулах','Unpin'):tr('📌 Дээр нь тогтоох','📌 Pin to top')}</button>`:'')+`<button data-del class="danger">${tr('Устгах','Delete')}</button>`;
+  card.appendChild(m);
+  m.onclick=async e=>{ e.stopPropagation();
+    if(e.target.closest('[data-pin]')){ try{ await rpc('g_post_pin',{id_:id, on_:!p.pinned}); await loadPosts(); }catch(err){ toast(socErr2(err)); } }
+    if(e.target.closest('[data-del]')){ const b=e.target.closest('[data-del]'); if(!b.dataset.sure){ b.dataset.sure=1; b.textContent=tr('Дахин дарж устгана','Tap again to delete'); return; }
+      try{ await rpc('g_post_del',{id_:id}); HUB.posts=HUB.posts.filter(x=>x.id!==id); drawWall(); }catch(err){ toast(socErr2(err)); } } };
+}
+
+/* ---------- Эвент ---------- */
+async function loadEvents(){ try{ HUB.events=await rpc('g_events',{g:HUB.g.id}); }catch(e){ HUB.events=HUB.events||[]; toast(socErr2(e)); } if(HUB.tab==='events') drawEvents(); }
+function evCard(e){
+  const s=new Date(e.starts_at), en=new Date(s.getTime()+e.dur_min*60000), now=Date.now(), live=now>=s&&now<en, past=now>=en;
+  const admin=HUB.g.my_role==='admin';
+  const who=(e.going||[]).slice(0,6).map(n=>`<i title="${esc(n)}">${esc(String(n).slice(0,1).toUpperCase())}</i>`).join('');
+  return `<div class="glass ev${live?' live':''}${past?' past':''}" data-e="${e.id}">
+    <div class="evDate"><small>${hubWD()[s.getDay()]}</small><b>${s.getDate()}</b><small>${tr(`${s.getMonth()+1}-р сар`,s.toLocaleString('en',{month:'short'}))}</small></div>
+    <div class="evMain"><b>${esc(e.title)}</b><small>${hm(s.getHours()*60+s.getMinutes())}–${hm(en.getHours()*60+en.getMinutes())}${live?` · <span class="evLive">● ${tr('Одоо явж байна','Live now')}</span>`:''}</small>
+      ${e.note?`<p>${hubTxt(e.note)}</p>`:''}
+      <div class="evGo"><span class="evWho">${who}</span><small>${e.going_n} ${tr('хүн очно','going')}</small></div>
+      ${past?'':`<div class="evBtns"><button class="sm${e.my_going===true?' main':''}" data-go="${e.id}">${e.my_going===true?'✓ ':''}${tr('Очно','Going')}</button><button class="sm${e.my_going===false?' on':''}" data-no="${e.id}">${tr('Чадахгүй','Can\'t')}</button>${live?`<button class="sm main" data-join>🔊 ${tr('Ярианд орох','Join talk')}</button>`:''}</div>`}
+      ${(e.mine||admin)?`<a class="evDel" data-edel="${e.id}">${tr('Устгах','Delete')}</a>`:''}
+    </div></div>`;
+}
+function drawEvents(){
+  const b=$('hubBody'); if(!b) return;
+  if(HUB.events===null){ b.innerHTML=`<div class="socEmpty">${tr('Ачааллаж байна...','Loading...')}</div>`; loadEvents(); return; }
+  b.innerHTML=`<button class="main evNew" id="evNew">＋ ${tr('Хамтын суулт товлох','Plan a group sitting')}</button>
+    <div class="evs">${HUB.events.length?HUB.events.map(evCard).join(''):`<div class="socEmpty emptyS">${tr('Товлосон эвент алга. Хамтдаа суух цагаа товлоорой.','No events yet. Plan a time to sit together.')}</div>`}</div>`;
+  $('evNew').onclick=eventForm;
+  b.querySelector('.evs').onclick=async e=>{
+    const g=e.target.closest('[data-go]'), n=e.target.closest('[data-no]'), d=e.target.closest('[data-edel]');
+    if(e.target.closest('[data-join]')){ HUB.tab='voice'; hubDraw(); return; }
+    if(g||n){ const id=+(g||n).dataset[g?'go':'no']; try{ await rpc('g_rsvp',{id_:id, going_:!!g}); await loadEvents(); }catch(err){ toast(socErr2(err)); } return; }
+    if(d){ if(!d.dataset.sure){ d.dataset.sure=1; d.textContent=tr('Дахин дарж устгана','Tap again to delete'); return; } try{ await rpc('g_event_del',{id_:+d.dataset.edel}); await loadEvents(); }catch(err){ toast(socErr2(err)); } }
+  };
+}
+function eventForm(){
+  const b=$('hubBody'); const st={day:0, t:(HUB.g.sit_time!=null?HUB.g.sit_time:20*60), dur:60};
+  const days=Array.from({length:7},(_,i)=>{ const d=new Date(); d.setDate(d.getDate()+i); return d; });
+  const draw=()=>{
+    b.innerHTML=`<div class="glass evForm">
+      <label class="socF"><span>${tr('Нэр','Title')}</span><input id="efT" maxlength="120" placeholder="${tr('жишээ: Бямба гарагийн хамтын суулт','e.g. Saturday group sitting')}"></label>
+      <div class="socF"><span>${tr('Өдөр','Day')}</span><div class="efDays">${days.map((d,i)=>`<button class="${i===st.day?'on':''}" data-d="${i}"><small>${i===0?tr('Өнөөдөр','Today'):i===1?tr('Маргааш','Tomorrow'):hubWD()[d.getDay()]}</small><b>${d.getDate()}</b></button>`).join('')}</div></div>
+      <div class="efRow"><div class="socF"><span>${tr('Эхлэх цаг','Starts')}</span><button class="nmTbtn" id="efTime">${hm(st.t)}</button></div>
+        <div class="socF"><span>${tr('Үргэлжлэх','Duration')}</span><div class="efDur">${[30,60,90,120,150].map(m=>`<button class="${m===st.dur?'on':''}" data-m="${m}">${m<60?m+tr('м','m'):(m%60?`${Math.floor(m/60)}.5${tr('ц','h')}`:m/60+tr('ц','h'))}</button>`).join('')}</div></div></div>
+      <label class="socF"><span>${tr('Тайлбар (заавал биш)','Note (optional)')}</span><textarea id="efN" rows="2" maxlength="1000" placeholder="${tr('Хаана, яаж уулзах, юу бэлдэх гэх мэт','Where to meet, what to prepare...')}"></textarea></label>
+      <div class="bkrow"><button id="efNo">${tr('Болих','Cancel')}</button><button class="main" id="efGo">${tr('Товлох','Create')}</button></div></div>`;
+    const keep={t:$('efT').value, n:$('efN').value};
+    b.querySelectorAll('[data-d]').forEach(x=>x.onclick=()=>{ st.day=+x.dataset.d; save1(); draw(); restore(); });
+    b.querySelectorAll('[data-m]').forEach(x=>x.onclick=()=>{ st.dur=+x.dataset.m; save1(); draw(); restore(); });
+    $('efTime').onclick=()=>{ save1(); openSlot({title:tr('Эхлэх цаг','Start time'), v:st.t, ok:v=>{ st.t=v; draw(); restore(); }}); };
+    $('efNo').onclick=drawEvents;
+    $('efGo').onclick=async()=>{ const t=$('efT').value.trim(); if(!t){ $('efT').focus(); return; }
+      const d=new Date(days[st.day]); d.setHours(Math.floor(st.t/60), st.t%60, 0, 0);
+      $('efGo').disabled=true;
+      try{ await rpc('g_event_add',{g:HUB.g.id, title_:t, starts_:d.toISOString(), dur_:st.dur, note_:$('efN').value.trim()}); toast(tr('Эвент товлогдлоо. Гишүүдэд мэдэгдэл очлоо.','Event created. Members were notified.')); HUB.events=null; drawEvents(); }
+      catch(e){ toast(socErr2(e)); const g=$('efGo'); if(g) g.disabled=false; } };
+  };
+  let mem={t:'',n:''}; const save1=()=>{ const a=$('efT'), c=$('efN'); if(a) mem.t=a.value; if(c) mem.n=c.value; }; const restore=()=>{ $('efT').value=mem.t; $('efN').value=mem.n; };
+  draw();
+}
+
+/* ---------- Дуут өрөө (WebRTC, Supabase Realtime-аар холбогдоно) ---------- */
+const VC={on:false, g:null, ws:null, ref:0, hb:null, ping:null, me:rid(10), nick:'', stream:null, peers:{}, names:{}, muted:false, ac:null, meters:{}, raf:0};
+const ICE=[{urls:['stun:stun.l.google.com:19302','stun:stun1.l.google.com:19302']},
+  {urls:['turn:openrelay.metered.ca:80','turn:openrelay.metered.ca:443','turn:openrelay.metered.ca:443?transport=tcp'],username:'openrelayproject',credential:'openrelayproject'}];
+async function voiceWho(){ if(!HUB.g) return; try{ HUB.voiceWho=await rpc('voice_who',{g:HUB.g.id})||[]; }catch(e){ HUB.voiceWho=[]; }
+  const l=$('hubLive'); if(l){ l.hidden=!HUB.voiceWho.length; l.textContent=HUB.voiceWho.length||''; } if(HUB.tab==='voice' && !VC.on) drawVoice(); }
+function drawVoice(){
+  const b=$('hubBody'); if(!b) return;
+  const inThis=VC.on && VC.g===HUB.g.id;
+  const people=inThis?[{id:VC.me,nick:VC.nick+' ('+tr('та','you')+')',me:true}].concat(Object.keys(VC.peers).map(id=>({id,nick:VC.names[id]||'…'}))):[];
+  b.innerHTML=`<div class="glass voice${inThis?' on':''}">
+    <div class="vcTop"><b>🔊 ${esc(HUB.g.name)} · ${tr('Хурлын өрөө','Talk room')}</b><small>${inThis?tr(`${people.length} хүн ярьж байна`,`${people.length} in the room`):(HUB.voiceWho.length?tr(`${HUB.voiceWho.length} хүн ярьж байна: ${HUB.voiceWho.map(esc).join(', ')}`,`${HUB.voiceWho.length} talking: ${HUB.voiceWho.map(esc).join(', ')}`):tr('Одоогоор хэн ч алга','No one is here yet'))}</small></div>
+    ${inThis?`<div class="vcPeople">${people.map(p=>`<div class="vcP" id="vp_${p.id}"><i>${esc(String(p.nick).slice(0,1).toUpperCase())}</i><small>${esc(p.nick)}</small></div>`).join('')}</div>
+      <div class="vcBtns"><button class="vcMute${VC.muted?' off':''}" id="vcMute">${VC.muted?'🔇 '+tr('Дуугүй','Muted'):'🎙 '+tr('Микрофон асаалттай','Mic on')}</button><button class="vcLeave" id="vcLeave">${tr('Гарах','Leave')}</button></div>`
+     :`<button class="main vcJoin" id="vcJoin">🔊 ${tr('Ярианд нэгдэх','Join the talk')}</button>
+      <p class="hint" style="font-size:12px;text-align:center">${tr('Нэгдэхэд микрофоны зөвшөөрөл асууна. Чихэвчтэй бол цуурайгүй сонсогдоно.','You will be asked for microphone access. Headphones avoid echo.')}</p>`}
+  </div>`;
+  if(inThis){ $('vcMute').onclick=()=>{ VC.muted=!VC.muted; if(VC.stream) VC.stream.getAudioTracks().forEach(t=>t.enabled=!VC.muted); drawVoice(); }; $('vcLeave').onclick=()=>voiceLeave(); }
+  else $('vcJoin').onclick=()=>voiceJoin(HUB.g);
+}
+async function micStream(){
+  if(window.Native && typeof window.Native.hasMic==='function' && !window.Native.hasMic()){
+    window.Native.askMic();
+    for(let i=0;i<40 && !window.Native.hasMic();i++) await new Promise(r=>setTimeout(r,500));
+    if(!window.Native.hasMic()) throw new Error(tr('Микрофоны зөвшөөрөл өгөөгүй байна','Microphone permission was not given'));
+  }
+  return navigator.mediaDevices.getUserMedia({audio:{echoCancellation:true, noiseSuppression:true, autoGainControl:true}, video:false});
+}
+function rtSend(event, payload){ if(VC.ws && VC.ws.readyState===1) VC.ws.send(JSON.stringify({topic:'realtime:voice-'+VC.g, event:'broadcast', payload:{type:'broadcast', event, payload}, ref:String(++VC.ref)})); }
+async function voiceJoin(g){
+  if(VC.on) await voiceLeave(true);
+  const btn=$('vcJoin'); if(btn){ btn.disabled=true; btn.textContent=tr('Холбогдож байна...','Connecting...'); }
+  try{
+    VC.stream=await micStream();
+    await socLogin();
+    VC.on=true; VC.g=g.id; VC.nick=(S.soc&&S.soc.nick)||'?'; VC.peers={}; VC.names={}; VC.muted=false;
+    const ws=new WebSocket(SUPA.url.replace(/^http/,'ws')+'/realtime/v1/websocket?apikey='+encodeURIComponent(SUPA.key)+'&vsn=1.0.0'); VC.ws=ws;
+    ws.onopen=()=>{ ws.send(JSON.stringify({topic:'realtime:voice-'+VC.g, event:'phx_join', payload:{config:{broadcast:{self:false, ack:false}, presence:{key:''}, private:false}, access_token:socTok}, ref:String(++VC.ref)}));
+      VC.hb=setInterval(()=>{ try{ ws.send(JSON.stringify({topic:'phoenix', event:'heartbeat', payload:{}, ref:String(++VC.ref)})); }catch(e){} },25000);
+      setTimeout(()=>rtSend('hello',{from:VC.me, nick:VC.nick}),600); };
+    ws.onmessage=ev=>{ let m; try{ m=JSON.parse(ev.data); }catch(e){ return; } if(m.event!=='broadcast') return; const p=m.payload&&m.payload.payload, k=m.payload&&m.payload.event; if(p) onSignal(k,p); };
+    ws.onclose=()=>{ if(VC.on && VC.ws===ws){ toast(tr('Холболт тасарлаа','Connection lost')); voiceLeave(); } };
+    const ping=()=>rpc('voice_ping',{g:VC.g, on_:true}).then(w=>{ HUB.voiceWho=w||[]; }).catch(()=>{});
+    ping(); VC.ping=setInterval(ping,30000);
+    meterLoop(); drawVoice(); tickFx();
+  }catch(e){ toast(e&&e.name==='NotAllowedError'?tr('Микрофоны зөвшөөрөл өгөөгүй байна','Microphone permission was not given'):socErr2(e)); await voiceLeave(true); drawVoice(); }
+}
+function peer(id, initiator){
+  if(VC.peers[id]) return VC.peers[id];
+  const pc=new RTCPeerConnection({iceServers:ICE}); VC.peers[id]=pc;
+  VC.stream.getTracks().forEach(t=>pc.addTrack(t, VC.stream));
+  pc.onicecandidate=e=>{ if(e.candidate) rtSend('ice',{from:VC.me, to:id, c:e.candidate}); };
+  pc.ontrack=e=>{ let a=document.getElementById('va_'+id); if(!a){ a=document.createElement('audio'); a.id='va_'+id; a.autoplay=true; a.playsInline=true; document.body.appendChild(a); } a.srcObject=e.streams[0]; a.play().catch(()=>{}); meterFor(id, e.streams[0]); };
+  pc.onconnectionstatechange=()=>{ if(['failed','closed'].includes(pc.connectionState)) dropPeer(id); };
+  if(initiator){ pc.createOffer().then(o=>pc.setLocalDescription(o)).then(()=>rtSend('offer',{from:VC.me, to:id, nick:VC.nick, sdp:pc.localDescription})).catch(()=>{}); }
+  if(HUB.tab==='voice') drawVoice();
+  return pc;
+}
+function dropPeer(id){ const pc=VC.peers[id]; if(pc){ try{ pc.close(); }catch(e){} } delete VC.peers[id]; const a=document.getElementById('va_'+id); if(a) a.remove(); delete VC.meters[id]; if(HUB.tab==='voice') drawVoice(); }
+async function onSignal(k,p){
+  if(!VC.on || p.from===VC.me || (p.to && p.to!==VC.me)) return;
+  if(p.nick) VC.names[p.from]=p.nick;
+  if(k==='hello'){ rtSend('hi',{from:VC.me, to:p.from, nick:VC.nick}); if(VC.me<p.from) peer(p.from,true); }
+  else if(k==='hi'){ if(VC.me<p.from) peer(p.from,true); }
+  else if(k==='offer'){ const pc=peer(p.from,false); try{ await pc.setRemoteDescription(p.sdp); const a=await pc.createAnswer(); await pc.setLocalDescription(a); rtSend('answer',{from:VC.me, to:p.from, nick:VC.nick, sdp:pc.localDescription}); }catch(e){} }
+  else if(k==='answer'){ const pc=VC.peers[p.from]; if(pc) try{ await pc.setRemoteDescription(p.sdp); }catch(e){} }
+  else if(k==='ice'){ const pc=VC.peers[p.from]; if(pc) try{ await pc.addIceCandidate(p.c); }catch(e){} }
+  else if(k==='bye'){ dropPeer(p.from); }
+}
+function meterFor(id, stream){ try{ VC.ac=VC.ac||new (window.AudioContext||window.webkitAudioContext)(); const s=VC.ac.createMediaStreamSource(stream), an=VC.ac.createAnalyser(); an.fftSize=256; s.connect(an); VC.meters[id]=an; }catch(e){} }
+function meterLoop(){ if(VC.stream) meterFor(VC.me, VC.stream); const buf=new Uint8Array(128);
+  const step=()=>{ if(!VC.on) return; VC.raf=requestAnimationFrame(step);
+    for(const id in VC.meters){ const an=VC.meters[id]; an.getByteTimeDomainData(buf); let m=0; for(let i=0;i<buf.length;i++) m=Math.max(m,Math.abs(buf[i]-128));
+      const el=document.getElementById('vp_'+id); if(el) el.classList.toggle('talk', m>(id===VC.me&&VC.muted?999:10)); } };
+  step(); }
+async function voiceLeave(quiet){
+  if(!VC.on && !VC.stream){ return; }
+  try{ rtSend('bye',{from:VC.me}); }catch(e){}
+  Object.keys(VC.peers).forEach(dropPeer);
+  try{ if(VC.stream) VC.stream.getTracks().forEach(t=>t.stop()); }catch(e){}
+  clearInterval(VC.hb); clearInterval(VC.ping); cancelAnimationFrame(VC.raf);
+  const g=VC.g; const ws=VC.ws; VC.ws=null; try{ if(ws) ws.close(); }catch(e){}
+  VC.on=false; VC.stream=null; VC.meters={};
+  if(g) rpc('voice_ping',{g, on_:false}).then(w=>{ HUB.voiceWho=w||[]; voiceWho(); }).catch(()=>{});
+  if(!quiet && HUB.tab==='voice') drawVoice();
+}
+window.addEventListener('pagehide',()=>{ if(VC.on) voiceLeave(true); });
 
 </script>
 </body>
