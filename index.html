@@ -583,28 +583,33 @@ button.pHearts:active .hIc{transform:scale(1.3)}.pHearts.on .hIc{animation:hPop 
 .nmWin{display:flex;align-items:center;justify-content:space-between;gap:8px;font-size:14px;margin-top:4px}.nmWinB{display:flex;align-items:center;gap:6px}.nmWinB i{opacity:.5;font-style:normal}
 .nmTbtn{padding:8px 12px;border-radius:12px;font-size:16px;font-weight:600;font-variant-numeric:tabular-nums;border:1px solid var(--line,rgba(127,127,127,.3));background:transparent;min-width:76px}
 .nmT .nmTbtn{flex:1;border:0;min-width:0;padding:6px 2px}
-/* ---- слот машин хэлбэрийн цаг тохируулагч ---- */
-.slotOv{position:fixed;inset:0;z-index:600;background:rgba(20,12,6,.55);display:flex;align-items:center;justify-content:center;padding:16px;opacity:0;transition:opacity .2s}.slotOv.on{opacity:1}
-.slotM{position:relative;width:min(330px,82vw);padding:16px 16px 18px;border-radius:22px 22px 14px 14px;background:linear-gradient(90deg,#8e8a84 0%,#f2efe9 18%,#c9c5be 45%,#fbf9f5 70%,#9d988f 100%);box-shadow:0 18px 40px rgba(0,0,0,.45),inset 0 2px 0 rgba(255,255,255,.8);color:#2a1a10}
-.slotHood{margin:-4px -2px 12px;height:46px;border-radius:12px;background:linear-gradient(#3a2412,#c98b4a 55%,#e8b77a);box-shadow:inset 0 0 0 3px #1c120a;display:flex;align-items:center;justify-content:center;color:#fff3df;font:600 17px Cormorant,Georgia,serif;letter-spacing:.08em;text-shadow:0 1px 2px rgba(0,0,0,.5)}
-.slotWin{position:relative;display:flex;align-items:center;justify-content:center;gap:6px;padding:10px;border-radius:12px;background:#15100c;box-shadow:inset 0 0 0 3px #3c3029,inset 0 6px 14px rgba(0,0,0,.8)}
-.reel{position:relative;width:96px;height:168px;overflow-y:scroll;scroll-snap-type:y mandatory;scrollbar-width:none;border-radius:8px;background:linear-gradient(#8f8676,#fffaf0 30%,#fffdf7 50%,#fffaf0 70%,#8f8676);overscroll-behavior:contain;-webkit-overflow-scrolling:touch}
+/* ---- эргэлддэг хүрдтэй цаг тохируулагч (апп-ын өөрийн хэв маяг) ---- */
+.slotOv{position:fixed;inset:0;z-index:600;background:rgba(44,32,10,.28);-webkit-backdrop-filter:blur(6px);backdrop-filter:blur(6px);display:flex;align-items:flex-end;justify-content:center;padding:16px 16px calc(18px + env(safe-area-inset-bottom,0px));opacity:0;transition:opacity .25s}
+.slotOv.on{opacity:1}
+.slotM{position:relative;width:min(360px,100%);padding:18px 18px 16px;border-radius:30px;background:var(--glass2);border:1px solid var(--edge);box-shadow:0 24px 60px rgba(60,40,10,.28),inset 0 1px 0 rgba(255,255,255,.7);color:var(--fg);transform:translateY(30px) scale(.98);transition:transform .38s cubic-bezier(.2,1.25,.4,1)}
+.slotOv.on .slotM{transform:none}
+.slotHood{text-align:center;font:600 22px/1.2 Cormorant,Georgia,serif;margin:2px 40px 12px;color:var(--fg)}
+.slotWin{position:relative;display:flex;align-items:center;justify-content:center;gap:4px;padding:4px 12px;border-radius:24px;background:var(--bg2);box-shadow:inset 0 2px 10px rgba(120,90,20,.16),inset 0 -1px 0 rgba(255,255,255,.6);perspective:520px}
+.slotWin::before{content:"";position:absolute;left:10px;right:10px;top:50%;height:46px;transform:translateY(-50%);border-radius:16px;background:linear-gradient(90deg,rgba(247,209,94,.0),rgba(247,209,94,.30) 20%,rgba(247,209,94,.30) 80%,rgba(247,209,94,0));box-shadow:inset 0 1px 0 rgba(168,120,16,.28),inset 0 -1px 0 rgba(168,120,16,.28);pointer-events:none}
+.reel{position:relative;width:92px;height:220px;overflow-y:scroll;scroll-snap-type:y mandatory;scrollbar-width:none;overscroll-behavior:contain;-webkit-overflow-scrolling:touch;
+  -webkit-mask-image:linear-gradient(transparent,#000 32%,#000 68%,transparent);mask-image:linear-gradient(transparent,#000 32%,#000 68%,transparent);
+  background:repeating-linear-gradient(transparent 0 21px,rgba(140,100,25,.07) 21px 22px);transform-style:preserve-3d}
 .reel::-webkit-scrollbar{display:none}
-.reel div{height:56px;display:flex;align-items:center;justify-content:center;scroll-snap-align:center;font:700 40px/1 Cormorant,Georgia,serif;color:#8a1f12;text-shadow:0 1px 0 #fff,0 -1px 0 rgba(0,0,0,.25)}
-.reel .pad{scroll-snap-align:none}
-.reel small{font-size:16px;margin-left:3px;color:#5a2a18}
-.slotWin::after{content:"";position:absolute;left:8px;right:8px;top:50%;height:58px;transform:translateY(-50%);border-top:2px solid rgba(255,190,90,.75);border-bottom:2px solid rgba(255,190,90,.75);pointer-events:none;box-shadow:0 0 14px rgba(255,180,80,.35)}
-.slotCol{font:700 34px Cormorant,serif;color:#ffd79a}
-.slotKb{display:flex;gap:8px;margin-top:12px}.slotKb input{flex:1;min-width:0;padding:10px 12px;border-radius:12px;font-size:18px;text-align:center;letter-spacing:.1em;background:#fffdf8;border:1px solid #b9b2a6;color:#2a1a10}
-.slotBtns{display:flex;gap:8px;margin-top:12px}.slotBtns button{flex:1;padding:11px;border-radius:14px;font-weight:600}
-.slotOk{background:linear-gradient(#c22c1a,#8a1608);color:#fff;border:0;box-shadow:0 3px 0 #4e0b03}
-.slotLever{position:absolute;right:-30px;top:96px;width:30px;height:150px;cursor:pointer;touch-action:none}
-.slotLever .base{position:absolute;left:0;bottom:0;width:22px;height:46px;border-radius:0 12px 12px 0;background:linear-gradient(90deg,#9d988f,#f6f3ee,#a8a39b)}
-.slotLever .rod{position:absolute;left:12px;bottom:30px;width:7px;height:110px;border-radius:4px;background:linear-gradient(90deg,#8b867e,#fff,#9a958c);transform-origin:bottom center;transition:transform .35s cubic-bezier(.3,1.6,.5,1)}
-.slotLever .ball{position:absolute;left:-9px;top:-18px;width:24px;height:24px;border-radius:50%;background:radial-gradient(circle at 35% 30%,#666,#111 60%)}
-.slotLever.pull .rod{transform:scaleY(-.55);transition:transform .18s ease-in}
-.slotM.spin .reel div{animation:reelBlur .5s ease-out}
-@keyframes reelBlur{0%{filter:blur(3px);transform:translateY(-14px)}100%{filter:none;transform:none}}
+.reel div{height:44px;display:flex;align-items:center;justify-content:center;scroll-snap-align:center;font:600 34px/1 Cormorant,Georgia,serif;color:var(--fg);font-variant-numeric:lining-nums tabular-nums;backface-visibility:hidden;will-change:transform,opacity;transition:color .15s}
+.reel div.on{color:var(--accent)}
+.reel .pad{height:88px;scroll-snap-align:none}
+.reel small{font:500 13px Manrope,system-ui,sans-serif;margin-left:4px;color:var(--muted)}
+.slotCol{font:600 30px Cormorant,serif;color:var(--accent);margin-top:-4px}
+.slotKb{display:flex;gap:8px;margin-top:12px}.slotKb input{flex:1;min-width:0;padding:11px 12px;border-radius:16px;font-size:18px;text-align:center;letter-spacing:.12em;background:var(--glass);border:1px solid var(--line);color:var(--fg)}
+.slotBtns{display:flex;gap:10px;margin-top:12px}.slotBtns button{flex:1;padding:13px;border-radius:18px;font-weight:600;font-size:15px}
+.slotNo{background:transparent;border:1px solid var(--line);color:var(--fg)}
+.slotLever{position:absolute;right:14px;top:12px;width:30px;height:34px;cursor:pointer;touch-action:none}
+.slotLever .base{position:absolute;left:4px;bottom:0;width:22px;height:10px;border-radius:6px;background:var(--bg2);box-shadow:inset 0 1px 2px rgba(120,90,20,.25)}
+.slotLever .rod{position:absolute;left:13px;bottom:6px;width:4px;height:24px;border-radius:3px;background:linear-gradient(90deg,#c99a2e,#f7dc8c,#c99a2e);transform-origin:bottom center;transform:rotate(14deg);transition:transform .45s cubic-bezier(.3,1.7,.5,1)}
+.slotLever .ball{position:absolute;left:-5px;top:-11px;width:14px;height:14px;border-radius:50%;background:radial-gradient(circle at 35% 30%,#ffd2dc,#ff8fa3 55%,#e0607a);box-shadow:0 2px 6px rgba(224,96,122,.45)}
+.slotLever.pull .rod{transform:rotate(14deg) scaleY(-.6);transition:transform .16s ease-in}
+.slotM.spin .reel{animation:reelNudge .5s ease-out}
+@keyframes reelNudge{0%{transform:translateY(-6px)}60%{transform:translateY(3px)}100%{transform:none}}
 .rtBox{padding:16px;border-radius:22px;display:flex;flex-direction:column;gap:10px}
 .rtHead{display:flex;align-items:center;justify-content:space-between;gap:12px}
 .rtHead b{font-weight:500}
@@ -3800,7 +3805,7 @@ async function openGroup(id){
 function socBadges(){ if(!socOn()||!S||!S.soc) return; chatUnread(); rpc('my_friends').then(l=>{ FR.list=l; FR.incoming=l.filter(f=>f.state==='incoming').length; }).catch(()=>{}); rpc('my_invites').then(l=>{ GR.inv=l; }).catch(()=>{}); }
 
 /* ===================== шинэчлэлийн мэдэгдэл (Android) ===================== */
-const APP_VER=76, SITE='https://otgoo-cell.github.io/gegee';
+const APP_VER=77, SITE='https://otgoo-cell.github.io/gegee';
 async function checkUpdate(){
   if(!N.openUrl) return;
   try{ const r=await fetch(SITE+'/version.json?t='+Date.now(),{cache:'no-store'}); const v=await r.json();
@@ -3872,7 +3877,7 @@ async function pollChat(first){
 
 /* ===================== Санал хүсэлт ===================== */
 const FB={kind:'bug', newCount:0, mine:null, seenAt:0};
-const APP_NAME='8.6';
+const APP_NAME='8.7';
 const FB_K={bug:['🐞',()=>tr('Алдаа','Problem')], idea:['💡',()=>tr('Санаа','Idea')], other:['💬',()=>tr('Бусад','Other')]};
 const fbPlat=()=>{ try{ if(N.hasBg && N.hasBg()) return 'android-app'; }catch(e){} return /iPhone|iPad|iPod/.test(navigator.userAgent)?'ios-pwa':'web'; };
 const fbDev=()=>`${navigator.userAgent.slice(0,260)} | ${screen.width}x${screen.height}@${window.devicePixelRatio||1} | ${LANG} | ${view}`;
@@ -4260,10 +4265,16 @@ function radioPlay(){
   $('rPlay').addEventListener('click', radioPlay);
 })();
 
-/* ---------- слот машин хэлбэрийн цаг тохируулагч: эргүүлж эсвэл гараар бичиж тохируулна ---------- */
+/* ---------- эргэлддэг хүрдтэй цаг тохируулагч: гүйлгэх бүрт ховилд орох мэт чичирч, жижиг дуу гаргана ---------- */
+let _tickAC=null;
+function tickFx(){
+  try{ if(!(S && S.silent)){ _tickAC=_tickAC||new (window.AudioContext||window.webkitAudioContext)(); const ac=_tickAC, t=ac.currentTime, o=ac.createOscillator(), g=ac.createGain();
+    o.type='triangle'; o.frequency.setValueAtTime(2300,t); o.frequency.exponentialRampToValueAtTime(900,t+.03); g.gain.setValueAtTime(.05,t); g.gain.exponentialRampToValueAtTime(.0001,t+.04); o.connect(g).connect(ac.destination); o.start(t); o.stop(t+.05); } }catch(e){}
+  try{ if(window.Native && window.Native.vib) window.Native.vib('tick'); else if(navigator.vibrate) navigator.vibrate(8); }catch(e){}
+}
 function openSlot(o){
   // o: {title, v (минут), dur (давтамж бол цаг 0–12, минут 5-аар), ok(v)}
-  const IH=56, old=$('slotOv'); if(old) old.remove();
+  const IH=44, old=$('slotOv'); if(old) old.remove();
   const H=o.dur?Array.from({length:13},(_,i)=>i):Array.from({length:24},(_,i)=>i), M=o.dur?Array.from({length:12},(_,i)=>i*5):Array.from({length:60},(_,i)=>i);
   const p2=n=>String(n).padStart(2,'0');
   const col=(arr,u)=>`<div class="pad"></div>${arr.map(v=>`<div>${o.dur?v:p2(v)}${u?`<small>${u}</small>`:''}</div>`).join('')}<div class="pad"></div>`;
@@ -4271,26 +4282,33 @@ function openSlot(o){
   ov.innerHTML=`<div class="slotM" id="slotM"><div class="slotHood">${esc(o.title||'')}</div>
     <div class="slotWin"><div class="reel" id="reelH">${col(H,o.dur?tr('ц','h'):'')}</div><span class="slotCol">${o.dur?'':':'}</span><div class="reel" id="reelM">${col(M,o.dur?tr('м','m'):'')}</div></div>
     <div class="slotKb"><input id="slotIn" inputmode="numeric" maxlength="5" placeholder="${o.dur?tr('жишээ: 0:45','e.g. 0:45'):tr('жишээ: 07:30','e.g. 07:30')}" autocomplete="off"></div>
-    <div class="slotBtns"><button id="slotNo">${tr('Болих','Cancel')}</button><button class="slotOk" id="slotYes">${tr('Тохируулах','Set')}</button></div>
-    <div class="slotLever" id="slotLever"><i class="base"></i><i class="rod"><i class="ball"></i></i></div></div>`;
+    <div class="slotBtns"><button class="slotNo" id="slotNo">${tr('Болих','Cancel')}</button><button class="main" id="slotYes">${tr('Тохируулах','Set')}</button></div>
+    <div class="slotLever" id="slotLever" title="${tr('Татаж тохируулах','Pull to set')}"><i class="base"></i><i class="rod"><i class="ball"></i></i></div></div>`;
   document.body.appendChild(ov); requestAnimationFrame(()=>ov.classList.add('on'));
   const rh=$('reelH'), rm=$('reelM'), inp=$('slotIn');
+  const items=el=>[...el.children].filter(d=>!d.classList.contains('pad'));
+  const idx=el=>Math.max(0,Math.round(el.scrollTop/IH));
+  const paint=el=>{ const c=el.scrollTop/IH, ni=Math.round(c); items(el).forEach((d,i)=>{ const k=i-c, a=Math.abs(k); if(a>3.2){ d.style.opacity=0; return; }
+      d.style.transform=`rotateX(${(-k*21).toFixed(1)}deg) scale(${(1-a*.05).toFixed(3)})`; d.style.opacity=Math.max(.12,1-a*.3).toFixed(2); d.classList.toggle('on',i===ni); }); };
   const v0=o.v||0, hi=Math.min(H.length-1,Math.floor(v0/60)), mi=o.dur?Math.min(M.length-1,Math.round((v0%60)/5)):v0%60;
   const setIdx=(el,i,smooth)=>el.scrollTo({top:i*IH, behavior:smooth?'smooth':'auto'});
-  requestAnimationFrame(()=>{ setIdx(rh,hi); setIdx(rm,mi); });
-  const idx=el=>Math.max(0,Math.round(el.scrollTop/IH));
+  const last=new Map();
+  requestAnimationFrame(()=>{ setIdx(rh,hi); setIdx(rm,mi); paint(rh); paint(rm); last.set(rh,idx(rh)); last.set(rm,idx(rm)); });
   const val=()=>{ const h=H[Math.min(H.length-1,idx(rh))], m=M[Math.min(M.length-1,idx(rm))]; return h*60+m; };
   const show=()=>{ const v=val(); inp.value=o.dur?`${Math.floor(v/60)}:${p2(v%60)}`:`${p2(Math.floor(v/60))}:${p2(v%60)}`; };
-  let t1=null; [rh,rm].forEach(el=>el.addEventListener('scroll',()=>{ clearTimeout(t1); t1=setTimeout(()=>{ if(document.activeElement!==inp) show(); try{ if(navigator.vibrate) navigator.vibrate(4); }catch(e){} },110); },{passive:true}));
+  let t1=null;
+  [rh,rm].forEach(el=>el.addEventListener('scroll',()=>{
+    if(!el._raf) el._raf=requestAnimationFrame(()=>{ el._raf=0; paint(el); const i=idx(el); if(last.has(el) && i!==last.get(el)){ last.set(el,i); tickFx(); } });
+    clearTimeout(t1); t1=setTimeout(()=>{ if(document.activeElement!==inp) show(); },110); },{passive:true}));
   setTimeout(show,60);
   inp.addEventListener('input',()=>{ let d=inp.value.replace(/[^\d]/g,''); if(d.length>=3){ const h=+d.slice(0,d.length-2), m=+d.slice(-2);
       if(m<60){ const hI=H.indexOf(h); const mI=o.dur?M.indexOf(Math.round(m/5)*5):m; if(hI>=0) setIdx(rh,hI,true); if(mI>=0) setIdx(rm,mI,true); } } });
-  const close=()=>{ ov.classList.remove('on'); setTimeout(()=>ov.remove(),200); };
+  const close=()=>{ ov.classList.remove('on'); setTimeout(()=>ov.remove(),250); };
   const done=()=>{ const v=val(); if(o.dur && v<5){ toast(tr('Хамгийн багадаа 5 минут','At least 5 minutes')); return; } close(); try{ o.ok(v); }catch(e){} };
   $('slotNo').onclick=close; ov.addEventListener('click',e=>{ if(e.target===ov) close(); });
-  $('slotYes').onclick=done;
-  const lv=$('slotLever'); lv.onclick=()=>{ lv.classList.add('pull'); $('slotM').classList.add('spin'); try{ if(navigator.vibrate) navigator.vibrate([10,40,10]); }catch(e){}
-    setTimeout(()=>{ lv.classList.remove('pull'); },380); setTimeout(done,620); };
+  $('slotYes').onclick=()=>{ tickFx(); done(); };
+  const lv=$('slotLever'); lv.onclick=()=>{ lv.classList.add('pull'); $('slotM').classList.add('spin'); tickFx(); setTimeout(tickFx,120); setTimeout(tickFx,240);
+    setTimeout(()=>{ lv.classList.remove('pull'); },360); setTimeout(done,560); };
 }
 
 </script>
