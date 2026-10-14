@@ -628,6 +628,7 @@ button.pHearts:active .hIc{transform:scale(1.3)}.pHearts.on .hIc{animation:hPop 
 .gHallT{color:var(--muted);margin-right:2px}
 .gHallP{padding:6px 12px;border-radius:14px;border:1px solid var(--line);background:var(--glass);font-size:13px;color:var(--fg)}
 .gHallP.me{border-color:var(--accent)}
+.socList.busy{opacity:.55;transition:opacity .2s}
 .rtBox{padding:16px;border-radius:22px;display:flex;flex-direction:column;gap:10px}
 .rtHead{display:flex;align-items:center;justify-content:space-between;gap:12px}
 .rtHead b{font-weight:500}
@@ -3299,7 +3300,7 @@ function socTabs(){ try{ $('socBody').classList.remove('gView'); }catch(e){}
   const T=[['board',tr('Жагсаалт','Boards')],['friends',tr('Найзууд','Friends')+(FR.incoming?` <i class="dotN">${FR.incoming}</i>`:'')],['groups',tr('Группүүд','Groups')+(GR.inv&&GR.inv.length?` <i class="dotN">${GR.inv.length}</i>`:'')],['chat',chatTabLabel()]];
   return `<div class="seg2 glass socSeg socTabs" id="socTabs">${T.map(t=>`<button data-t="${t[0]}" class="${SOC.tab===t[0]?'on':''}">${t[1]}</button>`).join('')}</div>`;
 }
-function bindTabs(){ $('socTabs').onclick=e=>{ const b=e.target.closest('button'); if(!b) return; SOC.tab=b.dataset.t; if(SOC.tab==='friends') FR.list=null; if(SOC.tab==='groups') GR.mine=null; if(SOC.tab==='chat') CH.list=null; renderSoc(); }; }
+function bindTabs(){ $('socTabs').onclick=e=>{ const b=e.target.closest('button'); if(!b) return; if(SOC.tab===b.dataset.t) return; SOC.tab=b.dataset.t; if(SOC.tab==='friends') FR.stale=true; if(SOC.tab==='groups') GR.stale=true; if(SOC.tab==='chat') CH.stale=true; renderSoc(); }; }
 function countryOpts(sel){ return COUNTRIES.map(c=>`<option value="${c[0]}"${c[0]===sel?' selected':''}>${flag(c[0])} ${LANG==='en'?c[2]:c[1]}</option>`).join(''); }
 function drawJoin(box, first){
   box=box||$('socBody');
@@ -3415,11 +3416,11 @@ function drawSoc(){
   box.innerHTML=socTabs()+`
     <div class="seg2 glass socSeg" id="socP">${P.map(p=>`<button data-p="${p[0]}" class="${SOC.p===p[0]?'on':''}">${p[1]}</button>`).join('')}</div>
     <div class="chips socCh" id="socC"><button class="chip${SOC.c==='all'?' on':''}" data-c="all">🌐 ${tr('Бүх дэлхий','World')}</button><button class="chip${SOC.c===S.soc.country?' on':''}" data-c="${S.soc.country}">${flag(S.soc.country)} ${cname(S.soc.country)}</button></div>
-    <div class="socList">${S&&S.soc&&!SOC.err?raceHead():''}${list}</div>
+    <div class="socList${SOC.busy&&SOC.rows?' busy':''}">${S&&S.soc&&!SOC.err?raceHead():''}${list}</div>
     ${socAdmin?`<button class="ghostlink" id="socAdm">${tr('Эзэмшигчийн хэсэг · бүх бүртгэл','Owner area · all members')}</button>`:''}`;
   bindTabs();
-  $('socP').onclick=e=>{ const b=e.target.closest('button'); if(!b) return; SOC.p=b.dataset.p; SOC.rows=null; socLoad(); };
-  $('socC').onclick=e=>{ const b=e.target.closest('button'); if(!b) return; SOC.c=b.dataset.c; SOC.rows=null; socLoad(); };
+  $('socP').onclick=e=>{ const b=e.target.closest('button'); if(!b||SOC.p===b.dataset.p) return; SOC.p=b.dataset.p; socLoad(); };
+  $('socC').onclick=e=>{ const b=e.target.closest('button'); if(!b||SOC.c===b.dataset.c) return; SOC.c=b.dataset.c; socLoad(); };
   box.querySelectorAll('[data-k]').forEach(b=>b.onclick=()=>openProfile(null, b.dataset.k, +b.dataset.t));
   if($('socMine')) $('socMine').onclick=()=>openProfile(S.soc.nick);
   if($('socRetry')) $('socRetry').onclick=()=>{ SOC.rows=null; socLoad(); };
@@ -3621,7 +3622,8 @@ async function loadFriends(){
   FR.busy=false; if(SOC.tab==='friends' && view==='vSoc') drawFriends();
 }
 function drawFriends(){
-  const box=$('socBody'); if(FR.list===null){ if(!FR.busy) loadFriends(); box.innerHTML=socTabs()+`<div class="socEmpty">${tr('Ачааллаж байна...','Loading...')}</div>`; bindTabs(); return; }
+  const box=$('socBody'); if(FR.list!==null && FR.stale && !FR.busy){ FR.stale=false; setTimeout(loadFriends,0); }
+  if(FR.list===null){ if(!FR.busy) loadFriends(); box.innerHTML=socTabs()+`<div class="socEmpty">${tr('Ачааллаж байна...','Loading...')}</div>`; bindTabs(); return; }
   const inc=FR.list.filter(f=>f.state==='incoming'), fr=FR.list.filter(f=>f.state==='friend'), sent=FR.list.filter(f=>f.state==='sent');
   const sitting=fr.filter(f=>f.sitting).length;
   const row=f=>`<div class="socRow fr" data-nick="${esc(f.nick)}">${sitDot(f.sitting)}<span class="socWho"><b>${esc(f.nick)}</b><small>${flag(f.country)} ${f.sitting?`<span class="sitTxt">${tr('одоо сууж байна','sitting now')}</span> · `:''}${tr('өдөрт дунджаар','daily avg')} ${hmin(f.avg30)}</small></span><span class="socMin">${hmin(f.week)}</span><button class="sm ghost chBtn" data-chat="${esc(f.nick)}" aria-label="${tr('Чатлах','Chat')}">💬</button></div>`;
@@ -3637,11 +3639,11 @@ function drawFriends(){
   if(!S.soc.code) rpc('my_code').then(c=>{ if(c){ S.soc.code=c; save(); if($('myCode')) $('myCode').textContent=c; } }).catch(()=>{});
   $('codeShare').onclick=async()=>{ const c=S.soc.code; if(!c) return; const t=tr(`Гэгээ апп дээр намайг найзаар нэмээрэй. Миний ID: ${c}`,`Add me as a friend on Gegee. My ID: ${c}`);
     try{ if(navigator.share){ await navigator.share({text:t}); return; } }catch(e){ return; } try{ await navigator.clipboard.writeText(c); toast(tr('ID хуулагдлаа','ID copied')); }catch(e){ toast(c); } };
-  const go=()=>{ const n=$('frNick').value.trim().toUpperCase().replace(/\s/g,''); if(n.length<6){ toast(tr('ID нь 6 тэмдэгттэй','The ID has 6 characters')); return; } act(()=>rpc('friend_request_code',{code_:n}), r=>r==='accepted'?tr('Найз боллоо','You are now friends'):tr('Хүсэлт илгээлээ','Request sent'), ()=>{ FR.list=null; drawFriends(); }); };
+  const go=()=>{ const n=$('frNick').value.trim().toUpperCase().replace(/\s/g,''); if(n.length<6){ toast(tr('ID нь 6 тэмдэгттэй','The ID has 6 characters')); return; } act(()=>rpc('friend_request_code',{code_:n}), r=>r==='accepted'?tr('Найз боллоо','You are now friends'):tr('Хүсэлт илгээлээ','Request sent'), ()=>{ FR.stale=true; drawFriends(); }); };
   $('frGo').onclick=go; $('frNick').onkeydown=e=>{ if(e.key==='Enter') go(); };
-  box.querySelectorAll('[data-ok]').forEach(b=>b.onclick=()=>act(()=>rpc('friend_respond',{who:b.dataset.ok,ok:true}),tr('Найз боллоо','You are now friends'),()=>{ FR.list=null; drawFriends(); }));
-  box.querySelectorAll('[data-no]').forEach(b=>b.onclick=()=>act(()=>rpc('friend_respond',{who:b.dataset.no,ok:false}),'',()=>{ FR.list=null; drawFriends(); }));
-  box.querySelectorAll('[data-cancel]').forEach(b=>b.onclick=e=>{ e.stopPropagation(); act(()=>rpc('friend_remove',{who:b.dataset.cancel}),'',()=>{ FR.list=null; drawFriends(); }); });
+  box.querySelectorAll('[data-ok]').forEach(b=>b.onclick=()=>act(()=>rpc('friend_respond',{who:b.dataset.ok,ok:true}),tr('Найз боллоо','You are now friends'),()=>{ FR.stale=true; drawFriends(); }));
+  box.querySelectorAll('[data-no]').forEach(b=>b.onclick=()=>act(()=>rpc('friend_respond',{who:b.dataset.no,ok:false}),'',()=>{ FR.stale=true; drawFriends(); }));
+  box.querySelectorAll('[data-cancel]').forEach(b=>b.onclick=e=>{ e.stopPropagation(); act(()=>rpc('friend_remove',{who:b.dataset.cancel}),'',()=>{ FR.stale=true; drawFriends(); }); });
   box.querySelectorAll('.socRow.fr:not(.dim)').forEach(r=>r.onclick=e=>{ const c=e.target.closest('[data-chat]'); if(c){ openChatWith(c.dataset.chat); return; } openProfile(r.dataset.nick); });
 }
 async function drawRel(nick){
@@ -3675,7 +3677,8 @@ function gRow(g, extra=''){
   return `<button class="socRow grp" data-g="${g.id}">${extra}${gBadge(g.icon, g.id, gTier(g.week_avg*7,'week'), 'sm')}<span class="socWho"><b>${esc(g.name)} ${clsBadge(g.class)}</b><small>${g.size} ${tr('гишүүн','members')}${st?` · ${st}`:''}${g.sit_time!=null?` · 🕯 ${hm(g.sit_time)}`:''}</small></span>${g.week_avg!=null?`<span class="socMin">${hmin(g.week_avg)}</span>`:''}</button>`;
 }
 function drawGroups(){
-  const box=$('socBody'); if(GR.mine===null){ if(!GR.busy) loadGroups(); box.innerHTML=socTabs()+`<div class="socEmpty">${tr('Ачааллаж байна...','Loading...')}</div>`; bindTabs(); return; }
+  const box=$('socBody'); if(GR.mine!==null && GR.stale && !GR.busy){ GR.stale=false; setTimeout(loadGroups,0); }
+  if(GR.mine===null){ if(!GR.busy) loadGroups(); box.innerHTML=socTabs()+`<div class="socEmpty">${tr('Ачааллаж байна...','Loading...')}</div>`; bindTabs(); return; }
   const P=[['week',tr('7 хоног','Week')],['month',tr('Сар','Month')],['quarter',tr('Улирал','Quarter')],['year',tr('Жил','Year')]];
   if(!P.some(p=>p[0]===SOC.p)) SOC.p='week';
   const gh=(GR.hall||[]).filter(x=>x.kind===SOC.p&&x.class===GR.cls);
@@ -3701,20 +3704,20 @@ function drawGroups(){
     <div class="seg2 glass socSeg" id="gP">${P.map(p=>`<button data-p="${p[0]}" class="${SOC.p===p[0]?'on':''}">${p[1]}</button>`).join('')}</div>
     <div class="chips socCh" id="gC">${Object.keys(CLS).map(c=>`<button class="chip${GR.cls===c?' on':''}" data-c="${c}">${CLS[c][0]} <small>${CLS[c][1]}</small></button>`).join('')}</div>
     ${myGcard}${ghall}
-    <div class="socList">${board||`<div class="socEmpty emptyS">${tr('Энэ ангилалд хараахан групп алга.','No groups in this class yet.')}</div>`}</div>
+    <div class="socList">${GR.board===null?`<div class="socEmpty">${tr('Ачааллаж байна...','Loading...')}</div>`:(board||`<div class="socEmpty emptyS">${tr('Энэ ангилалд хараахан групп алга.','No groups in this class yet.')}</div>`)}</div>
     <p class="hint socNote2">${tr('Ангилал бүрт гишүүн тус бүрийн дундаж суултаар өрсөлдөнө. Хугацаа дуусахад 1·2·3-т орсон группийн гишүүн бүр шагнал авна.','Within each class, groups compete on average sitting per member. When a period ends, every member of the top 3 groups gets the award.')}</p>
     <div class="socH gH"><span>${tr('Групп хайх','Find a group')}</span></div>
     <div class="glass socAdd"><input id="gQ" maxlength="30" value="${esc(GR.q)}" placeholder="${tr('Группийн нэр','Group name')}"><button id="gFind">${tr('Хайх','Search')}</button></div>
     <div class="socList" id="gFound">${GR.found?(GR.found.length?GR.found.map(g=>gRow(g)).join(''):`<div class="socEmpty emptyS">${tr('Олдсонгүй','Nothing found')}</div>`):''}</div>`;
   bindTabs(); box.classList.add('gView');
   box.querySelectorAll('.socRow.grp,.podCol.grp,.gHallP').forEach(b=>b.onclick=()=>openGroup(b.dataset.g));
-  $('gP').onclick=e=>{ const b=e.target.closest('button'); if(!b) return; SOC.p=b.dataset.p; SOC.rows=null; GR.mine=null; drawGroups(); };
-  $('gC').onclick=e=>{ const b=e.target.closest('button'); if(!b) return; GR.cls=b.dataset.c; GR.mine=null; drawGroups(); };
+  $('gP').onclick=e=>{ const b=e.target.closest('button'); if(!b||SOC.p===b.dataset.p) return; SOC.p=b.dataset.p; SOC.rows=null; GR.board=null; drawGroups(); if(!GR.busy) loadGroups(); };
+  $('gC').onclick=e=>{ const b=e.target.closest('button'); if(!b||GR.cls===b.dataset.c) return; GR.cls=b.dataset.c; GR.board=null; drawGroups(); if(!GR.busy) loadGroups(); };
   $('gNew').onclick=()=>groupForm(null);
   const find=()=>{ GR.q=$('gQ').value.trim(); act(()=>rpc('group_search',{q:GR.q}),'',r=>{ GR.found=r; drawGroups(); }); };
   $('gFind').onclick=find; $('gQ').onkeydown=e=>{ if(e.key==='Enter') find(); };
-  box.querySelectorAll('[data-acc]').forEach(b=>b.onclick=()=>act(()=>rpc('group_join',{g:b.dataset.acc,msg:''}),tr('Группт нэгдлээ','You joined the group'),()=>{ GR.mine=null; drawGroups(); }));
-  box.querySelectorAll('[data-dec]').forEach(b=>b.onclick=()=>act(()=>rpc('group_cancel',{g:b.dataset.dec}),'',()=>{ GR.mine=null; drawGroups(); }));
+  box.querySelectorAll('[data-acc]').forEach(b=>b.onclick=()=>act(()=>rpc('group_join',{g:b.dataset.acc,msg:''}),tr('Группт нэгдлээ','You joined the group'),()=>{ GR.stale=true; drawGroups(); }));
+  box.querySelectorAll('[data-dec]').forEach(b=>b.onclick=()=>act(()=>rpc('group_cancel',{g:b.dataset.dec}),'',()=>{ GR.stale=true; drawGroups(); }));
 }
 
 function groupForm(g){
@@ -3823,7 +3826,7 @@ async function openGroup(id){
 function socBadges(){ if(!socOn()||!S||!S.soc) return; chatUnread(); rpc('my_friends').then(l=>{ FR.list=l; FR.incoming=l.filter(f=>f.state==='incoming').length; }).catch(()=>{}); rpc('my_invites').then(l=>{ GR.inv=l; }).catch(()=>{}); }
 
 /* ===================== шинэчлэлийн мэдэгдэл (Android) ===================== */
-const APP_VER=78, SITE='https://otgoo-cell.github.io/gegee';
+const APP_VER=79, SITE='https://otgoo-cell.github.io/gegee';
 async function checkUpdate(){
   if(!N.openUrl) return;
   try{ const r=await fetch(SITE+'/version.json?t='+Date.now(),{cache:'no-store'}); const v=await r.json();
@@ -3842,7 +3845,8 @@ setInterval(()=>{ if(!document.hidden && !CH.room) chatUnread(); }, 60000);
 
 async function loadChats(){ CH.busy=true; try{ CH.list=await rpc('my_chats'); CH.unread=CH.list.reduce((t,c)=>t+c.unread,0); navBadge(); CH.err=''; }catch(e){ CH.err=socErr2(e); CH.list=CH.list||[]; } CH.busy=false; if(SOC.tab==='chat' && view==='vSoc') drawChats(); }
 function drawChats(){
-  const box=$('socBody'); if(CH.list===null){ if(!CH.busy) loadChats(); box.innerHTML=socTabs()+`<div class="socEmpty">${tr('Ачааллаж байна...','Loading...')}</div>`; bindTabs(); return; }
+  const box=$('socBody'); if(CH.list!==null && CH.stale && !CH.busy){ CH.stale=false; setTimeout(loadChats,0); }
+  if(CH.list===null){ if(!CH.busy) loadChats(); box.innerHTML=socTabs()+`<div class="socEmpty">${tr('Ачааллаж байна...','Loading...')}</div>`; bindTabs(); return; }
   const rows=CH.list.map(c=>`<button class="socRow chatRow${c.unread?' unread':''}" data-room="${esc(c.room)}" data-title="${esc(c.title)}" data-kind="${c.kind}">
       <span class="chAv ${c.kind}">${c.kind==='group'?'👥':flag(c.country)}${c.sitting?'<i class="sitDot"></i>':''}</span>
       <span class="socWho"><b>${esc(c.title)} ${c.kind==='group'&&c.cls?clsBadge(c.cls):''}</b><small>${c.last_body?`${c.last_nick===S.soc.nick?tr('Та: ','You: '):(c.kind==='group'?esc(c.last_nick)+': ':'')}${esc(c.last_body.slice(0,70))}`:tr('Хараахан бичээгүй байна','No messages yet')}</small></span>
@@ -3861,7 +3865,7 @@ function openChat(room, title, kind){
     <div class="chatBox" id="chatBox"><div class="socEmpty">${tr('Ачааллаж байна...','Loading...')}</div></div>
     <div class="chatIn glass"><textarea id="chatTxt" rows="1" maxlength="2000" placeholder="${tr('Мессеж бичих...','Write a message...')}"></textarea><button class="main" id="chatSend" aria-label="${tr('Илгээх','Send')}"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 12l16-8-6 16-3-7z"/></svg></button></div>`);
   $('socSheet').classList.add('chatMode');
-  $('socX').onclick=()=>{ stopChat(); closeSocSheet(); if(view==='vSoc' && SOC.tab==='chat'){ CH.list=null; drawChats(); } else chatUnread(); };
+  $('socX').onclick=()=>{ stopChat(); closeSocSheet(); if(view==='vSoc' && SOC.tab==='chat'){ CH.stale=true; drawChats(); } else chatUnread(); };
   const ta=$('chatTxt');
   ta.oninput=()=>{ ta.style.height='auto'; ta.style.height=Math.min(120, ta.scrollHeight)+'px'; };
   const send=async()=>{ const t=ta.value.trim(); if(!t) return; ta.value=''; ta.oninput(); $('chatSend').disabled=true;
@@ -3895,7 +3899,7 @@ async function pollChat(first){
 
 /* ===================== Санал хүсэлт ===================== */
 const FB={kind:'bug', newCount:0, mine:null, seenAt:0};
-const APP_NAME='8.8';
+const APP_NAME='8.9';
 const FB_K={bug:['🐞',()=>tr('Алдаа','Problem')], idea:['💡',()=>tr('Санаа','Idea')], other:['💬',()=>tr('Бусад','Other')]};
 const fbPlat=()=>{ try{ if(N.hasBg && N.hasBg()) return 'android-app'; }catch(e){} return /iPhone|iPad|iPod/.test(navigator.userAgent)?'ios-pwa':'web'; };
 const fbDev=()=>`${navigator.userAgent.slice(0,260)} | ${screen.width}x${screen.height}@${window.devicePixelRatio||1} | ${LANG} | ${view}`;
@@ -4150,7 +4154,7 @@ function openFromAlert(kind){
   if(!/^(msg|friend|friend_ok|greq|ginv)$/.test(kind||'')) return;   // сануулга бол зүгээр апп нээгдэнэ
   const go=()=>{ if(!S || !S.soc || (!$('lock').hidden && !$('lock').classList.contains('out'))){ setTimeout(go,700); return; }
     SOC.tab = kind==='msg' ? 'chat' : kind==='greq'||kind==='ginv' ? 'groups' : 'friends';
-    if(SOC.tab==='chat') CH.list=null; if(SOC.tab==='friends') FR.list=null; if(SOC.tab==='groups') GR.mine=null;
+    if(SOC.tab==='chat') CH.stale=true; if(SOC.tab==='friends') FR.stale=true; if(SOC.tab==='groups') GR.stale=true;
     const t=document.querySelector('#tabs button[data-v="vSoc"]'); if(t) t.click(); try{ renderSoc(); }catch(e){} };
   go();
 }
@@ -4170,9 +4174,9 @@ if('serviceWorker' in navigator) navigator.serviceWorker.addEventListener('messa
     if(d<70){ set(0); return; }
     busy=true; set(70,true);
     try{
-      if(typeof SOC!=='undefined'){ SOC.rows=null; SOC.hall=null; }
-      if(typeof FR!=='undefined') FR.list=null; if(typeof GR!=='undefined') GR.mine=null; if(typeof CH!=='undefined') CH.list=null;
-      renderSoc(); try{ chatUnread(); }catch(e){}
+      if(typeof SOC!=='undefined'){ SOC.hall=null; }
+      if(typeof FR!=='undefined') FR.stale=true; if(typeof GR!=='undefined') GR.stale=true; if(typeof CH!=='undefined') CH.stale=true;
+      if(SOC.tab==='board'||!SOC.tab){ if(SOC.rows) socLoad(); else renderSoc(); } else renderSoc(); try{ chatUnread(); }catch(e){}
       await new Promise(r=>setTimeout(r,900));
     }catch(e){}
     busy=false; set(0);
