@@ -541,6 +541,14 @@ body.running .cglow{display:none}
 body.sheetOpen{overflow:hidden}
 /* дадлын цаг */
 .nmBox{padding:16px;border-radius:22px;display:flex;flex-direction:column;gap:12px}.nmHead{display:flex;align-items:flex-start;justify-content:space-between;gap:12px}.nmBody{display:flex;flex-direction:column;gap:10px;transition:opacity .2s}.nmBody.off{opacity:.4;pointer-events:none}.nmTimes{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px}.nmT{min-width:0;display:flex;align-items:center;gap:4px;border:1px solid var(--line,rgba(127,127,127,.25));border-radius:14px;padding:4px 4px 4px 6px}.nmT input{flex:1;min-width:0;border:0;background:transparent;padding:6px 2px;font-size:15px;text-align:center}.nmT input::-webkit-calendar-picker-indicator{display:none}.nmT button{width:30px;height:30px;padding:0;border-radius:50%;font-size:13px;opacity:.6;flex:none}.nmAdd{grid-column:1/-1;padding:10px;border-radius:14px;border:1px dashed var(--line,rgba(127,127,127,.4));background:transparent;font-size:14px}.nmTxt{display:flex;flex-direction:column;gap:6px;font-size:14px}.nmTxt input{width:100%;padding:10px 12px;font-size:16px}.nmNote{font-size:12px;color:var(--gold,#e8c27a)}
+.pHearts{display:flex;align-items:center;gap:14px;width:100%;margin:6px 0 2px;padding:12px 16px;border-radius:20px;border:1px solid rgba(255,120,160,.28);background:linear-gradient(135deg,rgba(255,110,150,.12),rgba(255,180,140,.08));text-align:left;color:inherit;font:inherit}
+.pHearts .hIc{font-size:30px;line-height:1;color:#ff6f9a;filter:drop-shadow(0 0 8px rgba(255,110,150,.45));transition:transform .25s}
+.pHearts:not(.on):not(.mine) .hIc{color:transparent;-webkit-text-stroke:2px #ff6f9a}
+.pHearts b{display:block;font-size:20px;font-weight:600}.pHearts small{display:block;font-size:12px;opacity:.75;line-height:1.35}
+button.pHearts:active .hIc{transform:scale(1.3)}.pHearts.on .hIc{animation:hPop .5s ease}
+@keyframes hPop{0%{transform:scale(.6)}60%{transform:scale(1.35)}100%{transform:scale(1)}}
+.hFly{position:fixed;z-index:999;pointer-events:none;color:#ff6f9a;font-style:normal;font-size:22px;transform:translate(-50%,-50%);animation:hFly 1.2s ease-out forwards;text-shadow:0 0 10px rgba(255,110,150,.6)}
+@keyframes hFly{0%{opacity:0;transform:translate(-50%,-50%) scale(.4)}15%{opacity:1}100%{opacity:0;transform:translate(calc(-50% + var(--dx)),calc(-50% + var(--dy))) scale(var(--s))}}
 .rtBox{padding:16px;border-radius:22px;display:flex;flex-direction:column;gap:10px}
 .rtHead{display:flex;align-items:center;justify-content:space-between;gap:12px}
 .rtHead b{font-weight:500}
@@ -3331,6 +3339,32 @@ async function profCal(k, who, cur){
   $('pcGrid').innerHTML=h;
   $('pcSum').innerHTML=`<span>☀️ ${tr('Бүрэн','Full')} <b>${full}</b> ${tr('өдөр','d')}</span><span>⏱ <b>${hmin(tot)}</b></span>${rbn?`<span>🌈 <b>${rbn}</b></span>`:''}`;
 }
+/* ---------- зүрх: таалагдсан бол нууцаар зүрх илгээнэ, хэн илгээсэн нь хэзээ ч харагдахгүй ---------- */
+async function drawHeart(k, who, isMe){
+  const box=$('pHeartBox'); if(!box) return;
+  let r=null; try{ r=await sreq('/rest/v1/rpc/heart',{k_:k, who, give_:false}); }catch(e){}
+  if(!r || !$('pHeartBox')) return;
+  const n=r.n||0;
+  if(isMe || r.mine){
+    box.innerHTML=`<div class="pHearts mine"><span class="hIc">♥</span><div><b>${n}</b><small>${n?tr('Таны бясалгалд ирсэн зүрх · хэн илгээсэн нь нууц','Hearts sent to your practice · senders stay secret'):tr('Бусад таны бясалгалд зүрх илгээх боломжтой','Others can send hearts to your practice')}</small></div></div>`;
+    return;
+  }
+  const paint=(n,on)=>{ box.innerHTML=`<button class="pHearts${on?' on':''}" id="pHeartBtn"><span class="hIc">♥</span><div><b>${n}</b><small>${on?tr('Өнөөдөр зүрх илгээсэн. Маргааш дахин илгээж болно.','You sent a heart today. You can send another tomorrow.'):tr('Таалагдсан бол зүрх илгээгээрэй. Таны нэр харагдахгүй.','Send a heart if this inspires you. Your name stays hidden.')}</small></div></button>`; };
+  paint(n, r.today);
+  $('pHeartBtn').onclick=async()=>{
+    const b=$('pHeartBtn'); if(!b || b.classList.contains('on')) { toast(tr('Өнөөдөр зүрх илгээсэн байна 💗','Already sent a heart today 💗')); return; }
+    heartBurst(b); paint(n+1, true);
+    try{ const x=await sreq('/rest/v1/rpc/heart',{k_:k, who, give_:true}); if(x) paint(x.n, x.today); }catch(e){ paint(n,false); toast(socErr(e)); }
+  };
+}
+function heartBurst(el){
+  const r=el.getBoundingClientRect(), ic=el.querySelector('.hIc'), q=ic?ic.getBoundingClientRect():r;
+  for(let i=0;i<9;i++){ const h=document.createElement('i'); h.className='hFly'; h.textContent='♥';
+    h.style.left=(q.left+q.width/2)+'px'; h.style.top=(q.top+q.height/2)+'px';
+    h.style.setProperty('--dx',((Math.random()-.5)*120)+'px'); h.style.setProperty('--dy',(-60-Math.random()*90)+'px'); h.style.setProperty('--s',(.7+Math.random()*.8).toFixed(2));
+    h.style.animationDelay=(i*40)+'ms'; document.body.appendChild(h); setTimeout(()=>h.remove(),1500); }
+  try{ if(navigator.vibrate) navigator.vibrate(18); }catch(e){}
+}
 async function openProfile(nick, pk, rt){
   let T=pk?tr('Профайл','Profile'):esc(nick);
   openSocSheet(sheetHead(T)+`<div class="socEmpty">${tr('Ачааллаж байна...','Loading...')}</div>`);
@@ -3347,6 +3381,7 @@ async function openProfile(nick, pk, rt){
     const isMe=S.soc && p.nick===S.soc.nick, tier=Number.isFinite(rt)?rt:profTier(p); if(pk) T=(p.nick&&p.nick!=='•••••••')?esc(p.nick):tierName(tier); if(isMe) SOC.myTier=tier;
     $('socSheetIn').innerHTML=sheetHead(pk&&!isMe?T:esc(p.nick))+`
       <div class="pHero">${avatar(p.avatar, tier, (p.gems||[]).map(g=>({s:g.s,p:g.p})), 'lg')}<div class="pTier">✦ ${tierName(tier)}${(p.awards||[]).length?` · 🏆 ${(p.awards||[]).length}`:''}${(p.gem_count||(p.gems||[]).length)?` · 💎 ${p.gem_count||p.gems.length}`:''}</div></div><div class="pTop"><div><b>${p.country?flag(p.country)+' '+cname(p.country):'🌐 '+tr('Нууц','Private')}</b><small>${tr('Нэгдсэн','Joined')} ${String(p.since).replace(/-/g,'.')}</small></div></div>
+      <div id="pHeartBox"></div>
       ${cupShelf(p.awards)}
       <div class="pGrid">
         ${st(p.routine!=null?hm(p.routine):'—',tr('Дадлын цаг','Practice time'))}
@@ -3368,6 +3403,7 @@ async function openProfile(nick, pk, rt){
       Gem.thumb(gemSpec(a,false), 'pf'+gemKey(a,false)).then(u=>{ if(u){ el.style.backgroundImage=`url(${u})`; el.classList.add('img'); } }); });
     if(!pk && p.nick.toLowerCase()!==S.soc.nick.toLowerCase()) drawRel(p.nick);
     profCal(pk||null, pk?null:p.nick);
+    drawHeart(pk||null, pk?null:p.nick, isMe);
   }catch(e){ $('socSheetIn').innerHTML=sheetHead(T)+`<div class="socEmpty">${esc(socErr(e))}</div>`; $('socX').onclick=closeSocSheet; }
 }
 
@@ -3672,7 +3708,7 @@ async function openGroup(id){
 function socBadges(){ if(!socOn()||!S||!S.soc) return; chatUnread(); rpc('my_friends').then(l=>{ FR.list=l; FR.incoming=l.filter(f=>f.state==='incoming').length; }).catch(()=>{}); rpc('my_invites').then(l=>{ GR.inv=l; }).catch(()=>{}); }
 
 /* ===================== шинэчлэлийн мэдэгдэл (Android) ===================== */
-const APP_VER=71, SITE='https://otgoo-cell.github.io/gegee';
+const APP_VER=72, SITE='https://otgoo-cell.github.io/gegee';
 async function checkUpdate(){
   if(!N.openUrl) return;
   try{ const r=await fetch(SITE+'/version.json?t='+Date.now(),{cache:'no-store'}); const v=await r.json();
@@ -3744,7 +3780,7 @@ async function pollChat(first){
 
 /* ===================== Санал хүсэлт ===================== */
 const FB={kind:'bug', newCount:0, mine:null, seenAt:0};
-const APP_NAME='8.1';
+const APP_NAME='8.2';
 const FB_K={bug:['🐞',()=>tr('Алдаа','Problem')], idea:['💡',()=>tr('Санаа','Idea')], other:['💬',()=>tr('Бусад','Other')]};
 const fbPlat=()=>{ try{ if(N.hasBg && N.hasBg()) return 'android-app'; }catch(e){} return /iPhone|iPad|iPod/.test(navigator.userAgent)?'ios-pwa':'web'; };
 const fbDev=()=>`${navigator.userAgent.slice(0,260)} | ${screen.width}x${screen.height}@${window.devicePixelRatio||1} | ${LANG} | ${view}`;
