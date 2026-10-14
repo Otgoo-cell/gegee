@@ -540,7 +540,7 @@ body.running .cglow{display:none}
 .sheetX svg{width:20px;height:20px}
 body.sheetOpen{overflow:hidden}
 /* дадлын цаг */
-.nmBox{padding:16px;border-radius:22px;display:flex;flex-direction:column;gap:12px}.nmHead{display:flex;align-items:flex-start;justify-content:space-between;gap:12px}.nmBody{display:flex;flex-direction:column;gap:10px;transition:opacity .2s}.nmBody.off{opacity:.4;pointer-events:none}.nmRange{display:flex;align-items:center;gap:6px}.nmRange input{flex:1;min-width:0;padding:8px 6px;font-size:14px;text-align:center}.nmRange i{opacity:.5;font-style:normal}.nmTxt{display:flex;flex-direction:column;gap:6px;font-size:14px}.nmTxt input{width:100%;padding:10px 12px;font-size:16px}.nmNote{font-size:12px;color:var(--gold,#e8c27a)}
+.nmBox{padding:16px;border-radius:22px;display:flex;flex-direction:column;gap:12px}.nmHead{display:flex;align-items:flex-start;justify-content:space-between;gap:12px}.nmBody{display:flex;flex-direction:column;gap:10px;transition:opacity .2s}.nmBody.off{opacity:.4;pointer-events:none}.nmTimes{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px}.nmT{min-width:0;display:flex;align-items:center;gap:4px;border:1px solid var(--line,rgba(127,127,127,.25));border-radius:14px;padding:4px 4px 4px 6px}.nmT input{flex:1;min-width:0;border:0;background:transparent;padding:6px 2px;font-size:15px;text-align:center}.nmT input::-webkit-calendar-picker-indicator{display:none}.nmT button{width:30px;height:30px;padding:0;border-radius:50%;font-size:13px;opacity:.6;flex:none}.nmAdd{grid-column:1/-1;padding:10px;border-radius:14px;border:1px dashed var(--line,rgba(127,127,127,.4));background:transparent;font-size:14px}.nmTxt{display:flex;flex-direction:column;gap:6px;font-size:14px}.nmTxt input{width:100%;padding:10px 12px;font-size:16px}.nmNote{font-size:12px;color:var(--gold,#e8c27a)}
 .rtBox{padding:16px;border-radius:22px;display:flex;flex-direction:column;gap:10px}
 .rtHead{display:flex;align-items:center;justify-content:space-between;gap:12px}
 .rtHead b{font-weight:500}
@@ -1222,11 +1222,10 @@ body:has(#doneBar:not([hidden])) .toast{bottom:calc(148px + env(safe-area-inset-
     <span class="ntimes"><input type="time" id="nt0" disabled title="Дадлын цаг"><input type="time" id="nt1"><input type="time" id="nt2"></span>
   </div>
   <div class="glass nmBox" id="nmBox">
-    <div class="nmHead"><div><b>Ариун нэрийн сануулга</b><div class="hint">Өдөр турш тогтсон завсарт зөвхөн таны мэдэх үгээр сануулна</div></div>
+    <div class="nmHead"><div><b>Ариун нэрийн сануулга</b><div class="hint">Өөрийн сонгосон цагуудад зөвхөн таны мэдэх үгээр сануулна</div></div>
       <select id="nmOn"><option value="1">Асаалттай</option><option value="0">Унтраалттай</option></select></div>
     <div class="nmBody" id="nmBody">
-      <div class="row"><span class="muted">Хэр олон</span><select id="nmEvery"><option value="30">30 минут тутам</option><option value="60">Цаг тутам</option><option value="120">2 цаг тутам</option><option value="180">3 цаг тутам</option><option value="240">4 цаг тутам</option></select></div>
-      <div class="nmTxt"><span class="muted">Хэдээс хэд хүртэл</span><span class="nmRange"><input type="time" id="nmFrom"><i>–</i><input type="time" id="nmTo"></span></div>
+      <div class="nmTxt"><span class="muted">Сануулах цагууд</span><div class="nmTimes" id="nmTimes"></div></div>
       <label class="nmTxt"><span class="muted">Мэдэгдэл дээр гарах үг</span><input id="nmText" maxlength="40" placeholder="🌸" autocomplete="off"></label>
       <div class="hint" style="font-size:12px">Хажуунаас харсан хүн утгыг нь ойлгохооргүй үг, эсвэл ганц тэмдэг бичээрэй. Утгыг нь зөвхөн та мэднэ.</div>
       <div class="hint nmNote" id="nmNote" hidden></div>
@@ -2530,7 +2529,7 @@ const EN = {
   'Өнөөдөр гэрлийн үед...':'Today during the light...', 'Тэмдэглэлээс хайх':'Search notes', 'Үгээ энд буулгана уу':'Paste the words here', 'Эх сурвалж (ном, хуудас) заавал биш':'Source (book, page), optional',
   'Дэлгэц дээр дарж удирдлага харна':'Tap the screen for controls', 'Түр зогсоох':'Pause', 'Гэрэл':'Brightness', 'Аялгуу руу шилжих цаг боллоо':'Time to switch to the sound', 'Дарж баталгаажуулна уу':'Tap to confirm', 'Хамтрагч':'Companion', 'Суултын үеэр хамт байх амьд дүрээ сонго. Дээр нь дарвал баярлана.':'Choose the little friend who sits with you. Tap it and it bounces.',
   'Соёолж':'Sprout', 'Бадам':'Lotus', 'Үүлхэн':'Cloudy', '30м':'30m', '1ц':'1h', '2ц':'2h', '3ц':'3h', '5ц':'5h', '7ц':'7h', '9ц':'9h', '12ц':'12h',
-  'Ариун нэрийн сануулга':'Holy Name reminder', 'Өдөр турш тогтсон завсарт зөвхөн таны мэдэх үгээр сануулна':'Reminds you through the day with a word only you understand', 'Хэр олон':'How often', '30 минут тутам':'Every 30 min', 'Цаг тутам':'Every hour', '2 цаг тутам':'Every 2 hours', '3 цаг тутам':'Every 3 hours', '4 цаг тутам':'Every 4 hours', 'Хэдээс хэд хүртэл':'From – to', 'Мэдэгдэл дээр гарах үг':'Text on the notification', 'Хажуунаас харсан хүн утгыг нь ойлгохооргүй үг, эсвэл ганц тэмдэг бичээрэй. Утгыг нь зөвхөн та мэднэ.':'Write a word or a single symbol others won\'t understand. Only you know what it means.', 'Шагнал':'Awards', 'Өдрийн сануулга':'Daily reminders', 'Асаалттай':'On', 'Унтраалттай':'Off', 'Өглөө · өдөр · орой':'Morning · day · evening', 'Хаах':'Close', 'Шагналын чулуу':'Award gems', 'Хамтрагчийг тойрно':'Circle my companion', 'Хамтрагчид зохирсон өнгөөр':'In my companion\'s colors', 'Нуух':'Hide', '⤢ Томоор':'⤢ Full view', '↻ Ар тал':'↻ Back side', 'Чирж эргүүлнэ · хоёр хуруугаар томруулна':'Drag to turn · pinch to zoom', 'Эргүүлж ар талыг харах':'Turn to see the back', 'Чирж эргүүлнэ':'Drag to turn', 'Өмнөх сар':'Previous month', 'Дараагийн сар':'Next month', 'Өмнөх жил':'Previous year', 'Дараагийн жил':'Next year'
+  'Ариун нэрийн сануулга':'Holy Name reminder', 'Өөрийн сонгосон цагуудад зөвхөн таны мэдэх үгээр сануулна':'Reminds you at the times you choose, with a word only you understand', 'Сануулах цагууд':'Reminder times', 'Мэдэгдэл дээр гарах үг':'Text on the notification', 'Хажуунаас харсан хүн утгыг нь ойлгохооргүй үг, эсвэл ганц тэмдэг бичээрэй. Утгыг нь зөвхөн та мэднэ.':'Write a word or a single symbol others won\'t understand. Only you know what it means.', 'Шагнал':'Awards', 'Өдрийн сануулга':'Daily reminders', 'Асаалттай':'On', 'Унтраалттай':'Off', 'Өглөө · өдөр · орой':'Morning · day · evening', 'Хаах':'Close', 'Шагналын чулуу':'Award gems', 'Хамтрагчийг тойрно':'Circle my companion', 'Хамтрагчид зохирсон өнгөөр':'In my companion\'s colors', 'Нуух':'Hide', '⤢ Томоор':'⤢ Full view', '↻ Ар тал':'↻ Back side', 'Чирж эргүүлнэ · хоёр хуруугаар томруулна':'Drag to turn · pinch to zoom', 'Эргүүлж ар талыг харах':'Turn to see the back', 'Чирж эргүүлнэ':'Drag to turn', 'Өмнөх сар':'Previous month', 'Дараагийн сар':'Next month', 'Өмнөх жил':'Previous year', 'Дараагийн жил':'Next year'
 };
 const _orig = new WeakMap();
 function applyStatic(){
@@ -3673,7 +3672,7 @@ async function openGroup(id){
 function socBadges(){ if(!socOn()||!S||!S.soc) return; chatUnread(); rpc('my_friends').then(l=>{ FR.list=l; FR.incoming=l.filter(f=>f.state==='incoming').length; }).catch(()=>{}); rpc('my_invites').then(l=>{ GR.inv=l; }).catch(()=>{}); }
 
 /* ===================== шинэчлэлийн мэдэгдэл (Android) ===================== */
-const APP_VER=70, SITE='https://otgoo-cell.github.io/gegee';
+const APP_VER=71, SITE='https://otgoo-cell.github.io/gegee';
 async function checkUpdate(){
   if(!N.openUrl) return;
   try{ const r=await fetch(SITE+'/version.json?t='+Date.now(),{cache:'no-store'}); const v=await r.json();
@@ -3745,7 +3744,7 @@ async function pollChat(first){
 
 /* ===================== Санал хүсэлт ===================== */
 const FB={kind:'bug', newCount:0, mine:null, seenAt:0};
-const APP_NAME='8.0';
+const APP_NAME='8.1';
 const FB_K={bug:['🐞',()=>tr('Алдаа','Problem')], idea:['💡',()=>tr('Санаа','Idea')], other:['💬',()=>tr('Бусад','Other')]};
 const fbPlat=()=>{ try{ if(N.hasBg && N.hasBg()) return 'android-app'; }catch(e){} return /iPhone|iPad|iPod/.test(navigator.userAgent)?'ios-pwa':'web'; };
 const fbDev=()=>`${navigator.userAgent.slice(0,260)} | ${screen.width}x${screen.height}@${window.devicePixelRatio||1} | ${LANG} | ${view}`;
@@ -4030,13 +4029,18 @@ if('serviceWorker' in navigator) navigator.serviceWorker.addEventListener('messa
 })();
 
 /* ===================== Ариун нэрийн сануулга ба iPhone-ий дадлын сануулга ===================== */
-const NM_DEF={on:false, every:120, from:480, to:1260, text:'🌸'};
-function nmCfg(){ if(!S.nm) S.nm={...NM_DEF}; return S.nm; }
+const NM_DEF={on:false, times:[480,720,1080,1260], text:'🌸'};
+function nmCfg(){ if(!S.nm) S.nm={...NM_DEF, times:NM_DEF.times.slice()}; const c=S.nm;
+  if(!Array.isArray(c.times)){ const t=[]; if(c.every&&c.from!=null){ for(let m=c.from;m<=(c.to??c.from)&&t.length<12;m+=c.every) t.push(m); } c.times=t.length?t:NM_DEF.times.slice(); delete c.every; delete c.from; delete c.to; }
+  return c; }
+const nmSort=c=>{ c.times=[...new Set(c.times.filter(m=>m>=0&&m<1440))].sort((a,b)=>a-b).slice(0,12); };
 const hhmm=m=>`${String(Math.floor(m/60)).padStart(2,'0')}:${String(m%60).padStart(2,'0')}`;
 const toMin=v=>{ if(!/^\d\d:\d\d$/.test(v||'')) return null; const [h,m]=v.split(':').map(Number); return h*60+m; };
 function drawNm(){
   if(!S || !$('nmBox')) return; const c=nmCfg();
-  $('nmOn').value=c.on?'1':'0'; $('nmEvery').value=String(c.every); $('nmFrom').value=hhmm(c.from); $('nmTo').value=hhmm(c.to); $('nmText').value=c.text||'';
+  $('nmOn').value=c.on?'1':'0'; $('nmText').value=c.text||'';
+  $('nmTimes').innerHTML=c.times.map((m,i)=>`<span class="nmT"><input type="time" value="${hhmm(m)}" data-nmi="${i}"><button data-nmdel="${i}" aria-label="${tr('Устгах','Remove')}">✕</button></span>`).join('')
+    + (c.times.length<12?`<button class="nmAdd" id="nmAdd">＋ ${tr('Цаг нэмэх','Add a time')}</button>`:'');
   $('nmBody').classList.toggle('off', !c.on);
   const note=$('nmNote'); let t='';
   if(!isApk()){
@@ -4052,23 +4056,24 @@ function nmApply(){ save(); drawNm(); remindSync(true); }
 (function(){
   if(!$('nmOn')) return;
   $('nmOn').addEventListener('change', e=>{ nmCfg().on=e.target.value==='1'; nmApply(); toast(nmCfg().on?tr('Ариун нэрийн сануулга асаалаа','Holy Name reminder on'):tr('Ариун нэрийн сануулга унтарлаа','Holy Name reminder off')); });
-  $('nmEvery').addEventListener('change', e=>{ nmCfg().every=+e.target.value||120; nmApply(); });
-  $('nmFrom').addEventListener('change', e=>{ const m=toMin(e.target.value); if(m!=null){ nmCfg().from=m; if(nmCfg().to<m) nmCfg().to=m; nmApply(); } });
-  $('nmTo').addEventListener('change', e=>{ const m=toMin(e.target.value); if(m!=null){ nmCfg().to=Math.max(m, nmCfg().from); nmApply(); } });
+  $('nmTimes').addEventListener('change', e=>{ const i=e.target.dataset.nmi; if(i==null) return; const m=toMin(e.target.value); if(m==null) return; const c=nmCfg(); c.times[+i]=m; nmSort(c); nmApply(); });
+  $('nmTimes').addEventListener('click', e=>{ const c=nmCfg(); const d=e.target.closest('[data-nmdel]');
+    if(d){ c.times.splice(+d.dataset.nmdel,1); nmApply(); return; }
+    if(e.target.closest('#nmAdd')){ const last=c.times.length?c.times[c.times.length-1]:420; let m=Math.min(1380,last+120); while(c.times.includes(m)&&m<1439) m++; c.times.push(m); nmSort(c); nmApply(); } });
   $('nmText').addEventListener('change', e=>{ nmCfg().text=(e.target.value||'').trim().slice(0,40)||'🌸'; nmApply(); });
 })();
 // Android: утас өөрөө сануулна. Бусад: серверээс мэдэгдэл явна (мэдэгдэл асаалттай үед)
 let _rsLast='', _rsT=null;
 function remindSync(force){
   if(!S) return; const c=nmCfg();
-  if(isApk()){ try{ if(typeof window.Native.remindCfg==='function') window.Native.remindCfg(JSON.stringify({on:!!c.on, every:c.every, from:c.from, to:c.to, text:c.text||'🌸'})); }catch(e){} return; }
+  if(isApk()){ try{ if(typeof window.Native.remindCfg==='function') window.Native.remindCfg(JSON.stringify({on:!!c.on&&c.times.length>0, times:c.times.join(','), text:c.text||'🌸'})); }catch(e){} return; }
   if(!socOn() || !S.soc || !S.acct || pushState()!=='on') return;
   const n=notifCfg(), k=today();
   const p={ tz:(Intl.DateTimeFormat().resolvedOptions().timeZone||'Asia/Ulaanbaatar'), med_on:!!n.on, med:n.t.slice(0,3),
     med_txt:[tr('Дадлын цаг боллоо. Тайван суугаарай.','It is your practice time. Sit peacefully.'),
              tr('Өдрийн сануулга · Нэг амьсгаа аваад, өнөөдрийн суултаа санаарай.','Midday · Take a breath and remember today\'s sitting.'),
              tr('Орой болж байна · Унтахын өмнө суух цаг бий.','Evening · There is still time to sit before sleep.')],
-    done_day: dayDone(k)?k:'', nm_on:!!c.on, nm_every:c.every, nm_from:c.from, nm_to:c.to, nm_text:c.text||'🌸' };
+    done_day: dayDone(k)?k:'', nm_on:!!c.on, nm_times:c.times, nm_text:c.text||'🌸' };
   const js=JSON.stringify(p); if(js===_rsLast && !force) return;
   clearTimeout(_rsT); _rsT=setTimeout(async()=>{ try{ await socLogin(); await sreq('/rest/v1/rpc/set_reminders',{c:p}); _rsLast=js; }catch(e){} }, 1500);
 }
