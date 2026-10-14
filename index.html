@@ -551,6 +551,32 @@ button.pHearts:active .hIc{transform:scale(1.3)}.pHearts.on .hIc{animation:hPop 
 @keyframes hFly{0%{opacity:0;transform:translate(-50%,-50%) scale(.4)}15%{opacity:1}100%{opacity:0;transform:translate(calc(-50% + var(--dx)),calc(-50% + var(--dy))) scale(var(--s))}}
 .hTag{color:#ff6f9a;font-weight:600;white-space:nowrap}
 #ringHint{transition:opacity .25s}#ringHint.hSwap{opacity:0}
+.radio{position:relative;margin:30px 4px 12px;padding-top:6px}
+.rAnt{position:absolute;top:-22px;right:40px;width:4px;height:44px;border-radius:3px;background:linear-gradient(#c9a27a,#8d6a4b);transform:rotate(18deg);transform-origin:bottom}
+.rAnt::before{content:"";position:absolute;top:-7px;left:-4px;width:12px;height:12px;border-radius:50%;background:#ff8fa3;box-shadow:0 0 10px rgba(255,143,163,.7)}
+.rBody{position:relative;border-radius:30px;padding:14px;background:linear-gradient(160deg,#ffcfb4 0%,#ffb08f 100%);box-shadow:inset 0 2px 0 rgba(255,255,255,.55),inset 0 -6px 0 rgba(170,80,50,.18),0 10px 22px rgba(190,100,70,.25);display:flex;flex-direction:column;gap:10px;color:#5a2f1e}
+.rTop{display:flex;gap:10px;align-items:stretch}
+.rScreen{flex:1;min-width:0;border-radius:16px;padding:10px 12px;background:linear-gradient(#e6f7d9,#c9ecbe);box-shadow:inset 0 2px 6px rgba(40,90,30,.28);font-family:ui-monospace,Menlo,monospace;color:#2f5a26;display:flex;flex-direction:column;gap:2px;position:relative;overflow:hidden}
+.rScreen b{font-size:16px;letter-spacing:.06em}.rScreen span{font-size:12px;opacity:.8}
+.rEq{display:flex;gap:3px;align-items:flex-end;height:14px;margin-top:4px}.rEq i{width:5px;border-radius:2px;background:#4f8a40;height:30%;opacity:.55}
+.radio.play .rEq i{animation:rEq .5s ease-in-out infinite alternate}.radio.play .rEq i:nth-child(2n){animation-delay:.15s}.radio.play .rEq i:nth-child(3n){animation-delay:.3s}
+@keyframes rEq{from{height:20%}to{height:100%}}
+.rGrill{width:64px;flex:none;border-radius:16px;background:radial-gradient(circle,rgba(110,50,30,.45) 2.2px,transparent 2.6px) 0 0/9px 9px,#ffc3a6;box-shadow:inset 0 2px 4px rgba(120,60,40,.25)}
+.rKeys{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:6px}
+.rKeys button,.rRep button{padding:8px 2px;border-radius:12px;border:0;font-size:12px;font-weight:600;color:#5a2f1e;background:#fff2e8;box-shadow:0 3px 0 #e39b7d;transition:transform .1s,box-shadow .1s}
+.rKeys button.on,.rRep button.on{background:#ff8fa3;color:#fff;box-shadow:0 1px 0 #c75a6e;transform:translateY(2px)}
+.rKeys button i{display:block;font-style:normal;font-size:16px;line-height:1.2}
+.rRow{display:flex;align-items:center;gap:10px;font-size:13px;font-weight:600}
+.rRow>span{flex:none}.rRep{display:flex;gap:6px;flex:1}.rRep button{flex:1}
+.rRow input[type=range]{flex:1;min-width:0;accent-color:#ff6f8a}.rRow b{width:40px;text-align:right;font-size:13px}
+.rLoud{justify-content:space-between;cursor:pointer}.rLoud input{display:none}
+.rSw{width:44px;height:24px;border-radius:12px;background:#f3d3c4;position:relative;box-shadow:inset 0 2px 3px rgba(120,60,40,.25);transition:background .2s;flex:none}
+.rSw::after{content:"";position:absolute;top:3px;left:3px;width:18px;height:18px;border-radius:50%;background:#fff;box-shadow:0 1px 2px rgba(0,0,0,.25);transition:left .2s}
+.rLoud input:checked+.rSw{background:#ff8fa3}.rLoud input:checked+.rSw::after{left:23px}
+.rPlay{align-self:center;padding:9px 22px;border-radius:20px;border:0;background:#5a2f1e;color:#ffe9dc;font-weight:700;font-size:14px;box-shadow:0 3px 0 #2e160c}
+.rPlay:active{transform:translateY(2px);box-shadow:0 1px 0 #2e160c}
+.rFoot{position:absolute;bottom:-6px;width:26px;height:10px;border-radius:0 0 8px 8px;background:#c9785a}.rFoot.l{left:30px}.rFoot.r{right:30px}
+.radio.off{opacity:.45;filter:grayscale(.5);pointer-events:none}
 .rtBox{padding:16px;border-radius:22px;display:flex;flex-direction:column;gap:10px}
 .rtHead{display:flex;align-items:center;justify-content:space-between;gap:12px}
 .rtHead b{font-weight:500}
@@ -1238,6 +1264,22 @@ body:has(#doneBar:not([hidden])) .toast{bottom:calc(148px + env(safe-area-inset-
       <div class="nmTxt"><span class="muted">Сануулах цагууд</span><div class="nmTimes" id="nmTimes"></div></div>
       <label class="nmTxt"><span class="muted">Мэдэгдэл дээр гарах үг</span><input id="nmText" maxlength="40" placeholder="🌸" autocomplete="off"></label>
       <div class="hint" style="font-size:12px">Хажуунаас харсан хүн утгыг нь ойлгохооргүй үг, эсвэл ганц тэмдэг бичээрэй. Утгыг нь зөвхөн та мэднэ.</div>
+      <div class="radio" id="nmRadio">
+        <i class="rAnt"></i>
+        <div class="rBody">
+          <div class="rTop">
+            <div class="rScreen"><b id="rLbl">♪ ХОНХ</b><span id="rSub">2 удаа · 70%</span><span class="rEq" id="rEq"><i></i><i></i><i></i><i></i><i></i><i></i><i></i></span></div>
+            <div class="rGrill"></div>
+          </div>
+          <div class="rKeys" id="rSnd"></div>
+          <div class="rRow"><span>Давталт</span><div class="rRep" id="rRep"></div></div>
+          <div class="rRow"><span>Чанга</span><input type="range" id="rVol" min="10" max="100" step="5"><b id="rVolN">70%</b></div>
+          <label class="rRow rLoud"><span>Чимээгүй горимд ч дуугарах</span><input type="checkbox" id="rLoud"><i class="rSw"></i></label>
+          <button class="rPlay" id="rPlay">▶ Сонсох</button>
+        </div>
+        <i class="rFoot l"></i><i class="rFoot r"></i>
+      </div>
+      <div class="hint" id="rWebNote" style="font-size:12px" hidden></div>
       <div class="hint nmNote" id="nmNote" hidden></div>
     </div>
   </div>
@@ -2548,7 +2590,7 @@ const EN = {
   'Өнөөдөр гэрлийн үед...':'Today during the light...', 'Тэмдэглэлээс хайх':'Search notes', 'Үгээ энд буулгана уу':'Paste the words here', 'Эх сурвалж (ном, хуудас) заавал биш':'Source (book, page), optional',
   'Дэлгэц дээр дарж удирдлага харна':'Tap the screen for controls', 'Түр зогсоох':'Pause', 'Гэрэл':'Brightness', 'Аялгуу руу шилжих цаг боллоо':'Time to switch to the sound', 'Дарж баталгаажуулна уу':'Tap to confirm', 'Хамтрагч':'Companion', 'Суултын үеэр хамт байх амьд дүрээ сонго. Дээр нь дарвал баярлана.':'Choose the little friend who sits with you. Tap it and it bounces.',
   'Соёолж':'Sprout', 'Бадам':'Lotus', 'Үүлхэн':'Cloudy', '30м':'30m', '1ц':'1h', '2ц':'2h', '3ц':'3h', '5ц':'5h', '7ц':'7h', '9ц':'9h', '12ц':'12h',
-  'Ариун нэрийн сануулга':'Holy Name reminder', 'Өөрийн сонгосон цагуудад зөвхөн таны мэдэх үгээр сануулна':'Reminds you at the times you choose, with a word only you understand', 'Сануулах цагууд':'Reminder times', 'Мэдэгдэл дээр гарах үг':'Text on the notification', 'Хажуунаас харсан хүн утгыг нь ойлгохооргүй үг, эсвэл ганц тэмдэг бичээрэй. Утгыг нь зөвхөн та мэднэ.':'Write a word or a single symbol others won\'t understand. Only you know what it means.', 'Шагнал':'Awards', 'Өдрийн сануулга':'Daily reminders', 'Асаалттай':'On', 'Унтраалттай':'Off', 'Өглөө · өдөр · орой':'Morning · day · evening', 'Хаах':'Close', 'Шагналын чулуу':'Award gems', 'Хамтрагчийг тойрно':'Circle my companion', 'Хамтрагчид зохирсон өнгөөр':'In my companion\'s colors', 'Нуух':'Hide', '⤢ Томоор':'⤢ Full view', '↻ Ар тал':'↻ Back side', 'Чирж эргүүлнэ · хоёр хуруугаар томруулна':'Drag to turn · pinch to zoom', 'Эргүүлж ар талыг харах':'Turn to see the back', 'Чирж эргүүлнэ':'Drag to turn', 'Өмнөх сар':'Previous month', 'Дараагийн сар':'Next month', 'Өмнөх жил':'Previous year', 'Дараагийн жил':'Next year'
+  'Ариун нэрийн сануулга':'Holy Name reminder', 'Давталт':'Repeat', 'Чанга':'Volume', 'Чимээгүй горимд ч дуугарах':'Ring even on silent',  'Өөрийн сонгосон цагуудад зөвхөн таны мэдэх үгээр сануулна':'Reminds you at the times you choose, with a word only you understand', 'Сануулах цагууд':'Reminder times', 'Мэдэгдэл дээр гарах үг':'Text on the notification', 'Хажуунаас харсан хүн утгыг нь ойлгохооргүй үг, эсвэл ганц тэмдэг бичээрэй. Утгыг нь зөвхөн та мэднэ.':'Write a word or a single symbol others won\'t understand. Only you know what it means.', 'Шагнал':'Awards', 'Өдрийн сануулга':'Daily reminders', 'Асаалттай':'On', 'Унтраалттай':'Off', 'Өглөө · өдөр · орой':'Morning · day · evening', 'Хаах':'Close', 'Шагналын чулуу':'Award gems', 'Хамтрагчийг тойрно':'Circle my companion', 'Хамтрагчид зохирсон өнгөөр':'In my companion\'s colors', 'Нуух':'Hide', '⤢ Томоор':'⤢ Full view', '↻ Ар тал':'↻ Back side', 'Чирж эргүүлнэ · хоёр хуруугаар томруулна':'Drag to turn · pinch to zoom', 'Эргүүлж ар талыг харах':'Turn to see the back', 'Чирж эргүүлнэ':'Drag to turn', 'Өмнөх сар':'Previous month', 'Дараагийн сар':'Next month', 'Өмнөх жил':'Previous year', 'Дараагийн жил':'Next year'
 };
 const _orig = new WeakMap();
 function applyStatic(){
@@ -3722,7 +3764,7 @@ async function openGroup(id){
 function socBadges(){ if(!socOn()||!S||!S.soc) return; chatUnread(); rpc('my_friends').then(l=>{ FR.list=l; FR.incoming=l.filter(f=>f.state==='incoming').length; }).catch(()=>{}); rpc('my_invites').then(l=>{ GR.inv=l; }).catch(()=>{}); }
 
 /* ===================== шинэчлэлийн мэдэгдэл (Android) ===================== */
-const APP_VER=74, SITE='https://otgoo-cell.github.io/gegee';
+const APP_VER=75, SITE='https://otgoo-cell.github.io/gegee';
 async function checkUpdate(){
   if(!N.openUrl) return;
   try{ const r=await fetch(SITE+'/version.json?t='+Date.now(),{cache:'no-store'}); const v=await r.json();
@@ -3794,7 +3836,7 @@ async function pollChat(first){
 
 /* ===================== Санал хүсэлт ===================== */
 const FB={kind:'bug', newCount:0, mine:null, seenAt:0};
-const APP_NAME='8.4';
+const APP_NAME='8.5';
 const FB_K={bug:['🐞',()=>tr('Алдаа','Problem')], idea:['💡',()=>tr('Санаа','Idea')], other:['💬',()=>tr('Бусад','Other')]};
 const fbPlat=()=>{ try{ if(N.hasBg && N.hasBg()) return 'android-app'; }catch(e){} return /iPhone|iPad|iPod/.test(navigator.userAgent)?'ios-pwa':'web'; };
 const fbDev=()=>`${navigator.userAgent.slice(0,260)} | ${screen.width}x${screen.height}@${window.devicePixelRatio||1} | ${LANG} | ${view}`;
@@ -4079,9 +4121,11 @@ if('serviceWorker' in navigator) navigator.serviceWorker.addEventListener('messa
 })();
 
 /* ===================== Ариун нэрийн сануулга ба iPhone-ий дадлын сануулга ===================== */
-const NM_DEF={on:false, times:[480,720,1080,1260], text:'🌸'};
+const NM_DEF={on:false, times:[480,720,1080,1260], text:'🌸', snd:'bell', rep:2, vol:70, loud:false};
+const NM_SND=[['bell','🔔',()=>tr('Хонх','Bell'),'bell_remind.wav'],['big','🛎️',()=>tr('Том хонх','Big bell'),'bell_end.wav'],['soft','🎐',()=>tr('Зөөлөн','Soft'),'bell_switch.wav'],['tune','🎵',()=>tr('Аялгуу','Tune'),'alldone.mp3'],['none','🔕',()=>tr('Дуугүй','Silent'),'']];
 function nmCfg(){ if(!S.nm) S.nm={...NM_DEF, times:NM_DEF.times.slice()}; const c=S.nm;
   if(!Array.isArray(c.times)){ const t=[]; if(c.every&&c.from!=null){ for(let m=c.from;m<=(c.to??c.from)&&t.length<12;m+=c.every) t.push(m); } c.times=t.length?t:NM_DEF.times.slice(); delete c.every; delete c.from; delete c.to; }
+  if(c.snd==null){ c.snd='bell'; c.rep=2; c.vol=70; c.loud=false; }
   return c; }
 const nmSort=c=>{ c.times=[...new Set(c.times.filter(m=>m>=0&&m<1440))].sort((a,b)=>a-b).slice(0,12); };
 const hhmm=m=>`${String(Math.floor(m/60)).padStart(2,'0')}:${String(m%60).padStart(2,'0')}`;
@@ -4091,6 +4135,7 @@ function drawNm(){
   $('nmOn').value=c.on?'1':'0'; $('nmText').value=c.text||'';
   $('nmTimes').innerHTML=c.times.map((m,i)=>`<span class="nmT"><input type="time" value="${hhmm(m)}" data-nmi="${i}"><button data-nmdel="${i}" aria-label="${tr('Устгах','Remove')}">✕</button></span>`).join('')
     + (c.times.length<12?`<button class="nmAdd" id="nmAdd">＋ ${tr('Цаг нэмэх','Add a time')}</button>`:'');
+  drawRadio();
   $('nmBody').classList.toggle('off', !c.on);
   const note=$('nmNote'); let t='';
   if(!isApk()){
@@ -4116,7 +4161,7 @@ function nmApply(){ save(); drawNm(); remindSync(true); }
 let _rsLast='', _rsT=null;
 function remindSync(force){
   if(!S) return; const c=nmCfg();
-  if(isApk()){ try{ if(typeof window.Native.remindCfg==='function') window.Native.remindCfg(JSON.stringify({on:!!c.on&&c.times.length>0, times:c.times.join(','), text:c.text||'🌸'})); }catch(e){} return; }
+  if(isApk()){ try{ if(typeof window.Native.remindCfg==='function') window.Native.remindCfg(JSON.stringify({on:!!c.on&&c.times.length>0, times:c.times.join(','), text:c.text||'🌸', snd:(NM_SND.find(x=>x[0]===c.snd)||NM_SND[0])[3], rep:c.rep, vol:c.vol, loud:!!c.loud})); }catch(e){} return; }
   if(!socOn() || !S.soc || !S.acct || pushState()!=='on') return;
   const n=notifCfg(), k=today();
   const p={ tz:(Intl.DateTimeFormat().resolvedOptions().timeZone||'Asia/Ulaanbaatar'), med_on:!!n.on, med:n.t.slice(0,3),
@@ -4129,6 +4174,37 @@ function remindSync(force){
 }
 setTimeout(()=>{ try{ remindSync(); }catch(e){} }, 5000);
 document.addEventListener('visibilitychange', ()=>{ try{ remindSync(); }catch(e){} });
+
+/* ---------- жижигхэн радио: хонхны дуу, давталт, чанга сул ---------- */
+function drawRadio(){
+  if(!$('nmRadio')) return; const c=nmCfg(), cur=NM_SND.find(x=>x[0]===c.snd)||NM_SND[0];
+  $('rSnd').innerHTML=NM_SND.map(x=>`<button data-snd="${x[0]}" class="${x[0]===c.snd?'on':''}"><i>${x[1]}</i>${x[2]()}</button>`).join('');
+  $('rRep').innerHTML=[1,2,3,5].map(n=>`<button data-rep="${n}" class="${n===c.rep?'on':''}">${n}×</button>`).join('');
+  $('rVol').value=c.vol; $('rVolN').textContent=c.vol+'%'; $('rLoud').checked=!!c.loud;
+  $('rLbl').textContent=cur[1]+' '+cur[2]().toUpperCase();
+  $('rSub').textContent = c.snd==='none' ? tr('Зөвхөн бичиг гарна','Text only') : `${c.rep}× · ${c.vol}%${c.loud?' · 📢':''}`;
+  const quiet=c.snd==='none'; ['rRep','rVol','rLoud','rPlay'].forEach(id=>{ const el=$(id); if(el) (el.closest('.rRow')||el).style.opacity=quiet?.4:1; });
+  const wn=$('rWebNote'); if(wn){ wn.hidden=isApk(); wn.textContent=tr('iPhone болон хөтөч дээр сануулга утасны энгийн мэдэгдлийн дуугаар ирнэ. Энэ тохиргоо Android апп дээр ажиллана.','On iPhone and browsers reminders use the phone\'s normal notification sound. These settings work in the Android app.'); }
+}
+let _rAud=null, _rLeft=0;
+function radioStop(){ try{ if(_rAud){ _rAud.pause(); _rAud=null; } }catch(e){} _rLeft=0; const r=$('nmRadio'); if(r) r.classList.remove('play'); const b=$('rPlay'); if(b) b.textContent='▶ '+tr('Сонсох','Listen'); }
+function radioPlay(){
+  const c=nmCfg(), cur=NM_SND.find(x=>x[0]===c.snd)||NM_SND[0];
+  if(_rAud){ radioStop(); return; } if(!cur[3]) { toast(tr('Дуугүй горим: зөвхөн бичиг гарна','Silent: text only')); return; }
+  _rLeft=c.rep; $('nmRadio').classList.add('play'); $('rPlay').textContent='■ '+tr('Зогсоох','Stop');
+  const one=()=>{ if(_rLeft<=0){ radioStop(); return; } _rLeft--; const a=new Audio(cur[3]); a.volume=Math.max(.05,Math.min(1,c.vol/100)); _rAud=a;
+    a.onended=()=>{ if(_rAud===a) one(); }; a.play().catch(()=>radioStop()); if(cur[0]==='tune') setTimeout(()=>{ if(_rAud===a) radioStop(); }, 9000); };
+  one();
+}
+(function(){
+  if(!$('nmRadio')) return;
+  $('rSnd').addEventListener('click', e=>{ const b=e.target.closest('[data-snd]'); if(!b) return; radioStop(); nmCfg().snd=b.dataset.snd; nmApply(); });
+  $('rRep').addEventListener('click', e=>{ const b=e.target.closest('[data-rep]'); if(!b) return; nmCfg().rep=+b.dataset.rep; nmApply(); });
+  $('rVol').addEventListener('input', e=>{ nmCfg().vol=+e.target.value; $('rVolN').textContent=e.target.value+'%'; if(_rAud) _rAud.volume=Math.max(.05,+e.target.value/100); });
+  $('rVol').addEventListener('change', ()=>nmApply());
+  $('rLoud').addEventListener('change', e=>{ nmCfg().loud=e.target.checked; nmApply(); });
+  $('rPlay').addEventListener('click', radioPlay);
+})();
 
 </script>
 </body>
