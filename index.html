@@ -550,6 +550,7 @@ button.pHearts:active .hIc{transform:scale(1.3)}.pHearts.on .hIc{animation:hPop 
 .hFly{position:fixed;z-index:999;pointer-events:none;color:#ff6f9a;font-style:normal;font-size:22px;transform:translate(-50%,-50%);animation:hFly 1.2s ease-out forwards;text-shadow:0 0 10px rgba(255,110,150,.6)}
 @keyframes hFly{0%{opacity:0;transform:translate(-50%,-50%) scale(.4)}15%{opacity:1}100%{opacity:0;transform:translate(calc(-50% + var(--dx)),calc(-50% + var(--dy))) scale(var(--s))}}
 .hTag{color:#ff6f9a;font-weight:600;white-space:nowrap}
+#ringHint{transition:opacity .25s}#ringHint.hSwap{opacity:0}
 .rtBox{padding:16px;border-radius:22px;display:flex;flex-direction:column;gap:10px}
 .rtHead{display:flex;align-items:center;justify-content:space-between;gap:12px}
 .rtHead b{font-weight:500}
@@ -1727,6 +1728,15 @@ function angleOf(e){
   return (Math.atan2(x,-y)*180/Math.PI+360)%360;   // 0° дээд талд, цагийн зүүний дагуу
 }
 /* ---- цагны төв: нэг дарвал эхлэх / түр зогсох, хоёр дарвал 00:00 ---- */
+// Цаг тохируулсан үед "хоёр дарвал 00:00" гэдгийг ээлжлэн сануулна
+let hintAlt=false;
+const HINT_SET=()=>tr('Цагирагаа эргүүлж тохируулна','Turn the ring to set the time'), HINT_RST=()=>tr('Төвд нь хоёр дарвал 00:00 болно','Double-tap the center to reset to 00:00');
+function ringHintIdle(){ return (S && S.freeMin>0 && hintAlt) ? HINT_RST() : HINT_SET(); }
+setInterval(()=>{ try{
+  const h=$('ringHint'); if(!h || !S || mode!=='free' || running || !(S.freeMin>0)) { hintAlt=false; return; }
+  const cur=h.textContent; if(cur!==HINT_SET() && cur!==HINT_RST()) return;
+  hintAlt=!hintAlt; h.classList.add('hSwap'); setTimeout(()=>{ h.textContent=ringHintIdle(); h.classList.remove('hSwap'); },250);
+}catch(e){} }, 4500);
 let cDown=null, tapT=0, tapTimer=null;
 function inCenter(e){ const r=$('ringbox').getBoundingClientRect(), x=e.clientX-(r.left+r.width/2), y=e.clientY-(r.top+r.height/2); return Math.hypot(x,y) < r.width*0.33; }
 function resetFree(){ S.freeMin=0; sess=null; save(); renderMed(); try{ if(navigator.vibrate) navigator.vibrate(25); }catch(e){} toast(tr('Цаг 00:00 боллоо. Цагирагийг эргүүлж шинээр тохируулна уу','Reset to 00:00. Turn the ring to set a new time')); }
@@ -2122,7 +2132,7 @@ function renderMed(){
     $('ringbox').classList.toggle('paused', pz); $('resumeTag').hidden=!pz; $('resumeTag').textContent=tr('Үргэлжлүүлэх','Resume'); }
   { const paused = mode==='free' ? (sess&&sess.e>0&&sess.e<sess.T) : false;
     $('ringHint').textContent = mode==='free'
-      ? (paused ? tr('Төвд нь дарж үргэлжлүүлнэ · хоёр дарвал 00:00','Tap the center to continue · double-tap for 00:00') : running ? '' : tr('Цагирагаа эргүүлж тохируулна','Turn the ring to set the time'))
+      ? (paused ? tr('Төвд нь дарж үргэлжлүүлнэ · хоёр дарвал 00:00','Tap the center to continue · double-tap for 00:00') : running ? '' : ringHintIdle())
       : (dayDone(today()) ? '' : dget(today()).t>0 ? tr('Цагны төвд дарж үргэлжлүүлнэ','Tap the center of the clock to resume') : tr('Цагны төвд дарж эхлүүлнэ','Tap the center of the clock to begin')); }
   $('sitTime').textContent=$('remain').textContent; $('sitPhase').textContent=$('phase').textContent;
 
@@ -3712,7 +3722,7 @@ async function openGroup(id){
 function socBadges(){ if(!socOn()||!S||!S.soc) return; chatUnread(); rpc('my_friends').then(l=>{ FR.list=l; FR.incoming=l.filter(f=>f.state==='incoming').length; }).catch(()=>{}); rpc('my_invites').then(l=>{ GR.inv=l; }).catch(()=>{}); }
 
 /* ===================== шинэчлэлийн мэдэгдэл (Android) ===================== */
-const APP_VER=73, SITE='https://otgoo-cell.github.io/gegee';
+const APP_VER=74, SITE='https://otgoo-cell.github.io/gegee';
 async function checkUpdate(){
   if(!N.openUrl) return;
   try{ const r=await fetch(SITE+'/version.json?t='+Date.now(),{cache:'no-store'}); const v=await r.json();
@@ -3784,7 +3794,7 @@ async function pollChat(first){
 
 /* ===================== Санал хүсэлт ===================== */
 const FB={kind:'bug', newCount:0, mine:null, seenAt:0};
-const APP_NAME='8.3';
+const APP_NAME='8.4';
 const FB_K={bug:['🐞',()=>tr('Алдаа','Problem')], idea:['💡',()=>tr('Санаа','Idea')], other:['💬',()=>tr('Бусад','Other')]};
 const fbPlat=()=>{ try{ if(N.hasBg && N.hasBg()) return 'android-app'; }catch(e){} return /iPhone|iPad|iPod/.test(navigator.userAgent)?'ios-pwa':'web'; };
 const fbDev=()=>`${navigator.userAgent.slice(0,260)} | ${screen.width}x${screen.height}@${window.devicePixelRatio||1} | ${LANG} | ${view}`;
