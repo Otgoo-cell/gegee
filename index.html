@@ -1168,6 +1168,20 @@ body:has(#doneBar:not([hidden])) .toast{bottom:calc(148px + env(safe-area-inset-
 .evDate{align-self:flex-start;min-height:72px}
 .evDel{border:0!important;background:none!important;padding:2px 0!important;box-shadow:none!important}
 .vcJoin{width:100%}
+
+/* Суугаагүй өдөр: Багшийн хайрын зүрх */
+.cell.love{background:linear-gradient(160deg,rgba(255,226,236,.9),rgba(255,240,228,.85));border-color:rgba(236,120,160,.35)}
+:root[data-theme="night"] .cell.love{background:linear-gradient(160deg,rgba(120,40,70,.45),rgba(90,50,40,.35));border-color:rgba(255,150,190,.25)}
+.cell.love .n{position:absolute;top:2px;left:0;right:0;text-align:center;font-size:9px;line-height:1;opacity:.65;z-index:3}
+.cell.love .m{display:none}
+.cell .lv{position:absolute;inset:18% 10% 4%;display:grid;place-items:center;z-index:2;animation:lvBeat 3.2s ease-in-out infinite}
+.cell .lv svg{position:absolute;width:100%;height:100%;fill:#ef5d8f;filter:drop-shadow(0 2px 4px rgba(220,70,120,.35))}
+.cell .lv b{position:relative;margin-top:-8%;font-family:var(--serif);font-style:italic;font-weight:600;font-size:clamp(8px,2.4vw,11px);color:#fff;letter-spacing:.02em;white-space:nowrap;text-shadow:0 1px 2px rgba(150,30,70,.4)}
+@keyframes lvBeat{0%,100%{transform:scale(1)}12%{transform:scale(1.07)}24%{transform:scale(.98)}36%{transform:scale(1.04)}}
+.day.love .col{background:linear-gradient(180deg,#ffd3e2,#ffb3cb)}
+.day.love .v{color:#e2477f!important}
+.loveNote{display:flex;gap:10px;align-items:flex-start;margin:8px 0;padding:10px 12px;border-radius:14px;background:rgba(239,93,143,.1);color:var(--fg);line-height:1.5}
+.loveNote svg{flex:none;width:22px;height:20px;fill:#ef5d8f;margin-top:2px;animation:lvBeat 3.2s ease-in-out infinite}
 </style>
 </head>
 <body>
@@ -2157,6 +2171,9 @@ $('duties').addEventListener('click', e=>{
 });
 
 /* ===================== calculations ===================== */
+// Суугаагүй өдөр: улаан тэмдэг биш, Багшийн хайрын зүрх харагдана
+const isLove=inf=>inf.st==='short' && (inf.t||0)<60;
+const LOVE_SVG='<svg viewBox="0 0 32 29" aria-hidden="true"><path d="M16 28.5C7 21.6 0 16 0 8.6 0 3.8 3.7 0 8.4 0c3.2 0 5.9 1.8 7.6 4.4C17.7 1.8 20.4 0 23.6 0 28.3 0 32 3.8 32 8.6 32 16 25 21.6 16 28.5z"/></svg>';
 function dayInfo(k){
   const d=dget(k), t=today();
   if(k < S.start) return {...d, st:'pre'};
@@ -2330,8 +2347,9 @@ function renderMed(){
   weekDates().forEach((dd,i)=>{
     const dk=key(dd), inf=dayInfo(dk);
     if(inf.miss) wMiss+=inf.miss;
-    const cls = inf.st==='full'?'full': inf.st==='short'?'short': (inf.st==='pre'||inf.st==='fut')?'none':'';
-    const v = inf.st==='fut'||inf.st==='pre' ? '—' : inf.st==='short' ? `−${Math.ceil(inf.miss/60)}` : `${Math.floor(inf.t/60)}`;
+    const love=isLove(inf);
+    const cls = love?'love': inf.st==='full'?'full': inf.st==='short'?'short': (inf.st==='pre'||inf.st==='fut')?'none':'';
+    const v = inf.st==='fut'||inf.st==='pre' ? '—' : love ? '♥' : inf.st==='short' ? `−${Math.ceil(inf.miss/60)}` : `${Math.floor(inf.t/60)}`;
     const wev=S.events.filter(e=>e.date===dk).map(e=>e.type), rb=hasRainbow(inf.t,dk);
     html+=`<div class="day ${cls} ${dk===k?'today':''}"><div class="col ${rewardsFor(inf.t).map(r=>'rw-'+r.id).join(' ')} ${rb?'rw-rainbow':''}"><i style="height:${Math.min(100,inf.t/DAY*100)}%"></i>${rb?`<i class="rbow">${IC('rainbow')}</i>`:''}${topBadge(inf.t)}${dutyIcons(wev)}</div><span class="lbl">${DN[i]}</span><span class="v">${v}</span></div>`;
   });
@@ -2369,11 +2387,11 @@ function renderTrack(){
   for(let i=0;i<lead;i++) h+='<div class="cell empty"></div>';
   for(let d=1; d<=last.getDate(); d++){
     const dk=key(new Date(y,m,d)), inf=dayInfo(dk);
-    const cls=[inf.st, dk===t?'today':'', dk===selDay?'sel':''].join(' ');
-    const mm = inf.st==='short' ? `−${Math.ceil(inf.miss/60)}` : (inf.st==='pre'||inf.st==='fut') ? '' : Math.floor(inf.t/60);
+    const love=isLove(inf), cls=[love?'love':inf.st, dk===t?'today':'', dk===selDay?'sel':''].join(' ');
+    const mm = love ? '' : inf.st==='short' ? `−${Math.ceil(inf.miss/60)}` : (inf.st==='pre'||inf.st==='fut') ? '' : Math.floor(inf.t/60);
     const ev = dutyIcons(evBy[dk]), rb=hasRainbow(inf.t,dk);
     const rw = rewardsFor(inf.t).map(r=>'rw-'+r.id).join(' ') + (rb?' rw-rainbow':'');
-    h+=`<button class="cell ${cls} ${rw}" data-k="${dk}">${rb?`<i class="rbring"></i><i class="rbcore"></i><i class="rbow">${IC('rainbow')}</i>`:''}${badges(inf.t)}${inf.st!=='full'?`<span class="fill" style="height:${Math.min(100,inf.t/DAY*100)}%"></span>`:''}${notesBy[dk]?'<span class="nd"></span>':''}<span class="n">${d}</span><span class="m">${mm}</span>${ev}</button>`;
+    h+=`<button class="cell ${cls} ${rw}" data-k="${dk}">${rb?`<i class="rbring"></i><i class="rbcore"></i><i class="rbow">${IC('rainbow')}</i>`:''}${badges(inf.t)}${inf.st!=='full'?`<span class="fill" style="height:${Math.min(100,inf.t/DAY*100)}%"></span>`:''}${notesBy[dk]?'<span class="nd"></span>':''}${love?`<span class="lv">${LOVE_SVG}<b>Love U</b></span>`:''}<span class="n">${d}</span><span class="m">${mm}</span>${ev}</button>`;
   }
   $('cal').innerHTML=h;
   const hm=m=>m>=300?`${m/60}${tr('ц','h')}`:`${m}${tr('м','m')}`;
@@ -2411,8 +2429,9 @@ function renderDayDetail(){
   if(!selDay){ el.innerHTML=`<span class="muted">${tr('Өдөр дээр дарж тухайн өдрийн дүн, тэмдэглэлийг харна.','Tap a day to see its minutes and notes.')}</span>`; return; }
   const inf=dayInfo(selDay), d=parse(selDay), ns=S.notes.filter(n=>n.date===selDay), ev=S.events.filter(e=>e.date===selDay);
   const txt = inf.st==='pre'?tr('Энэ өдөр хяналт эхлээгүй байсан.','Tracking had not started yet.'): inf.st==='fut'?tr('Ирээдүйн өдөр.','A future day.'):
-    tr(`Гэрэл <strong>${Math.floor(inf.l/60)}</strong> мин, аялгуу <strong>${Math.floor(inf.s/60)}</strong> мин, нийт <strong>${Math.floor(inf.t/60)} / 150</strong>.`,`Light <strong>${Math.floor(inf.l/60)}</strong> min, sound <strong>${Math.floor(inf.s/60)}</strong> min, total <strong>${Math.floor(inf.t/60)} / 150</strong>.`) + (inf.miss?` <span style="color:var(--miss)">${tr(`${Math.ceil(inf.miss/60)} минут дутуу.`,`${Math.ceil(inf.miss/60)} min short.`)}</span>`:'');
-  el.innerHTML=`<div><b>${tr(`${d.getMonth()+1}-р сарын ${d.getDate()}`,`${MN_EN[d.getMonth()]} ${d.getDate()}`)}</b>, ${DN[(d.getDay()+6)%7]}</div><div>${txt}</div>` +
+    tr(`Гэрэл <strong>${Math.floor(inf.l/60)}</strong> мин, аялгуу <strong>${Math.floor(inf.s/60)}</strong> мин, нийт <strong>${Math.floor(inf.t/60)} / 150</strong>.`,`Light <strong>${Math.floor(inf.l/60)}</strong> min, sound <strong>${Math.floor(inf.s/60)}</strong> min, total <strong>${Math.floor(inf.t/60)} / 150</strong>.`) + (inf.miss&&!isLove(inf)?` <span style="color:var(--miss)">${tr(`${Math.ceil(inf.miss/60)} минут дутуу.`,`${Math.ceil(inf.miss/60)} min short.`)}</span>`:'');
+  const loveTxt = isLove(inf) ? `<div class="loveNote">${LOVE_SVG}<span>${tr('Энэ өдөр суугаагүй ч Багшийн хайр үргэлж хамт байдаг. Бясалгал бол амьдралд нэмэгдэх бэлэг болохоос хасагдах зүйл биш. Дараагийн суултаа хайраар угтаарай.','You did not sit this day, yet the Master\'s love is always with you. Meditation is a gift added to life, never something taken away. Greet your next sitting with love.')}</span></div>` : '';
+  el.innerHTML=`<div><b>${tr(`${d.getMonth()+1}-р сарын ${d.getDate()}`,`${MN_EN[d.getMonth()]} ${d.getDate()}`)}</b>, ${DN[(d.getDay()+6)%7]}</div>${loveTxt}${isLove(inf)?'':`<div>${txt}</div>`}` +
     ((rewardsFor(inf.t).length||ev.length||hasRainbow(inf.t,selDay))?`<div class="rwlist">${rewardsFor(inf.t).map(r=>`<span class="rwitem"><i class="bd bd-${r.id}">${IC(r.id)}</i>${r.name}<small>${r.why}</small></span>`).join('')}${hasRainbow(inf.t,selDay)?`<span class="rwitem rwrb"><i class="bd bd-rainbow"><i class="rbow">${IC('rainbow')}</i></i>${RAINBOW.name}<small>${RAINBOW.why}</small></span>`:''}${ev.map(e=>`<span class="rwitem evItem"><i class="bd di di-${e.type}">${IC(e.type)}</i>${DUTY[e.type].name}<button class="evDel" data-evdel="${e.id}" aria-label="${tr('Устгах','Delete')}">${tr('Устгах','Delete')}</button></span>`).join('')}</div>`:'') +
     ns.map(n=>`<div style="margin-top:8px;border-top:1px solid var(--line);padding-top:8px"><span class="tag ${n.tag}">${TAGN[n.tag]}</span> <span class="ntext">${esc(n.text)}</span></div>`).join('');
 }
@@ -3916,7 +3935,7 @@ async function openGroup(id){
 function socBadges(){ if(!socOn()||!S||!S.soc) return; chatUnread(); rpc('my_friends').then(l=>{ FR.list=l; FR.incoming=l.filter(f=>f.state==='incoming').length; }).catch(()=>{}); rpc('my_invites').then(l=>{ GR.inv=l; }).catch(()=>{}); }
 
 /* ===================== шинэчлэлийн мэдэгдэл (Android) ===================== */
-const APP_VER=81, SITE='https://otgoo-cell.github.io/gegee';
+const APP_VER=82, SITE='https://otgoo-cell.github.io/gegee';
 async function checkUpdate(){
   if(!N.openUrl) return;
   try{ const r=await fetch(SITE+'/version.json?t='+Date.now(),{cache:'no-store'}); const v=await r.json();
@@ -3989,7 +4008,7 @@ async function pollChat(first){
 
 /* ===================== Санал хүсэлт ===================== */
 const FB={kind:'bug', newCount:0, mine:null, seenAt:0};
-const APP_NAME='9.1';
+const APP_NAME='9.2';
 const FB_K={bug:['🐞',()=>tr('Алдаа','Problem')], idea:['💡',()=>tr('Санаа','Idea')], other:['💬',()=>tr('Бусад','Other')]};
 const fbPlat=()=>{ try{ if(N.hasBg && N.hasBg()) return 'android-app'; }catch(e){} return /iPhone|iPad|iPod/.test(navigator.userAgent)?'ios-pwa':'web'; };
 const fbDev=()=>`${navigator.userAgent.slice(0,260)} | ${screen.width}x${screen.height}@${window.devicePixelRatio||1} | ${LANG} | ${view}`;
