@@ -1207,7 +1207,7 @@ body:has(#doneBar:not([hidden])) .toast{bottom:calc(148px + env(safe-area-inset-
 @keyframes fuTitle{0%,100%{background-position:100% 0}50%{background-position:0 0}}
 .fuStage{position:relative;border-radius:26px;overflow:hidden;background:radial-gradient(120% 90% at 50% 35%,#2a2214 0%,#16130d 70%);aspect-ratio:1/1.22;max-height:62vh;margin:0 auto;width:100%;touch-action:none}
 :root[data-theme="night"] .fuStage{background:radial-gradient(120% 90% at 50% 35%,#132a1f 0%,#070b09 70%)}
-#fuHost{position:absolute;inset:0}#fuHost canvas{display:block}
+#fuHost{position:absolute;inset:13% 4% 7%}#fuHost canvas{display:block}
 .fuFly{position:absolute;inset:0;pointer-events:none}.fuFly img{position:absolute;object-fit:contain;filter:drop-shadow(0 0 8px rgba(255,220,150,.6))}
 .fuFlash{position:absolute;left:50%;top:50%;width:160px;height:160px;margin:-80px 0 0 -80px;border-radius:50%;background:radial-gradient(circle,#fff 0%,rgba(255,240,200,.7) 30%,transparent 70%);opacity:0}
 .fuDesc{margin:-6px 0 0;text-align:center;color:var(--muted);font-size:13.5px;min-height:0}.fuDesc:empty{display:none}
@@ -4032,7 +4032,7 @@ async function openGroup(id){
 function socBadges(){ if(!socOn()||!S||!S.soc) return; chatUnread(); rpc('my_friends').then(l=>{ FR.list=l; FR.incoming=l.filter(f=>f.state==='incoming').length; }).catch(()=>{}); rpc('my_invites').then(l=>{ GR.inv=l; }).catch(()=>{}); }
 
 /* ===================== шинэчлэлийн мэдэгдэл (Android) ===================== */
-const APP_VER=87, SITE='https://otgoo-cell.github.io/gegee';
+const APP_VER=88, SITE='https://otgoo-cell.github.io/gegee';
 async function checkUpdate(){
   if(!N.openUrl) return;
   try{ const r=await fetch(SITE+'/version.json?t='+Date.now(),{cache:'no-store'}); const v=await r.json();
@@ -4105,7 +4105,7 @@ async function pollChat(first){
 
 /* ===================== Санал хүсэлт ===================== */
 const FB={kind:'bug', newCount:0, mine:null, seenAt:0};
-const APP_NAME='9.7';
+const APP_NAME='9.8';
 const FB_K={bug:['🐞',()=>tr('Алдаа','Problem')], idea:['💡',()=>tr('Санаа','Idea')], other:['💬',()=>tr('Бусад','Other')]};
 const fbPlat=()=>{ try{ if(N.hasBg && N.hasBg()) return 'android-app'; }catch(e){} return /iPhone|iPad|iPod/.test(navigator.userAgent)?'ios-pwa':'web'; };
 const fbDev=()=>`${navigator.userAgent.slice(0,260)} | ${screen.width}x${screen.height}@${window.devicePixelRatio||1} | ${LANG} | ${view}`;

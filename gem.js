@@ -437,36 +437,54 @@ window.Gem = (function(){
     if(t<=1) return [Math.cos(th)*R0,0,Math.sin(th)*R0];
     if(t>=7){ const k=th*3, rr=R0*(.55+.45*((u*3)%1)); return [Math.cos(k)*rr,Math.sin(th*3)*.2,Math.sin(k)*rr]; }
     const k=t+1, rr=R0*(.72+.28*Math.cos(k*th)); return [Math.cos(th)*rr,Math.sin(k*th)*.14,Math.sin(th)*rr]; }
+  // Шатны бэлгэдэлт хээг эх чулууны сийлбэрт шингээнэ: хүрээ хэвээр, дунд нь тухайн шатны хээ, дээр доор нь өмнөх шатных
+  const _fOrn={};
+  function fuseOrnTex(t){
+    if(_fOrn[t]) return _fOrn[t];
+    const cv=document.createElement('canvas'); cv.width=cv.height=1024; drawOrnament(cv);
+    const W=1024,H=1024,x=cv.getContext('2d'), draw=window.FuseHee&&window.FuseHee.draw;
+    x.fillStyle='#000'; x.fillRect(0,H*.155,W,H*.69);
+    x.strokeStyle='#fff'; x.fillStyle='#fff'; x.lineCap='round'; x.lineJoin='round';
+    if(draw){
+      x.lineWidth=11; for(let i=0;i<2;i++) draw(x,t-1,(i+.5)*W/2,H*.47,W*.36,H*.3);
+      if(t>=2){ x.lineWidth=6; for(let i=0;i<4;i++) draw(x,t-2,(i+.5)*W/4,H*.24,W*.17,H*.12); }
+      if(t>=3){ x.lineWidth=6; for(let i=0;i<4;i++) draw(x,t-3,(i+.5)*W/4,H*.715,W*.17,H*.12); }
+      x.lineWidth=4; x.beginPath(); for(const y of [.175,.305,.635,.79]){ x.moveTo(0,H*y); x.lineTo(W,H*y); } x.stroke();
+    }
+    const b=document.createElement('canvas'); b.width=b.height=1024; const bx=b.getContext('2d'); bx.filter='blur(2.5px)'; bx.drawImage(cv,0,0);
+    const tx=new THREE.CanvasTexture(b); tx.wrapS=THREE.RepeatWrapping; tx.wrapT=THREE.ClampToEdgeWrapping; tx.anisotropy=4; return (_fOrn[t]=tx);
+  }
   function addFuse(grp, f, P){
     const t=Math.max(1,Math.min(7,f.tier||1)), fx=new THREE.Group(), add=m=>{ m.renderOrder=4; fx.add(m); return m; };
-    const AB=THREE.AdditiveBlending, col=new THREE.Color(P.c);
-    if(t>=2){ grp.userData.glow.material.opacity=.06+.025*t; }
-    // хээт бүс: тухайн шатны бэлгэдэлт хээ чулууны бүсээр гэрэлтэнэ
-    { const band=add(new THREE.Mesh(new THREE.CylinderGeometry(.66,.66,.3,48,1,true), new THREE.MeshBasicMaterial({map:heeTex(t), color:0xfff0c8, transparent:true, opacity:.55+.05*t, blending:AB, depthWrite:false, side:THREE.DoubleSide})));
-      band.position.y=-.05; fx.userData.band=band; }
-    const ringM=new THREE.MeshBasicMaterial({color:0xffd27a, transparent:true, opacity:.75, blending:AB, depthWrite:false});
-    if(t>=3){ const r=add(new THREE.Mesh(new THREE.TorusGeometry(.92,.012,6,120), ringM)); r.rotation.x=Math.PI/2; r.position.y=-.05; }
-    if(t>=5){ const r=add(new THREE.Mesh(new THREE.TorusGeometry(1.12,.009,6,140), ringM)); r.rotation.set(Math.PI/2.6,0,.3); fx.userData.r2=r; }
-    if(t>=4){ const pm=new THREE.MeshBasicMaterial({color:col, transparent:true, opacity:.5, blending:AB, depthWrite:false, side:THREE.DoubleSide}), np=t>=6?12:8;
-      for(let i=0;i<np;i++){ const a=i/np*Math.PI*2, p=add(new THREE.Mesh(new THREE.CircleGeometry(.2,16), pm)); p.scale.set(.55,1.25,1); p.position.set(Math.cos(a)*.5,-1.12,Math.sin(a)*.5); p.rotation.order='YXZ'; p.rotation.y=-a+Math.PI/2; p.rotation.x=-1.0; } }
-    if(t>=6){ const rays=new THREE.Group(), rm=new THREE.MeshBasicMaterial({color:0xffe08a, transparent:true, opacity:.35, blending:AB, depthWrite:false});
-      for(let i=0;i<16;i++){ const c=new THREE.Mesh(new THREE.PlaneGeometry(.7,.02), rm), a=i/16*Math.PI*2; c.position.set(Math.cos(a)*1.45,0,Math.sin(a)*1.45); c.rotation.y=-a; rays.add(c); }
-      add(rays); fx.userData.rays=rays; }
+    const AB=THREE.AdditiveBlending, col=new THREE.Color(P.c), gold=new THREE.Color(0xffd98a);
+    // сийлбэр: эх чулууны угалзны оронд шатны хээ
+    try{ const ot=fuseOrnTex(t); [grp.userData.back,grp.userData.front].forEach(m=>{ m.material.uniforms.orn.value=ot; m.material.uniforms.ornRep.value=2.; }); }catch(e){}
+    grp.userData.glow.material.opacity=.03+.012*t;
+    // нарийн алтан цагираг: 3-р шатаас нэг, 5-р шатаас хоёр
+    const ringM=new THREE.MeshBasicMaterial({color:gold, transparent:true, opacity:.55, blending:AB, depthWrite:false});
+    if(t>=3){ const r=add(new THREE.Mesh(new THREE.TorusGeometry(.98,.006,6,160), ringM)); r.rotation.x=Math.PI/2.15; r.position.y=-.05; fx.userData.r1=r; }
+    if(t>=5){ const r=add(new THREE.Mesh(new THREE.TorusGeometry(1.12,.005,6,180), ringM)); r.rotation.set(Math.PI/2.6,0,.35); fx.userData.r2=r; }
+    // 6-р шатнаас эргэн тойрон зөөлөн гэрлийн хүрээ
+    if(t>=6){ const c=document.createElement('canvas'); c.width=c.height=256; const x=c.getContext('2d'), g=x.createRadialGradient(128,128,40,128,128,128);
+      g.addColorStop(0,'rgba(255,230,170,0)'); g.addColorStop(.62,'rgba(255,225,160,.22)'); g.addColorStop(.7,'rgba(255,240,200,.05)'); g.addColorStop(1,'rgba(255,230,170,0)'); x.fillStyle=g; x.fillRect(0,0,256,256);
+      const s=add(new THREE.Sprite(new THREE.SpriteMaterial({map:new THREE.CanvasTexture(c), transparent:true, opacity:.9, blending:AB, depthWrite:false}))); s.scale.set(3.2,3.6,1); s.position.z=-.35; fx.userData.aura=s; }
+    // 7-р шат: солонгон туяа
     if(t>=7){ const c=document.createElement('canvas'); c.width=c.height=256; const x=c.getContext('2d');
-      for(let r=128;r>40;r-=2){ x.strokeStyle=`hsla(${(128-r)*4.2},95%,65%,${.35*(1-Math.abs(r-86)/46)})`; x.lineWidth=2.5; x.beginPath(); x.arc(128,128,r,0,7); x.stroke(); }
-      const rb=add(new THREE.Sprite(new THREE.SpriteMaterial({map:new THREE.CanvasTexture(c), transparent:true, opacity:.8, blending:AB, depthWrite:false}))); rb.scale.set(3.6,4.4,1); rb.position.z=-.3; }
-    if(t>=7 || f.crown){ const n=f.crown?5:3; for(let i=0;i<n;i++){ const s=add(new THREE.Sprite(new THREE.SpriteMaterial({map:fxDot(), color:col.clone().lerp(new THREE.Color(0xffffff),.5), transparent:true, opacity:.95, blending:AB, depthWrite:false}))); const a=(i-(n-1)/2)*.32; s.position.set(Math.sin(a)*.5,1.35+Math.cos(a)*.12,0); s.scale.setScalar(.2); } }
+      for(let r=128;r>60;r-=2){ x.strokeStyle=`hsla(${(128-r)*5.2},90%,70%,${.22*(1-Math.abs(r-94)/34)})`; x.lineWidth=2.5; x.beginPath(); x.arc(128,128,r,0,7); x.stroke(); }
+      const rb=add(new THREE.Sprite(new THREE.SpriteMaterial({map:new THREE.CanvasTexture(c), transparent:true, opacity:.85, blending:AB, depthWrite:false}))); rb.scale.set(3.4,3.9,1); rb.position.z=-.4; }
+    // титэм: 5-аар нэгтгэсэн бол таван гэрэл, 7-р шатанд гурван гэрэл орой дээр
+    if(t>=7 || f.crown){ const n=f.crown?5:3; for(let i=0;i<n;i++){ const s=add(new THREE.Sprite(new THREE.SpriteMaterial({map:fxDot(), color:gold, transparent:true, opacity:.9, blending:AB, depthWrite:false}))); const a=(i-(n-1)/2)*.38; s.position.set(Math.sin(a)*.32,1.18+Math.cos(a)*.08,.05); s.scale.setScalar(.14); } }
     // оч: шат бүрт өөр замаар эргэнэ
-    const N=4+t*5, R0=1.05+.06*t, pg=new THREE.BufferGeometry(), pa=new Float32Array(N*3); pg.setAttribute('position',new THREE.BufferAttribute(pa,3));
-    add(new THREE.Points(pg,new THREE.PointsMaterial({map:fxDot(), color:0xfff0c0, size:.09+.008*t, transparent:true, blending:AB, depthWrite:false})));
+    const N=4+t*4, R0=1.0+.05*t, pg=new THREE.BufferGeometry(), pa=new Float32Array(N*3); pg.setAttribute('position',new THREE.BufferAttribute(pa,3));
+    add(new THREE.Points(pg,new THREE.PointsMaterial({map:fxDot(), color:0xfff0c0, size:.07+.006*t, transparent:true, blending:AB, depthWrite:false})));
     const lp=[]; for(let i=0;i<=240;i++) lp.push(new THREE.Vector3(...fusePath(t,i/240,R0)));
-    add(new THREE.Line(new THREE.BufferGeometry().setFromPoints(lp), new THREE.LineBasicMaterial({color:col, transparent:true, opacity:.2, blending:AB, depthWrite:false})));
+    add(new THREE.Line(new THREE.BufferGeometry().setFromPoints(lp), new THREE.LineBasicMaterial({color:gold, transparent:true, opacity:.14, blending:AB, depthWrite:false})));
     fx.userData.sp={pa,pg,N,R0,t}; fx.rotation.x=.18;
-    grp.add(fx); grp.userData.fx=fx; grp.userData.fscale=1+.03*(t-1)+(f.crown?.02:0);
+    grp.add(fx); grp.userData.fx=fx; grp.userData.fscale=1+.025*(t-1)+(f.crown?.015:0);
   }
   function fuseFrame(g,s){ const fx=g.userData.fx; if(!fx) return; const d=fx.userData, sp=d.sp;
     for(let i=0;i<sp.N;i++) sp.pa.set(fusePath(sp.t,((i/sp.N)+s*(.03+.004*sp.t))%1,sp.R0),i*3); sp.pg.attributes.position.needsUpdate=true;
-    if(d.band) d.band.rotation.y=-s*.25; if(d.r2) d.r2.rotation.z=s*.3; if(d.rays) d.rays.rotation.y=s*.12; }
+    if(d.r1) d.r1.rotation.z=s*.12; if(d.r2) d.r2.rotation.z=-s*.2; if(d.aura) d.aura.material.opacity=.7+.25*Math.sin(s*1.1); }
   let _shTex=null;
   function shadow(){
     if(!_shTex){ const cv=document.createElement('canvas'); cv.width=cv.height=128; const x=cv.getContext('2d'); const gr=x.createRadialGradient(64,64,0,64,64,64);
