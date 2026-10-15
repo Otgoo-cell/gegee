@@ -464,6 +464,19 @@ window.Gem = (function(){
     const ringM=new THREE.MeshBasicMaterial({color:gold, transparent:true, opacity:.55, blending:AB, depthWrite:false});
     if(t>=3){ const r=add(new THREE.Mesh(new THREE.TorusGeometry(.98,.006,6,160), ringM)); r.rotation.x=Math.PI/2.15; r.position.y=-.05; fx.userData.r1=r; }
     if(t>=5){ const r=add(new THREE.Mesh(new THREE.TorusGeometry(1.12,.005,6,180), ringM)); r.rotation.set(Math.PI/2.6,0,.35); fx.userData.r2=r; }
+    // 4-р шатнаас лянхуан суурь: чулуу дэлбээн дунд суусан мэт; 6-р шатнаас хоёр давхар дэлбээ
+    if(t>=4){ const c=document.createElement('canvas'); c.width=128; c.height=256; const x=c.getContext('2d');
+      const g=x.createLinearGradient(0,256,0,0); g.addColorStop(0,'rgba(255,255,255,.95)'); g.addColorStop(.55,'rgba(255,244,214,.7)'); g.addColorStop(1,'rgba(255,236,190,.15)');
+      x.fillStyle=g; x.beginPath(); x.moveTo(64,252); x.bezierCurveTo(4,190,10,70,64,4); x.bezierCurveTo(118,70,124,190,64,252); x.fill();
+      x.strokeStyle='rgba(255,255,255,.9)'; x.lineWidth=3; x.stroke(); x.lineWidth=2; x.beginPath(); x.moveTo(64,240); x.lineTo(64,40); x.stroke();
+      const ptx=new THREE.CanvasTexture(c), pm=new THREE.MeshBasicMaterial({map:ptx, color:col.clone().lerp(new THREE.Color(0xffffff),.15), transparent:true, opacity:.5, blending:AB, depthWrite:false, side:THREE.DoubleSide});
+      const lotus=new THREE.Group();
+      const layer=(n,len,wid,tilt,rad,off,y)=>{ for(let i=0;i<n;i++){ const a=(i+off)/n*Math.PI*2, geo=new THREE.PlaneGeometry(wid,len); geo.translate(0,len/2,0);
+          const p=new THREE.Mesh(geo,pm); p.position.set(Math.cos(a)*rad,y,Math.sin(a)*rad); p.rotation.order='YXZ'; p.rotation.y=-a+Math.PI/2; p.rotation.x=-tilt; p.renderOrder=4; lotus.add(p); } };
+      layer(8,.75,.36,1.28,.62,0,-1.36);
+      if(t>=6) layer(8,.62,.3,1.05,.5,.5,-1.33);
+      if(t>=7) layer(10,.9,.32,1.45,.75,.25,-1.4);
+      fx.add(lotus); fx.userData.lotus=lotus; }
     // 6-р шатнаас эргэн тойрон зөөлөн гэрлийн хүрээ
     if(t>=6){ const c=document.createElement('canvas'); c.width=c.height=256; const x=c.getContext('2d'), g=x.createRadialGradient(128,128,40,128,128,128);
       g.addColorStop(0,'rgba(255,230,170,0)'); g.addColorStop(.62,'rgba(255,225,160,.22)'); g.addColorStop(.7,'rgba(255,240,200,.05)'); g.addColorStop(1,'rgba(255,230,170,0)'); x.fillStyle=g; x.fillRect(0,0,256,256);
@@ -484,7 +497,7 @@ window.Gem = (function(){
   }
   function fuseFrame(g,s){ const fx=g.userData.fx; if(!fx) return; const d=fx.userData, sp=d.sp;
     for(let i=0;i<sp.N;i++) sp.pa.set(fusePath(sp.t,((i/sp.N)+s*(.03+.004*sp.t))%1,sp.R0),i*3); sp.pg.attributes.position.needsUpdate=true;
-    if(d.r1) d.r1.rotation.z=s*.12; if(d.r2) d.r2.rotation.z=-s*.2; if(d.aura) d.aura.material.opacity=.7+.25*Math.sin(s*1.1); }
+    if(d.lotus) d.lotus.rotation.y=s*.08; if(d.r1) d.r1.rotation.z=s*.12; if(d.r2) d.r2.rotation.z=-s*.2; if(d.aura) d.aura.material.opacity=.7+.25*Math.sin(s*1.1); }
   let _shTex=null;
   function shadow(){
     if(!_shTex){ const cv=document.createElement('canvas'); cv.width=cv.height=128; const x=cv.getContext('2d'); const gr=x.createRadialGradient(64,64,0,64,64,64);
