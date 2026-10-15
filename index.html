@@ -1748,7 +1748,9 @@ function normalize(o){
 }
 function save(){ if(S){ N.save(JSON.stringify(S)); pushNotes(); } }
 function dget(k){ const d=S.days[k]; return d ? {l:d.l||0, s:d.s||0, t:(d.l||0)+(d.s||0)} : {l:0,s:0,t:0}; }
-function dadd(k, ph, sec){ const d=S.days[k] || (S.days[k]={l:0,s:0}); d[ph==='light'?'l':'s'] += sec; }
+function dadd(k, ph, sec){ if(!(sec>0)) return; const d=S.days[k] || (S.days[k]={l:0,s:0}); const room=Math.max(0,86400-(d.l||0)-(d.s||0)); d[ph==='light'?'l':'s'] += Math.min(sec,room); }
+// Өдөрт 24 цагаас илүү бичигдсэн (утасны цаг өөрчлөгдсөн) өгөгдлийг засна
+function fixDays(){ if(!S||!S.days) return; let ch=false; for(const k in S.days){ const d=S.days[k], t=(d.l||0)+(d.s||0); if(!(t<=86400)){ const f=t>0?86400/t:0; d.l=Math.round((d.l||0)*f)||0; d.s=Math.round((d.s||0)*f)||0; ch=true; } } if(ch) save(); }
 
 /* ===================== lock screen ===================== */
 let entry='', lmode='unlock', firstPin='', fails=0;
@@ -1888,7 +1890,7 @@ $('pad').addEventListener('click', e=>{
   entry+=k; drawDots();
   if(entry.length===PIN_LEN) setTimeout(submitPin,120);
 });
-function afterUnlock(){
+function afterUnlock(){ try{ fixDays(); }catch(e){}
   $('orbitSel').value=orbitMode(); drawQuiet();
   if(S.freeMode==='open') S.freeMode='light';
   setFreeMode(S.freeMode); drawMusicChip();
@@ -2173,12 +2175,14 @@ function stop(){
 }
 function tick(){
   const now=Date.now(); let dt=(now-lastTick)/1000; lastTick=now;
+  if(!(dt>0)) dt=0;              // утасны цаг ухарсан бол тооцохгүй
   if(dt>5 && !quiet) dt=5;
+  if(dt>12*3600) dt=12*3600;     // утасны цаг урагшилсан ч нэг дор 12 цагаас илүүг тоолохгүй
   const k=today();
   if(mode==='daily'){
     const r=dailyRemain(k);
     if(r.Lr>0){ const a=Math.min(dt,r.Lr); dadd(k,'light',a); if(a===r.Lr){ dadd(k,'light',dt-a); if(!quiet) switchBell(); } }
-    else if(r.wait){ dadd(k,'light',dt); if(!switchRep && !quiet) switchBell(); }   // баталгаажуулах хүртэл гэрэлд тоологдоно
+    else if(r.wait){ dadd(k,'light',quiet?Math.min(dt,6*3600):dt); if(!switchRep && !quiet) switchBell(); }   // баталгаажуулах хүртэл гэрэлд тоологдоно
     else dadd(k,'sound',Math.min(dt,r.Sr));
     if(dayDone(k)){ stop(); playDone(); toast(tr('Өнөөдрийн 150 минут бүрэн боллоо','Today\'s 150 minutes are complete')); return; }
   } else {
@@ -4023,7 +4027,7 @@ async function openGroup(id){
 function socBadges(){ if(!socOn()||!S||!S.soc) return; chatUnread(); rpc('my_friends').then(l=>{ FR.list=l; FR.incoming=l.filter(f=>f.state==='incoming').length; }).catch(()=>{}); rpc('my_invites').then(l=>{ GR.inv=l; }).catch(()=>{}); }
 
 /* ===================== шинэчлэлийн мэдэгдэл (Android) ===================== */
-const APP_VER=85, SITE='https://otgoo-cell.github.io/gegee';
+const APP_VER=86, SITE='https://otgoo-cell.github.io/gegee';
 async function checkUpdate(){
   if(!N.openUrl) return;
   try{ const r=await fetch(SITE+'/version.json?t='+Date.now(),{cache:'no-store'}); const v=await r.json();
@@ -4096,7 +4100,7 @@ async function pollChat(first){
 
 /* ===================== Санал хүсэлт ===================== */
 const FB={kind:'bug', newCount:0, mine:null, seenAt:0};
-const APP_NAME='9.5';
+const APP_NAME='9.6';
 const FB_K={bug:['🐞',()=>tr('Алдаа','Problem')], idea:['💡',()=>tr('Санаа','Idea')], other:['💬',()=>tr('Бусад','Other')]};
 const fbPlat=()=>{ try{ if(N.hasBg && N.hasBg()) return 'android-app'; }catch(e){} return /iPhone|iPad|iPod/.test(navigator.userAgent)?'ios-pwa':'web'; };
 const fbDev=()=>`${navigator.userAgent.slice(0,260)} | ${screen.width}x${screen.height}@${window.devicePixelRatio||1} | ${LANG} | ${view}`;
@@ -4253,6 +4257,7 @@ async function openStats(){
       ${st(hmin(s.min_today), tr('Өнөөдөр нийт суусан','Sat today in total'))}
       ${st(hmin(s.avg_7), tr('7 хоногт нэг хүн дунджаар','Per person this week'))}
     </div>
+    <div id="stAudit"></div>
     <button class="ghostlink" id="stUsers">${tr('Бүртгүүлсэн хүмүүсийн нэр, утсыг харах →','See registered names and phones →')}</button>
     <div class="glass pChart"><b>${tr('Сонирхол · сүүлийн 30 хоног','Interest · last 30 days')}</b>
       <div class="funnel"><div><b>${P.get_view||0}</b><span>${tr('татах хуудас үзсэн','viewed the page')}</span></div><i>→</i><div><b>${(P.apk_click||0)+(P.ios_open||0)}</b><span>${tr('татах / нээх дарсан','tapped download')}</span></div><i>→</i><div><b>${(s.new_by_day||[]).reduce((a,x)=>a+x.n,0)}</b><span>${tr('суулгасан','installed')}</span></div></div>
@@ -4266,11 +4271,25 @@ async function openStats(){
     <div class="socH">${tr('Суулгалт бүр','Each install')} <small>${(s.list||[]).length}</small><small class="r">${tr('7 хоног','week')}</small></div>
     <div class="socList">${(s.list||[]).map(r=>`<div class="socRow"><span class="socRank">#${esc(r.tag)}</span><span class="socWho"><b>${PLAT[r.platform]||esc(r.platform||'?')} · v${esc(r.app_ver||'?')} · ${esc(cityOf(r.tz))}</b><small>${r.routine!=null?`${tr('дадлын цаг','practice')} ${hm(r.routine)} · `:''}${r.avg_start!=null?`${tr('эхэлдэг','starts')} ${hm(r.avg_start)} · `:''}${tr('нийт','total')} ${hmin(r.total)} · ${r.full_days} ${tr('бүрэн өдөр','full days')}${r.joined?' · Хамт':''}${r.has_pin?'':' · '+tr('код тохируулаагүй','no passcode yet')}<br>${tr('анх','first')} ${String(r.first).replace(/-/g,'.')} · ${tr('сүүлд','last')} ${fbDate(r.last_seen)} · ${r.opens} ${tr('удаа нээсэн','opens')}</small></span><span class="socMin">${hmin(r.m7)}</span></div>`).join('')||`<div class="socEmpty">${tr('Одоогоор мэдээлэл алга','No data yet')}</div>`}</div>`;
   $('socX').onclick=closeSocSheet; if($('stUsers')) $('stUsers').onclick=openAdmin;
+  drawAudit();
 }
 
 /* ---------- хөнгөн горимын сонголт ---------- */
 $('liteSel').value=LITE?'1':'0';
 $('liteSel').addEventListener('change', e=>{ try{ localStorage.setItem('gegee_lite', e.target.value); }catch(_){} toast(tr('Аппыг дахин нээхэд хэрэгжинэ','Takes effect when you reopen the app')); setTimeout(()=>location.reload(), 1200); });
+
+// Эзэмшигчийн шалгалт: өдөрт 16+ цаг, эсвэл серверт байгаа цагаас их цагийн чулуу зарласан хүмүүс
+async function drawAudit(){
+  const box=$('stAudit'); if(!box) return; let a=[];
+  try{ a=await sreq('/rest/v1/rpc/admin_audit',{})||[]; }catch(e){ return; }
+  const why=r=>{ const w=[]; if(r.big_days>0) w.push(tr(`${r.big_days} өдөр 16+ цаг (хамгийн ихдээ ${r.max_day_h}ц)`,`${r.big_days} days of 16h+ (max ${r.max_day_h}h)`));
+    if(r.claimed_h && r.claimed_h>Number(r.server_h)+1) w.push(tr(`${r.claimed_h} цагийн чулуутай, серверт ${r.server_h}ц л бий`,`claims ${r.claimed_h}h, server has ${r.server_h}h`)); return w; };
+  const bad=a.filter(r=>why(r).length), top=a.filter(r=>r.gem_count>0).slice(0,8);
+  box.innerHTML=`<div class="glass pChart"><b>${tr('Шалгах','Check')} ${bad.length?`<span style="color:var(--miss)">· ${bad.length} ${tr('сэжигтэй','suspicious')}</span>`:`<span style="color:var(--ok)">· ${tr('бүгд хэвийн','all normal')}</span>`}</b>
+    ${bad.map(r=>`<div class="socRow" data-nick="${esc(r.nick)}"><span class="socWho"><b>${esc(r.nick)}</b><small style="color:var(--miss)">${why(r).map(esc).join(' · ')}</small><small>${tr('Чулуу','Gems')} ${r.gem_count} · ${tr('серверт нийт','server total')} ${r.server_h}ц · ${r.days_n} ${tr('өдөр','days')}</small></span></div>`).join('')}
+    <small style="display:block;margin-top:8px">${tr('Хамгийн олон чулуутай','Most gems')}: ${top.map(r=>`${esc(r.nick)} ${r.gem_count}`).join(' · ')||'—'}</small></div>`;
+  box.querySelectorAll('[data-nick]').forEach(el=>el.onclick=()=>openProfile(el.dataset.nick));
+}
 /* ===================== Мэдэгдэл: апп хаалттай үед чат, хүсэлт ирэхэд ===================== */
 const VAPID='BLbAKkYwRoAdY5aU8FIx9ItGMzd7NKiWkFkf3eFIg_7OvxInx1_70AvY3EKrnJRPNkPvf4Ksqs-Tun3iP-azRrI';
 const isApk=()=>!!(window.Native && typeof window.Native.pushCfg==='function');
