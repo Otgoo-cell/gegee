@@ -1252,6 +1252,9 @@ body:has(#doneBar:not([hidden])) .toast{bottom:calc(148px + env(safe-area-inset-
 .pFuse small{color:var(--muted);font-size:12px}
 .pFuse em{font-style:normal;color:var(--muted);font-size:20px}
 .pGem{cursor:pointer}
+.endLine{text-align:center;font-size:12.5px;color:var(--muted);margin-top:6px;font-variant-numeric:tabular-nums}.endLine b{color:var(--fg);font-weight:500}
+#fEnd{white-space:nowrap}
+.fFootR{display:flex;gap:6px;flex:none}
 </style>
 </head>
 <body>
@@ -1337,7 +1340,7 @@ body:has(#doneBar:not([hidden])) .toast{bottom:calc(148px + env(safe-area-inset-
     </div>
     <div class="chips fQ" id="fQuick"><button class="chip" data-min="30">30м</button><button class="chip" data-min="60">1ц</button><button class="chip" data-min="120">2ц</button><button class="chip" data-min="180">3ц</button><button class="chip" data-min="300">5ц</button><button class="chip" data-min="420">7ц</button><button class="chip" id="fMore">⋯</button></div>
     <div class="fCustom" id="fCustom" hidden><input id="fcH" type="number" inputmode="numeric" min="0" max="99" placeholder="цаг"><span>:</span><input id="fcM" type="number" inputmode="numeric" min="0" max="59" placeholder="мин"><button class="main" id="fcOk">Болсон</button></div>
-    <div class="fFoot"><div class="preview" id="fPrev"></div><button class="chip on" id="fMusic">♪ Ая</button></div>
+    <div class="fFoot"><div class="preview" id="fPrev"></div><span class="fFootR"><button class="chip" id="fEnd">⏰</button><button class="chip on" id="fMusic">♪ Ая</button></span></div>
   </div>
   <div class="ringwrap">
     <div class="ringbox" id="ringbox">
@@ -1366,9 +1369,10 @@ body:has(#doneBar:not([hidden])) .toast{bottom:calc(148px + env(safe-area-inset-
   <div>
     <div class="bar"><div class="seg l"><i id="fillL"></i></div><div class="seg s"><i id="fillS"></i></div></div>
     <div class="legend">
-      <span><span class="dot" style="background:var(--light)"></span>Гэрэл <b id="lgL">92:42</b></span>
-      <span><span class="dot" style="background:var(--sound)"></span>Аялгуу <b id="lgS">57:18</b></span>
+      <span><span class="dot" style="background:var(--light)"></span>Гэрэл <b id="lgL"></b></span>
+      <span><span class="dot" style="background:var(--sound)"></span>Аялгуу <b id="lgS"></b></span>
     </div>
+    <div class="endLine" id="endLine"></div>
   </div>
   <button class="main" id="go" hidden>Эхлэх</button>
   <div class="note glass" id="status"></div>
@@ -1706,6 +1710,8 @@ const DUTY = {
   retreat: {get name(){return tr('Даяан','Retreat')},                  get rule(){return tr('Сард 1 удаа','Once a month')},                     per:'month'}
 };
 const today = () => key(new Date());
+const hmLeft = s => { const m=Math.round(Math.max(0,s)/60); return m>=60?`${Math.floor(m/60)}${tr('ц','h')} ${pad2(m%60)}${tr('м','m')}`:`${m}${tr('м','m')}`; };
+const endAt = sec => { const d=new Date(Date.now()+Math.max(0,sec)*1000); return `${pad2(d.getHours())}:${pad2(d.getMinutes())}`; };
 const fmtD = k => { const d=parse(k); return `${d.getMonth()+1}/${d.getDate()} ${DN[(d.getDay()+6)%7]}`; };
 const monday = d => { const x=new Date(d.getFullYear(),d.getMonth(),d.getDate()); x.setDate(x.getDate()-(x.getDay()+6)%7); return x; };
 const addDays = (d,n) => new Date(d.getFullYear(),d.getMonth(),d.getDate()+n);
@@ -1987,10 +1993,14 @@ function setFreeMode(fm){
   renderMed();
 }
 $('modeSw').addEventListener('click', e=>{ const b=e.target.closest('button'); if(b) setMode(b.dataset.m); });
+$('fEnd').addEventListener('click', ()=>{ if(!S) return; const n=new Date(), base=S.freeEnd!=null?S.freeEnd:(Math.ceil((n.getHours()*60+n.getMinutes()+60)/15)*15)%1440;
+  openSlot({title:tr('Хэдэн цагт дуусгах вэ?','Finish at what time?'), v:base, ok:v=>{ $('fCustom').hidden=true; S.freeEnd=v; S.freeMin=Math.min(720,minsTo(v)); sess=null; save(); renderMed(); toast(tr(`${hm(v)}-д дуусна · ${hmLeft(S.freeMin*60)}`,`Ends at ${hm(v)} · ${hmLeft(S.freeMin*60)}`)); }}); });
+const minsTo = v => { const n=new Date(), now=n.getHours()*60+n.getMinutes(); let d=(v-now+1440)%1440; return d||1440; };
 $('fQuick').addEventListener('click', e=>{ const b=e.target.closest('.chip'); if(!b||!S) return;
+  S.freeEnd=null;
   if(b.id==='fMore'){ const c=$('fCustom'); c.hidden=!c.hidden; if(!c.hidden){ $('fcH').value=S.freeMin?Math.floor(S.freeMin/60):''; $('fcM').value=S.freeMin?S.freeMin%60:''; $('fcH').focus(); } return; }
   $('fCustom').hidden=true; S.freeMin=Number(b.dataset.min); sess=null; save(); renderMed(); });
-$('fcOk').addEventListener('click', ()=>{ const h=Math.max(0,Math.min(99,parseInt($('fcH').value)||0)), m=Math.max(0,Math.min(59,parseInt($('fcM').value)||0)); S.freeMin=h*60+m; sess=null; save(); $('fCustom').hidden=true; renderMed(); });
+$('fcOk').addEventListener('click', ()=>{ S.freeEnd=null; const h=Math.max(0,Math.min(99,parseInt($('fcH').value)||0)), m=Math.max(0,Math.min(59,parseInt($('fcM').value)||0)); S.freeMin=h*60+m; sess=null; save(); $('fCustom').hidden=true; renderMed(); });
 ['fcH','fcM'].forEach(id=>$(id).addEventListener('keydown',e=>{ if(e.key==='Enter') $('fcOk').click(); }));
 $('fMode').addEventListener('click', e=>{ const b=e.target.closest('.chip'); if(b){ setFreeMode(b.dataset.fm); save(); } });
 /* ---- цагираг дээр гулсуулж минут сонгох ---- */
@@ -2144,7 +2154,8 @@ $('sitToSound').addEventListener('click', e=>{ e.stopPropagation(); const sg=sug
 async function start(){
   const k=today();
   if(mode==='daily' && dayDone(k)) return;
-  if(mode==='free'){ const sp=freeSplit(S.freeMin, S.freeMode); if(!sess || sess.e>=sess.T || (sess.fm!==S.freeMode && !(sess.e>0))) sess={...sp, e:0, fm:S.freeMode}; S.sug=null; }
+  if(mode==='free'){ if(S.freeEnd!=null && !(sess && sess.e>0 && sess.e<sess.T)){ S.freeMin=Math.min(720,minsTo(S.freeEnd)); sess=null; }
+    const sp=freeSplit(S.freeMin, S.freeMode); if(!sess || sess.e>=sess.T || (sess.fm!==S.freeMode && !(sess.e>0))) sess={...sp, e:0, fm:S.freeMode}; S.sug=null; }
   try{ actx = actx || new (window.AudioContext||window.webkitAudioContext)(); await actx.resume(); }catch(e){}
   N.keepScreen(true); primeDone(); if(mode==='free') primeFree();
   try{ switchAudio.muted=true; const pp=switchAudio.play(); if(pp) pp.then(()=>{ switchAudio.pause(); switchAudio.muted=false; }).catch(()=>{ switchAudio.muted=false; }); }catch(e){}
@@ -2349,20 +2360,23 @@ function renderMed(){
     $('phase').textContent = done?tr('Өнөөдөр бүрэн','Complete today'): r.wait?tr('Аялгуу руу шилжих','Switch to sound'): ph==='light'?tr('Гэрэл','Light'):tr('Аялгуу','Sound');
     $('phase').style.color = done?'var(--ok)': ph==='light'?'var(--light)':'var(--sound)';
     $('remain').textContent = fmt(r.R);
-    $('sub').textContent = done?tr(`${Math.floor(d.t/60)} / 150 минут`,`${Math.floor(d.t/60)} / 150 min`): ph==='light'?tr(`гэрэлд ${fmt(r.Lr)} үлдлээ`,`${fmt(r.Lr)} of light left`):tr(`аялгуунд ${fmt(r.Sr)} үлдлээ`,`${fmt(r.Sr)} of sound left`);
+    $('sub').textContent = done?tr(`${Math.floor(d.t/60)} / 150 минут`,`${Math.floor(d.t/60)} / 150 min`): ph==='light'?tr(`гэрэлд ${hmLeft(r.Lr)} үлдлээ`,`${hmLeft(r.Lr)} of light left`):tr(`аялгуунд ${hmLeft(r.Sr)} үлдлээ`,`${hmLeft(r.Sr)} of sound left`);
     const lp=Math.min(d.l,DAY)/DAY; setRing(lp, Math.min(d.s,DAY-Math.min(d.l,DAY))/DAY);
     $('fillL').parentNode.style.flex=61.8; $('fillS').parentNode.style.flex=38.2;
     $('fillL').style.width=Math.min(100,d.l/LIGHT*100)+'%'; $('fillS').style.width=Math.min(100,d.s/SOUND*100)+'%';
-    $('lgL').textContent=fmt(Math.max(LIGHT,d.l)); $('lgS').textContent=fmt(soundTarget(k));
+    $('endLine').innerHTML = done?'':running?tr(`<b>${endAt(r.R)}</b>-д дуусна`,`Ends at <b>${endAt(r.R)}</b>`):tr(`Одоо эхэлбэл <b>${endAt(r.R)}</b>-д дуусна`,`Start now to finish at <b>${endAt(r.R)}</b>`);
+    $('lgL').textContent=r.Lr>0?tr(`${hmLeft(r.Lr)} үлдсэн`,`${hmLeft(r.Lr)} left`):'✓ '+hmLeft(d.l); $('lgS').textContent=r.Sr>0?tr(`${hmLeft(r.Sr)} үлдсэн`,`${hmLeft(r.Sr)} left`):'✓ '+hmLeft(d.s);
     g.textContent = done?tr('Өнөөдрийн бясалгал дууссан','Today\'s practice is done'): running?tr('Түр зогсоох','Pause'): d.t>0?tr('Үргэлжлүүлэх','Continue'):tr('Эхлэх','Begin');
     g.disabled = done;
   } else {
     const sp = sess && sess.e<sess.T ? sess : {...freeSplit(S.freeMin,S.freeMode), e:0};
     const dialing = dialActive();
-    document.querySelectorAll('#fQuick .chip[data-min]').forEach(c=>c.classList.toggle('on', Number(c.dataset.min)===S.freeMin));
-    { const pre=[30,60,120,180,300,420].includes(S.freeMin), mb=$('fMore'); mb.classList.toggle('on', S.freeMin>0 && !pre); mb.textContent = S.freeMin>0 && !pre ? (S.freeMin>=60?`${Math.floor(S.freeMin/60)}${tr('ц','h')}${S.freeMin%60?pad2(S.freeMin%60):''}`:`${S.freeMin}${tr('м','m')}`) : '⋯'; }
+    document.querySelectorAll('#fQuick .chip[data-min]').forEach(c=>c.classList.toggle('on', Number(c.dataset.min)===S.freeMin && S.freeEnd==null));
+    { const fe=$('fEnd'); if(fe){ fe.classList.toggle('on', S.freeEnd!=null); fe.textContent = S.freeEnd!=null?`⏰ ${hm(S.freeEnd)}`:'⏰'; } }
+    { const pre=[30,60,120,180,300,420].includes(S.freeMin)&&S.freeEnd==null, mb=$('fMore'); mb.classList.toggle('on', S.freeMin>0 && !pre && S.freeEnd==null); mb.textContent = S.freeMin>0 && !pre && S.freeEnd==null ? (S.freeMin>=60?`${Math.floor(S.freeMin/60)}${tr('ц','h')}${S.freeMin%60?pad2(S.freeMin%60):''}`:`${S.freeMin}${tr('м','m')}`) : '⋯'; }
     document.body.classList.toggle('dialing', dialing);
     const ph = (sp.e < sp.Tl || freeWait()) ? 'light' : 'sound';
+    { const left=sp.open?0:sp.T-sp.e; $('endLine').innerHTML = left>0&&(running||S.freeEnd!=null||sp.e>0)?tr(`<b>${endAt(left)}</b>-д дуусна`,`Ends at <b>${endAt(left)}</b>`):''; }
     $('phase').textContent = freeWait()?tr('Аялгуу руу шилжих','Switch to sound'): ph==='light'?tr('Гэрэл','Light'):tr('Аялгуу','Sound');
     $('phase').style.color = ph==='light'?'var(--light)':'var(--sound)';
     $('remain').textContent = fmt(sp.T-sp.e);
@@ -4009,7 +4023,7 @@ async function openGroup(id){
 function socBadges(){ if(!socOn()||!S||!S.soc) return; chatUnread(); rpc('my_friends').then(l=>{ FR.list=l; FR.incoming=l.filter(f=>f.state==='incoming').length; }).catch(()=>{}); rpc('my_invites').then(l=>{ GR.inv=l; }).catch(()=>{}); }
 
 /* ===================== шинэчлэлийн мэдэгдэл (Android) ===================== */
-const APP_VER=84, SITE='https://otgoo-cell.github.io/gegee';
+const APP_VER=85, SITE='https://otgoo-cell.github.io/gegee';
 async function checkUpdate(){
   if(!N.openUrl) return;
   try{ const r=await fetch(SITE+'/version.json?t='+Date.now(),{cache:'no-store'}); const v=await r.json();
@@ -4082,7 +4096,7 @@ async function pollChat(first){
 
 /* ===================== Санал хүсэлт ===================== */
 const FB={kind:'bug', newCount:0, mine:null, seenAt:0};
-const APP_NAME='9.4';
+const APP_NAME='9.5';
 const FB_K={bug:['🐞',()=>tr('Алдаа','Problem')], idea:['💡',()=>tr('Санаа','Idea')], other:['💬',()=>tr('Бусад','Other')]};
 const fbPlat=()=>{ try{ if(N.hasBg && N.hasBg()) return 'android-app'; }catch(e){} return /iPhone|iPad|iPod/.test(navigator.userAgent)?'ios-pwa':'web'; };
 const fbDev=()=>`${navigator.userAgent.slice(0,260)} | ${screen.width}x${screen.height}@${window.devicePixelRatio||1} | ${LANG} | ${view}`;
