@@ -4044,7 +4044,7 @@ async function openGroup(id){
 function socBadges(){ if(!socOn()||!S||!S.soc) return; chatUnread(); rpc('my_friends').then(l=>{ FR.list=l; FR.incoming=l.filter(f=>f.state==='incoming').length; }).catch(()=>{}); rpc('my_invites').then(l=>{ GR.inv=l; }).catch(()=>{}); }
 
 /* ===================== шинэчлэлийн мэдэгдэл (Android) ===================== */
-const APP_VER=91, SITE='https://otgoo-cell.github.io/gegee';
+const APP_VER=92, SITE='https://otgoo-cell.github.io/gegee';
 async function checkUpdate(){
   if(!N.openUrl) return;
   try{ const r=await fetch(SITE+'/version.json?t='+Date.now(),{cache:'no-store'}); const v=await r.json();
@@ -4117,7 +4117,7 @@ async function pollChat(first){
 
 /* ===================== Санал хүсэлт ===================== */
 const FB={kind:'bug', newCount:0, mine:null, seenAt:0};
-const APP_NAME='10.1';
+const APP_NAME='10.2';
 const FB_K={bug:['🐞',()=>tr('Алдаа','Problem')], idea:['💡',()=>tr('Санаа','Idea')], other:['💬',()=>tr('Бусад','Other')]};
 const fbPlat=()=>{ try{ if(N.hasBg && N.hasBg()) return 'android-app'; }catch(e){} return /iPhone|iPad|iPod/.test(navigator.userAgent)?'ios-pwa':'web'; };
 const fbDev=()=>`${navigator.userAgent.slice(0,260)} | ${screen.width}x${screen.height}@${window.devicePixelRatio||1} | ${LANG} | ${view}`;
@@ -4570,7 +4570,21 @@ function openSlot(o){
 /* ---------- Алдаанаас үүссэн илүү цагийг хэрэглэгчээр өөрөөр нь шалгуулах ---------- */
 async function checkReviews(){
   if(!S || !S.soc || !socOn() || checkReviews.busy || document.getElementById('revOv')) return; checkReviews.busy=true;
-  let list=[]; try{ list=await rpc('my_reviews',{})||[]; }catch(e){} checkReviews.busy=false;
+  let list=[], fixes=[]; try{ list=await rpc('my_reviews',{})||[]; }catch(e){} try{ fixes=await rpc('my_fixes',{})||[]; }catch(e){} checkReviews.busy=false;
+  if(fixes.length){ let ch=false;
+    fixes.forEach(r=>{ const x=S.days[r.day]; if(x && x.l>r.light_fix){ x.l=r.light_fix; ch=true; } });
+    if(ch){ save(); try{ renderMed(); renderTrack(); }catch(_){} try{ socSync(true); }catch(_){} }
+    const ds=fixes.map(r=>{ const d=parse(r.day); return tr(`${d.getMonth()+1}-р сарын ${d.getDate()}`,`${MN_EN[d.getMonth()]} ${d.getDate()}`); }).join(', ');
+    const ov=document.createElement('div'); ov.id='revOv'; ov.innerHTML=`<div class="revBox glass">
+      <b class="revT">${tr('Суултын цаг засагдлаа','Your sitting time was corrected')}</b>
+      <p>${tr(`Апп-ын алдаанаас болж таны ${ds}-ны гэрлийн суултад илүү цаг бичигдэж, чулуу буруу нэмэгдсэн байсан тул засаж хураалаа.`,`Because of an app bug, extra time was recorded for your light sitting on ${ds} and stones were added by mistake, so we corrected it.`)}</p>
+      <p class="revWhy">${tr('Хэрэв та тэр өдөр үнэхээр ийм удаан суусан гэж үзвэл Санал хүсэлт хэсгээр бидэнд бичээрэй.','If you believe you really sat that long, please write to us through Feedback.')}</p>
+      <div class="revBtns"><button class="main" data-a="ok">${tr('Ойлголоо','Got it')}</button><button data-a="fb">${tr('Санал хүсэлт бичих','Write feedback')}</button></div></div>`;
+    document.body.appendChild(ov);
+    ov.onclick=e=>{ const b=e.target.closest('[data-a]'); if(!b) return;
+      fixes.forEach(r=>{ rpc('fix_seen',{day_:r.day}).catch(()=>{}); });
+      ov.remove(); if(b.dataset.a==='fb'){ try{ fbForm(); }catch(_){} } else setTimeout(next,400); };
+  }
   const hmT=s=>{ const m=Math.round(s/60); return m>=60?tr(`${Math.floor(m/60)} цаг ${m%60} мин`,`${Math.floor(m/60)}h ${m%60}m`):tr(`${m} мин`,`${m} min`); };
   const next=()=>{ const r=list.shift(); if(!r) return;
     const d=parse(r.day), when=tr(`${d.getMonth()+1}-р сарын ${d.getDate()}`,`${MN_EN[d.getMonth()]} ${d.getDate()}`);
@@ -4588,7 +4602,7 @@ async function checkReviews(){
       }catch(err){ toast(tr('Холболт тасарлаа, дараа дахин асууна','No connection, we will ask again later')); }
       ov.remove(); setTimeout(next,400); };
   };
-  next();
+  if(!fixes.length) next();
 }
 /* ===================== Группийн хана, эвент, дуут өрөө ===================== */
 const HUB={g:null, tab:'wall', posts:null, events:null, open:{}, voiceWho:[]};
