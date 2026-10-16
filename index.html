@@ -1259,6 +1259,11 @@ body:has(#doneBar:not([hidden])) .toast{bottom:calc(148px + env(safe-area-inset-
 .endLine{text-align:center;font-size:12.5px;color:var(--muted);margin-top:6px;font-variant-numeric:tabular-nums}.endLine b{color:var(--fg);font-weight:500}
 #fEnd{white-space:nowrap}
 .fFootR{display:flex;gap:6px;flex:none}
+#revOv{position:fixed;inset:0;z-index:640;background:rgba(0,0,0,.42);display:grid;place-items:center;padding:20px}
+.revBox{max-width:360px;width:100%;padding:22px 20px;display:flex;flex-direction:column;gap:10px;background:var(--glass2)}
+.revT{font-family:var(--serif);font-weight:400;font-style:italic;font-size:24px}
+.revBox p{margin:0;font-size:14.5px;line-height:1.55}.revWhy{color:var(--muted);font-size:13.5px!important}
+.revBtns{display:flex;flex-direction:column;gap:8px;margin-top:6px}
 </style>
 </head>
 <body>
@@ -1895,7 +1900,7 @@ $('pad').addEventListener('click', e=>{
   entry+=k; drawDots();
   if(entry.length===PIN_LEN) setTimeout(submitPin,120);
 });
-function afterUnlock(){ try{ fixDays(); }catch(e){}
+function afterUnlock(){ try{ fixDays(); }catch(e){} setTimeout(()=>{ try{ checkReviews(); }catch(e){} },2500);
   $('orbitSel').value=orbitMode(); drawQuiet();
   if(S.freeMode==='open') S.freeMode='light';
   setFreeMode(S.freeMode); drawMusicChip();
@@ -4039,7 +4044,7 @@ async function openGroup(id){
 function socBadges(){ if(!socOn()||!S||!S.soc) return; chatUnread(); rpc('my_friends').then(l=>{ FR.list=l; FR.incoming=l.filter(f=>f.state==='incoming').length; }).catch(()=>{}); rpc('my_invites').then(l=>{ GR.inv=l; }).catch(()=>{}); }
 
 /* ===================== шинэчлэлийн мэдэгдэл (Android) ===================== */
-const APP_VER=90, SITE='https://otgoo-cell.github.io/gegee';
+const APP_VER=91, SITE='https://otgoo-cell.github.io/gegee';
 async function checkUpdate(){
   if(!N.openUrl) return;
   try{ const r=await fetch(SITE+'/version.json?t='+Date.now(),{cache:'no-store'}); const v=await r.json();
@@ -4112,7 +4117,7 @@ async function pollChat(first){
 
 /* ===================== Санал хүсэлт ===================== */
 const FB={kind:'bug', newCount:0, mine:null, seenAt:0};
-const APP_NAME='10.0';
+const APP_NAME='10.1';
 const FB_K={bug:['🐞',()=>tr('Алдаа','Problem')], idea:['💡',()=>tr('Санаа','Idea')], other:['💬',()=>tr('Бусад','Other')]};
 const fbPlat=()=>{ try{ if(N.hasBg && N.hasBg()) return 'android-app'; }catch(e){} return /iPhone|iPad|iPod/.test(navigator.userAgent)?'ios-pwa':'web'; };
 const fbDev=()=>`${navigator.userAgent.slice(0,260)} | ${screen.width}x${screen.height}@${window.devicePixelRatio||1} | ${LANG} | ${view}`;
@@ -4379,6 +4384,7 @@ function bindPushNudge(){
 
 // Мэдэгдэл дээр дарахад Хамт → тохирох хэсэг рүү
 function openFromAlert(kind){
+  if(kind==='review'){ setTimeout(()=>{ try{ checkReviews(); }catch(e){} },3000); return; }
   if(!/^(msg|friend|friend_ok|greq|ginv|gpost|gevent)$/.test(kind||'')) return;   // сануулга бол зүгээр апп нээгдэнэ
   const go=()=>{ if(!S || !S.soc || (!$('lock').hidden && !$('lock').classList.contains('out'))){ setTimeout(go,700); return; }
     SOC.tab = kind==='msg' ? 'chat' : /^g(req|inv|post|event)$/.test(kind) ? 'groups' : 'friends';
@@ -4559,6 +4565,30 @@ function openSlot(o){
   $('slotYes').onclick=()=>{ tickFx(); done(); };
   const lv=$('slotLever'); lv.onclick=()=>{ lv.classList.add('pull'); $('slotM').classList.add('spin'); tickFx(); setTimeout(tickFx,120); setTimeout(tickFx,240);
     setTimeout(()=>{ lv.classList.remove('pull'); },360); setTimeout(done,560); };
+}
+
+/* ---------- Алдаанаас үүссэн илүү цагийг хэрэглэгчээр өөрөөр нь шалгуулах ---------- */
+async function checkReviews(){
+  if(!S || !S.soc || !socOn() || checkReviews.busy || document.getElementById('revOv')) return; checkReviews.busy=true;
+  let list=[]; try{ list=await rpc('my_reviews',{})||[]; }catch(e){} checkReviews.busy=false;
+  const hmT=s=>{ const m=Math.round(s/60); return m>=60?tr(`${Math.floor(m/60)} цаг ${m%60} мин`,`${Math.floor(m/60)}h ${m%60}m`):tr(`${m} мин`,`${m} min`); };
+  const next=()=>{ const r=list.shift(); if(!r) return;
+    const d=parse(r.day), when=tr(`${d.getMonth()+1}-р сарын ${d.getDate()}`,`${MN_EN[d.getMonth()]} ${d.getDate()}`);
+    const ov=document.createElement('div'); ov.id='revOv'; ov.innerHTML=`<div class="revBox glass">
+      <b class="revT">${tr('Суултаа шалгая','Let us check your sitting')}</b>
+      <p>${tr(`${when}-нд таны гэрлийн суулт <strong>${hmT(r.light_was)}</strong> гэж бичигдсэн байна.`,`On ${when} your light sitting was recorded as <strong>${hmT(r.light_was)}</strong>.`)}</p>
+      <p class="revWhy">${tr('Гэрэл дуусаад аялгуу руу шилжээгүй үед апп хугацааг үргэлжлүүлэн тоолчихдог алдаа байсан. Одоо зассан. Та тэр өдөр үнэхээр ийм удаан суусан уу?','The app used to keep counting after light ended if you had not switched to sound. This is fixed now. Did you really sit this long that day?')}</p>
+      <div class="revBtns"><button class="main" data-a="fix">${tr(`Үгүй, засаад өг (${hmT(r.light_fix)})`,`No, fix it (${hmT(r.light_fix)})`)}</button><button data-a="keep">${tr('Тийм, үнэхээр суусан','Yes, I really sat')}</button></div></div>`;
+    document.body.appendChild(ov);
+    ov.onclick=async e=>{ const b=e.target.closest('[data-a]'); if(!b) return; ov.querySelectorAll('button').forEach(x=>x.disabled=true);
+      const keep=b.dataset.a==='keep';
+      try{ await rpc('review_answer',{day_:r.day, keep_:keep});
+        if(!keep){ const x=S.days[r.day]; if(x && x.l>r.light_fix){ x.l=r.light_fix; save(); } try{ renderMed(); renderTrack(); }catch(_){} try{ socSync(true); }catch(_){} }
+        toast(keep?tr('Баярлалаа, хэвээр үлдлээ','Thank you, it stays as it is'):tr('Засагдлаа. Баярлалаа','Fixed. Thank you'));
+      }catch(err){ toast(tr('Холболт тасарлаа, дараа дахин асууна','No connection, we will ask again later')); }
+      ov.remove(); setTimeout(next,400); };
+  };
+  next();
 }
 /* ===================== Группийн хана, эвент, дуут өрөө ===================== */
 const HUB={g:null, tab:'wall', posts:null, events:null, open:{}, voiceWho:[]};
