@@ -1692,6 +1692,7 @@ let LANG = (()=>{ try{ return localStorage.getItem('gegee_lang')||'mn'; }catch(e
 const tr = (mn, en) => LANG==='en' ? en : mn;
 /* ===================== constants & helpers ===================== */
 const DAY = 150*60, PHI = (1+Math.sqrt(5))/2;
+const WAIT_MAX = 20*60;   // аялгуу руу шилжихийг хүлээх дээд хугацаа
 const LIGHT = Math.round(DAY/PHI), SOUND = DAY - LIGHT;   // 5562 / 3438 сек
 const C = 2*Math.PI*88;
 const $ = id => document.getElementById(id);
@@ -1803,9 +1804,9 @@ function bgPlan(){
   if(mode==='daily'){ const r=dailyRemain(k); rem=r.R; if(r.Lr>0 && r.Sr>0){ sw=r.Lr; waitSw=true; } else if(r.wait){ sw=0.6; waitSw=true; } }
   else { rem=sess.T-sess.e; if(freeWait()){ sw=0.6; waitSw=true; } else if(sess.e<sess.Tl && sess.Ts>0 && !sess.acked){ sw=sess.Tl-sess.e; waitSw=true; } }
   if(waitSw){   // баталгаажуулах хүртэл 20 секунд тутам 6 цаг давтана; суулт тэр хооронд дуусахгүй
-    for(let t=sw; t<sw+6*3600; t+=20) add(t,'bell_switch.wav');
+    for(let t=sw; t<sw+WAIT_MAX; t+=20) add(t,'bell_switch.wav');
     if(every){ for(let t=every-sinceRemind; t<sw-5; t+=every) add(t,'bell_remind.wav'); }
-    add(sw+6*3600+30,'quit');
+    add(sw+WAIT_MAX+30,'quit');
     return ev.join(',');
   }
   if(every){ for(let t=every-sinceRemind; t<rem-5; t+=every) add(t,'bell_remind.wav'); }
@@ -2185,16 +2186,22 @@ function tick(){
   const k=today();
   if(mode==='daily'){
     const r=dailyRemain(k);
-    if(r.Lr>0){ const a=Math.min(dt,r.Lr); dadd(k,'light',a); if(a===r.Lr){ dadd(k,'light',dt-a); if(!quiet) switchBell(); } }
-    else if(r.wait){ dadd(k,'light',quiet?Math.min(dt,6*3600):dt); if(!switchRep && !quiet) switchBell(); }   // баталгаажуулах хүртэл гэрэлд тоологдоно
+    if(r.Lr>0){ const a=Math.min(dt,r.Lr); dadd(k,'light',a);
+      if(a===r.Lr){ const rest=dt-a; dadd(k,'light',Math.min(rest,WAIT_MAX)); if(!quiet) switchBell();
+        if(rest>=WAIT_MAX){ stop(); toast(tr('Аялгуу руу шилжээгүй тул суулт түр зогслоо. Үргэлжлүүлэхдээ дахин эхлүүлээрэй.','You did not switch to sound, so the sitting paused. Start again to continue.')); return; } } }
+    else if(r.wait){   // аялгуу руу шилжихийг баталгаажуулах хүртэл 20 минут л гэрэлд тоологдоно, түүнээс хойш суулт зогсоно
+      const over=Math.max(0,dget(k).l-LIGHT), room=Math.max(0,WAIT_MAX-over);
+      dadd(k,'light',Math.min(dt,room)); if(!switchRep && !quiet) switchBell();
+      if(dt>=room){ stop(); toast(tr('Аялгуу руу шилжээгүй тул суулт түр зогслоо. Үргэлжлүүлэхдээ дахин эхлүүлээрэй.','You did not switch to sound, so the sitting paused. Start again to continue.')); return; } }
     else dadd(k,'sound',Math.min(dt,r.Sr));
     if(dayDone(k)){ stop(); playDone(); toast(tr('Өнөөдрийн 150 минут бүрэн боллоо','Today\'s 150 minutes are complete')); return; }
   } else {
-    if(freeWait()){ dadd(k,'light',dt); sess.lx=(sess.lx||0)+dt; if(!switchRep && !quiet) switchBell(); }
+    if(freeWait()){ const room=Math.max(0,WAIT_MAX-(sess.lx||0)), a=Math.min(dt,room); dadd(k,'light',a); sess.lx=(sess.lx||0)+a; if(!switchRep && !quiet) switchBell();
+      if(dt>=room){ stop(); toast(tr('Аялгуу руу шилжээгүй тул суулт түр зогслоо. Үргэлжлүүлэхдээ дахин эхлүүлээрэй.','You did not switch to sound, so the sitting paused. Start again to continue.')); return; } }
     else {
       const before=sess.e; let step=Math.min(dt, sess.T-before);
       if(before<sess.Tl && before+step>=sess.Tl && sess.Ts>0 && !sess.acked){
-        const a=sess.Tl-before; sess.e=sess.Tl; dadd(k,'light',a+(step-a)); sess.lx=(sess.lx||0)+(step-a); if(!quiet) switchBell();
+        const a=sess.Tl-before, ex=Math.min(step-a,WAIT_MAX); sess.e=sess.Tl; dadd(k,'light',a+ex); sess.lx=(sess.lx||0)+ex; if(!quiet) switchBell();
       } else {
         sess.e += step;
         const lPart = Math.max(0, Math.min(sess.e, sess.Tl) - Math.min(before, sess.Tl));
@@ -4032,7 +4039,7 @@ async function openGroup(id){
 function socBadges(){ if(!socOn()||!S||!S.soc) return; chatUnread(); rpc('my_friends').then(l=>{ FR.list=l; FR.incoming=l.filter(f=>f.state==='incoming').length; }).catch(()=>{}); rpc('my_invites').then(l=>{ GR.inv=l; }).catch(()=>{}); }
 
 /* ===================== шинэчлэлийн мэдэгдэл (Android) ===================== */
-const APP_VER=89, SITE='https://otgoo-cell.github.io/gegee';
+const APP_VER=90, SITE='https://otgoo-cell.github.io/gegee';
 async function checkUpdate(){
   if(!N.openUrl) return;
   try{ const r=await fetch(SITE+'/version.json?t='+Date.now(),{cache:'no-store'}); const v=await r.json();
@@ -4105,7 +4112,7 @@ async function pollChat(first){
 
 /* ===================== Санал хүсэлт ===================== */
 const FB={kind:'bug', newCount:0, mine:null, seenAt:0};
-const APP_NAME='9.9';
+const APP_NAME='10.0';
 const FB_K={bug:['🐞',()=>tr('Алдаа','Problem')], idea:['💡',()=>tr('Санаа','Idea')], other:['💬',()=>tr('Бусад','Other')]};
 const fbPlat=()=>{ try{ if(N.hasBg && N.hasBg()) return 'android-app'; }catch(e){} return /iPhone|iPad|iPod/.test(navigator.userAgent)?'ios-pwa':'web'; };
 const fbDev=()=>`${navigator.userAgent.slice(0,260)} | ${screen.width}x${screen.height}@${window.devicePixelRatio||1} | ${LANG} | ${view}`;
