@@ -2035,7 +2035,7 @@ setInterval(()=>{ try{
 }catch(e){} }, 4500);
 let cDown=null, tapT=0, tapTimer=null;
 function inCenter(e){ const r=$('ringbox').getBoundingClientRect(), x=e.clientX-(r.left+r.width/2), y=e.clientY-(r.top+r.height/2); return Math.hypot(x,y) < r.width*0.33; }
-function resetFree(){ S.freeMin=0; sess=null; save(); renderMed(); try{ if(navigator.vibrate) navigator.vibrate(25); }catch(e){} toast(tr('Цаг 00:00 боллоо. Цагирагийг эргүүлж шинээр тохируулна уу','Reset to 00:00. Turn the ring to set a new time')); }
+function resetFree(){ S.freeMin=0; S.freeEnd=null; sess=null; save(); renderMed(); try{ if(navigator.vibrate) navigator.vibrate(25); }catch(e){} toast(tr('Цаг 00:00 боллоо. Цагирагийг эргүүлж шинээр тохируулна уу','Reset to 00:00. Turn the ring to set a new time')); }
 function centerTap(){
   if(!S) return;
   { const rp=document.createElement('div'); rp.className='cripple'; $('ringbox').appendChild(rp); setTimeout(()=>rp.remove(),750); try{ if(navigator.vibrate) navigator.vibrate(12); }catch(e){} }
@@ -2068,7 +2068,7 @@ $('ringbox').addEventListener('pointermove', e=>{
 const endDial=()=>{ cDown=null; $('ringbox').classList.remove('press'); if(dial){ dial=null; sess=null; save(); } };
 $('ringbox').addEventListener('pointerup', e=>{ $('ringbox').classList.remove('press'); if(cDown){ const m=Math.hypot(e.clientX-cDown.x,e.clientY-cDown.y); cDown=null; if(m<12 && !dial){ centerTap(); return; } } endDial(); });
 $('ringbox').addEventListener('pointercancel', endDial);
-function setDialMin(m){ m=Math.max(0,Math.min(MAXMIN,m)); if(m!==S.freeMin){ S.freeMin=m; sess=null; } renderMed(); }
+function setDialMin(m){ m=Math.max(0,Math.min(MAXMIN,m)); if(m!==S.freeMin||S.freeEnd!=null){ S.freeMin=m; S.freeEnd=null; sess=null; } renderMed(); }
 
 /* ===================== timer ===================== */
 /* ===================== чөлөөт суултын үеийн ая ===================== */
@@ -2165,7 +2165,7 @@ $('obX').addEventListener('click', ()=>{ S.sug=null; if(sess&&sess.open&&!runnin
 $('sitToSound').addEventListener('click', e=>{ e.stopPropagation(); const sg=sugFromOpen(); if(sg) startOther(sg); });
 async function start(){
   const k=today();
-  if(mode==='daily' && dayDone(k)) return;
+  if(mode==='daily' && dayDone(k)){ setMode('free'); S.freeMin=0; S.freeEnd=null; sess=null; setFreeMode('sound'); save(); }   // өдрийнх дууссан ч аялгуугаа хугацаагүй үргэлжлүүлнэ
   if(mode==='free'){ if(S.freeEnd!=null && !(sess && sess.e>0 && sess.e<sess.T)){ S.freeMin=Math.min(720,minsTo(S.freeEnd)); sess=null; }
     const sp=freeSplit(S.freeMin, S.freeMode); if(!sess || sess.e>=sess.T || (sess.fm!==S.freeMode && !(sess.e>0))) sess={...sp, e:0, fm:S.freeMode}; S.sug=null; }
   try{ actx = actx || new (window.AudioContext||window.webkitAudioContext)(); await actx.resume(); }catch(e){}
@@ -2213,7 +2213,7 @@ function tick(){
         dadd(k,'light',lPart); dadd(k,'sound',step-lPart);
       }
     }
-    if(sess.e>=sess.T){ if(!sess.open && !sess.chained && (sess.fm==='light'||sess.fm==='sound')) S.sug={kind:sess.fm==='light'?'sound':'light', sec:Math.max(60,Math.round(sess.fm==='light'?sess.T/PHI:sess.T*PHI)), done:sess.T, from:sess.fm}; stop(); freeAlarmStart(); toast(tr(`${Math.round(sess.T/60)} минутын суулт дууслаа`,`${Math.round(sess.T/60)}-minute sitting complete`)); return; }
+    if(sess.e>=sess.T){ S.freeEnd=null; if(!sess.open && !sess.chained && (sess.fm==='light'||sess.fm==='sound')) S.sug={kind:sess.fm==='light'?'sound':'light', sec:Math.max(60,Math.round(sess.fm==='light'?sess.T/PHI:sess.T*PHI)), done:sess.T, from:sess.fm}; stop(); freeAlarmStart(); toast(tr(`${Math.round(sess.T/60)} минутын суулт дууслаа`,`${Math.round(sess.T/60)}-minute sitting complete`)); return; }
   }
   const tNow=dget(k).t;
   for(const r of REWARDS){ if(tNow>=r.min*60 && tickPrev<r.min*60 && tickPrev>0){ toast(tr(`${r.name} нэмэгдлээ · ${r.why}`,`${r.name} earned · ${r.why}`)); bell(660,3,.12); } }
@@ -2386,8 +2386,8 @@ function renderMed(){
     $('fillL').style.width=Math.min(100,d.l/LIGHT*100)+'%'; $('fillS').style.width=Math.min(100,d.s/SOUND*100)+'%';
     $('endLine').innerHTML = done?'':running?tr(`<b>${endAt(r.R)}</b>-д дуусна`,`Ends at <b>${endAt(r.R)}</b>`):tr(`Одоо эхэлбэл <b>${endAt(r.R)}</b>-д дуусна`,`Start now to finish at <b>${endAt(r.R)}</b>`);
     $('lgL').textContent=r.Lr>0?tr(`${hmLeft(r.Lr)} үлдсэн`,`${hmLeft(r.Lr)} left`):'✓ '+hmLeft(d.l); $('lgS').textContent=r.Sr>0?tr(`${hmLeft(r.Sr)} үлдсэн`,`${hmLeft(r.Sr)} left`):'✓ '+hmLeft(d.s);
-    g.textContent = done?tr('Өнөөдрийн бясалгал дууссан','Today\'s practice is done'): running?tr('Түр зогсоох','Pause'): d.t>0?tr('Үргэлжлүүлэх','Continue'):tr('Эхлэх','Begin');
-    g.disabled = done;
+    g.textContent = done?tr('♪ Аялгуугаа үргэлжлүүлэх','♪ Keep going with sound'): running?tr('Түр зогсоох','Pause'): d.t>0?tr('Үргэлжлүүлэх','Continue'):tr('Эхлэх','Begin');
+    g.disabled = false;
   } else {
     const sp = sess && sess.e<sess.T ? sess : {...freeSplit(S.freeMin,S.freeMode), e:0};
     const dialing = dialActive();
@@ -4044,7 +4044,7 @@ async function openGroup(id){
 function socBadges(){ if(!socOn()||!S||!S.soc) return; chatUnread(); rpc('my_friends').then(l=>{ FR.list=l; FR.incoming=l.filter(f=>f.state==='incoming').length; }).catch(()=>{}); rpc('my_invites').then(l=>{ GR.inv=l; }).catch(()=>{}); }
 
 /* ===================== шинэчлэлийн мэдэгдэл (Android) ===================== */
-const APP_VER=92, SITE='https://otgoo-cell.github.io/gegee';
+const APP_VER=93, SITE='https://otgoo-cell.github.io/gegee';
 async function checkUpdate(){
   if(!N.openUrl) return;
   try{ const r=await fetch(SITE+'/version.json?t='+Date.now(),{cache:'no-store'}); const v=await r.json();
@@ -4117,7 +4117,7 @@ async function pollChat(first){
 
 /* ===================== Санал хүсэлт ===================== */
 const FB={kind:'bug', newCount:0, mine:null, seenAt:0};
-const APP_NAME='10.2';
+const APP_NAME='10.3';
 const FB_K={bug:['🐞',()=>tr('Алдаа','Problem')], idea:['💡',()=>tr('Санаа','Idea')], other:['💬',()=>tr('Бусад','Other')]};
 const fbPlat=()=>{ try{ if(N.hasBg && N.hasBg()) return 'android-app'; }catch(e){} return /iPhone|iPad|iPod/.test(navigator.userAgent)?'ios-pwa':'web'; };
 const fbDev=()=>`${navigator.userAgent.slice(0,260)} | ${screen.width}x${screen.height}@${window.devicePixelRatio||1} | ${LANG} | ${view}`;
