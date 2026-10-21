@@ -1319,7 +1319,7 @@ body:has(#doneBar:not([hidden])) .toast{bottom:calc(148px + env(safe-area-inset-
   <div class="pet" id="petSit"><div class="aura"></div><div class="rays"></div><i class="spark"></i><i class="spark"></i><i class="spark"></i><i class="spark"></i><i class="spark"></i></div>
   <div class="sitPhase" id="sitPhase"></div>
   <div class="sitTime" id="sitTime"></div>
-  <button class="sitAlert" id="sitAlert" hidden><b>Аялгуу руу шилжих цаг боллоо</b><span>Дарж баталгаажуулна уу</span></button>
+  <button class="sitAlert" id="sitAlert" hidden><b>♪ Аялгуу эхлүүлэх</b><span>Гэрэл дууслаа. Дарахад аялгуу тоологдож эхэлнэ</span></button>
   <div class="sitHint">Дэлгэц дээр дарж удирдлага харна</div>
   <div class="sitQuiet" id="sitQuiet" hidden><svg viewBox="0 0 24 24" fill="currentColor"><path d="M15.5 4.5a8 8 0 1 0 4 12.8a7 7 0 0 1-4-12.8z"/></svg><span id="sitQuietTxt">Чимээгүй</span></div><div class="sitCtl" id="sitCtl" hidden><button id="sitToSound" hidden></button><button id="sitPause">Түр зогсоох</button><button id="sitDim">Гэрэл</button></div>
 </div>
@@ -1808,7 +1808,12 @@ function bgPlan(){
   let waitSw=false;
   if(mode==='daily'){ const r=dailyRemain(k); rem=r.R; if(r.Lr>0 && r.Sr>0){ sw=r.Lr; waitSw=true; } else if(r.wait){ sw=0.6; waitSw=true; } }
   else { rem=sess.T-sess.e; if(freeWait()){ sw=0.6; waitSw=true; } else if(sess.e<sess.Tl && sess.Ts>0 && !sess.acked){ sw=sess.Tl-sess.e; waitSw=true; } }
-  if(waitSw && sw>0.6) add(sw,'bell_switch.wav');   // гэрэл дуусахад нэг хонх, суулт аялгуугаар үргэлжилнэ
+  if(waitSw){   // "Аялгуу эхлүүлэх" дартал багшийн аялгуу давтагдана; 20 минутын дараа суулт зогсоно
+    const w0 = mode==='daily' ? (S.swWait?(Date.now()-S.swWait)/1000:0) : (sess.waitAt?(Date.now()-sess.waitAt)/1000:0);
+    for(let t=sw; t<sw+WAIT_MAX-w0; t+=156) add(t,'free.mp3');
+    add(sw+WAIT_MAX-w0+5,'quit');
+    return ev.join(',');
+  }
   if(every){ for(let t=every-sinceRemind; t<rem-5; t+=every) add(t,'bell_remind.wav'); }
   if(mode==='daily'){ add(rem,'alldone.mp3'); add(rem+380,'quit'); }
   else if(freeMusicOn){ add(rem,'free.mp3'); add(rem+170,'quit'); }
@@ -1958,29 +1963,33 @@ function switchOnce(){
   if(!native){ try{ switchAudio.currentTime=0; switchAudio.volume=1; const p=switchAudio.play(); if(p&&p.catch) p.catch(()=>bell(523,4,.3)); }catch(e){ bell(523,4,.3); } }
   try{ navigator.vibrate && navigator.vibrate([400,200,400,200,800]); }catch(e){}
 }
-function switchChime(){ try{ switchOnce(); }catch(e){} toast(tr('Гэрэл дууслаа, аялгуу эхэллээ','Light is done, sound has begun')); }
-function switchBell(){
+let swMusic=false;
+function switchBell(){   // гэрэл дууслаа: товч дартал багшийн аялгуу тасралтгүй эгшиглэнэ
   if(quiet) return;
-  clearInterval(switchRep); switchN=0; switchOnce();
   $('sitScreen').classList.add('alert'); $('sitAlert').hidden=false;
-  switchRep=setInterval(()=>{ switchN++; switchOnce(); },15000);
+  clearInterval(switchRep);
+  if(isSilent()){ buzz('vib2'); switchRep=setInterval(()=>buzz('vib2'),15000); return; }
+  switchRep=setInterval(()=>{},60000); swMusic=true;
+  try{ clearInterval(freeFade); freeAudio.muted=false; freeAudio.currentTime=0; freeAudio.volume=0; const p=freeAudio.play(); if(p&&p.catch) p.catch(()=>switchOnce()); fadeFree(1,1500); }catch(e){ switchOnce(); }
 }
-function ackSwitch(user){ if(user && S){ if(mode==='daily') S.swAck=today(); else if(sess){ sess.acked=true;
-      if(sess.fm==='phi' && sess.lx>0){ const ts=Math.max(sess.Ts, Math.round((sess.Tl+sess.lx)/PHI)); sess.T=sess.Tl+ts; sess.Ts=ts; } }
-    save(); renderMed(); }
-  clearInterval(switchRep); switchRep=null; $('sitScreen').classList.remove('alert'); $('sitAlert').hidden=true; }
+function switchMusicOff(){ if(!swMusic) return; swMusic=false; try{ clearInterval(freeFade); fadeFree(0,900,()=>{ freeAudio.pause(); freeAudio.currentTime=0; }); }catch(e){} }
+function waitTimeout(){ S.swWait=null; if(sess) sess.waitAt=null; ackSwitch(); stop();
+  toast(tr('Аялгуу эхлүүлээгүй тул суулт зогслоо. Гэрлийн дараах хүлээсэн хугацаа тоологдоогүй.','You did not start the sound, so the sitting stopped. The waiting time was not counted.')); }
+function ackSwitch(user){ if(user && S){ if(mode==='daily'){ S.swAck=today(); S.swWait=null; } else if(sess){ sess.acked=true; sess.waitAt=null; }
+    lastTick=Date.now(); save(); renderMed(); }
+  switchMusicOff(); clearInterval(switchRep); switchRep=null; $('sitScreen').classList.remove('alert'); $('sitAlert').hidden=true; }
 $('sitAlert').addEventListener('click', e=>{ e.stopPropagation(); ackSwitch(true); toast(tr('Аялгуунд төвлөрөөрэй','Now rest in the sound')); });
 function flash(){ const r=$('ringbox'); r.classList.remove('focus-flash'); void r.offsetWidth; r.classList.add('focus-flash'); }
 
 /* ===================== modes ===================== */
 function dailyRemain(k){   // өдрийн хөтөлбөрт үлдсэн гэрэл / аялгуу
   const d=dget(k), Lr=Math.max(0,LIGHT-d.l), Sr=Math.max(0,soundTarget(k)-d.s);
-  return {R:Lr+Sr, Lr, Sr, wait:false};
+  return {R:Lr+Sr, Lr, Sr, wait: Lr===0 && Sr>0 && !swAcked(k)};
 }
 function swAcked(k){ return S.swAck===k || dget(k).s>0; }
 function soundTarget(k){ const d=dget(k); return Math.max(SOUND, Math.round(d.l/PHI)); }   // гэрэл уртсавал аялгуу ч алтан харьцаагаар нэмэгдэнэ
 function dayDone(k){ const d=dget(k); return d.l>=LIGHT && d.s>=soundTarget(k); }
-function freeWait(){ return false; }
+function freeWait(){ return !!(sess && sess.Tl>0 && sess.Ts>0 && sess.e>=sess.Tl && sess.e<sess.T && !sess.acked); }
 const OPEN_T=3*3600;   // хугацаагүй суулт 3 цагт өөрөө зогсоно
 function freeSplit(min, fm){
   if(!(min>0) && (fm==='light'||fm==='sound')) return fm==='light' ? {T:OPEN_T, Tl:OPEN_T, Ts:0, open:'light'} : {T:OPEN_T, Tl:0, Ts:OPEN_T, open:'sound'};
@@ -2169,6 +2178,7 @@ async function start(){
   try{ switchAudio.muted=true; const pp=switchAudio.play(); if(pp) pp.then(()=>{ switchAudio.pause(); switchAudio.muted=false; }).catch(()=>{ switchAudio.muted=false; }); }catch(e){}
   { const dd=S.days[k]||(S.days[k]={l:0,s:0}); if(!Number.isFinite(dd.fs)){ const n=new Date(); dd.fs=n.getHours()*60+n.getMinutes(); } }
   if(!HAS_BG && /iPhone|iPad|iPod/.test(navigator.userAgent) && !S.iosHint){ S.iosHint=1; setTimeout(()=>toast(tr('iPhone дээр дэлгэц унтарсан ч хугацаа тоологдсоор байна. Харин хонх дуугарахгүй тул дэлгэцээ асаалттай байлгавал илүү.','On iPhone time keeps counting with the screen off, but bells cannot ring, so keeping the screen on is better.')),1500); }
+  S.swWait=null; if(sess) sess.waitAt=null;
   running=true; lastTick=Date.now(); sinceRemind=0; tickPrev=dget(today()).t; bell(528,2.4,.18); socSitting(true);
   document.body.classList.add('running');
   timer=setInterval(tick,500); renderMed(); dimOn=true; showSit(true);
@@ -2188,20 +2198,21 @@ function tick(){
   if(mode==='daily'){
     const r=dailyRemain(k);
     if(r.Lr>0){ const a=Math.min(dt,r.Lr); dadd(k,'light',a);
-      if(a===r.Lr){ S.swAck=k; const rest=dt-a; if(rest>0) dadd(k,'sound',Math.min(rest,soundTarget(k)-dget(k).s)); if(!quiet) switchChime(); } }
-    else if(r.wait){   // аялгуу руу шилжихийг баталгаажуулах хүртэл 20 минут л гэрэлд тоологдоно, түүнээс хойш суулт зогсоно
-      const over=Math.max(0,dget(k).l-LIGHT), room=Math.max(0,WAIT_MAX-over);
-      dadd(k,'light',Math.min(dt,room)); if(!switchRep && !quiet) switchBell();
-      if(dt>=room){ stop(); toast(tr('Аялгуу руу шилжээгүй тул суулт түр зогслоо. Үргэлжлүүлэхдээ дахин эхлүүлээрэй.','You did not switch to sound, so the sitting paused. Start again to continue.')); return; } }
+      if(a===r.Lr){ S.swWait=now-(dt-a)*1000; if(!quiet) switchBell(); if(dt-a>=WAIT_MAX){ waitTimeout(); return; } } }
+    else if(r.wait){   // гэрэл дууссан, "Аялгуу эхлүүлэх" дартал багшийн аялгуу эгшиглэнэ; энэ хугацаа тоологдохгүй
+      if(!S.swWait) S.swWait=now; if(!switchRep && !quiet) switchBell();
+      if((now-S.swWait)/1000>=WAIT_MAX){ waitTimeout(); return; } }
     else dadd(k,'sound',Math.min(dt,r.Sr));
     if(dayDone(k)){ stop(); playDone(); toast(tr('Өнөөдрийн 150 минут бүрэн боллоо','Today\'s 150 minutes are complete')); return; }
   } else {
-    if(freeWait()){ const room=Math.max(0,WAIT_MAX-(sess.lx||0)), a=Math.min(dt,room); dadd(k,'light',a); sess.lx=(sess.lx||0)+a; if(!switchRep && !quiet) switchBell();
-      if(dt>=room){ stop(); toast(tr('Аялгуу руу шилжээгүй тул суулт түр зогслоо. Үргэлжлүүлэхдээ дахин эхлүүлээрэй.','You did not switch to sound, so the sitting paused. Start again to continue.')); return; } }
+    if(freeWait()){ if(!sess.waitAt) sess.waitAt=now; if(!switchRep && !quiet) switchBell();
+      if((now-sess.waitAt)/1000>=WAIT_MAX){ waitTimeout(); return; } }
     else {
       const before=sess.e; let step=Math.min(dt, sess.T-before);
-      if(before<sess.Tl && before+step>=sess.Tl && sess.Ts>0 && !sess.acked){ sess.acked=true; if(!quiet) switchChime(); }
-      {
+      if(before<sess.Tl && before+step>=sess.Tl && sess.Ts>0 && !sess.acked){
+        const a=sess.Tl-before; sess.e=sess.Tl; dadd(k,'light',a); sess.waitAt=now-(dt-a)*1000; if(!quiet) switchBell();
+        if(dt-a>=WAIT_MAX){ waitTimeout(); return; }
+      } else {
         sess.e += step;
         const lPart = Math.max(0, Math.min(sess.e, sess.Tl) - Math.min(before, sess.Tl));
         dadd(k,'light',lPart); dadd(k,'sound',step-lPart);
@@ -4038,7 +4049,7 @@ async function openGroup(id){
 function socBadges(){ if(!socOn()||!S||!S.soc) return; chatUnread(); rpc('my_friends').then(l=>{ FR.list=l; FR.incoming=l.filter(f=>f.state==='incoming').length; }).catch(()=>{}); rpc('my_invites').then(l=>{ GR.inv=l; }).catch(()=>{}); }
 
 /* ===================== шинэчлэлийн мэдэгдэл (Android) ===================== */
-const APP_VER=95, SITE='https://otgoo-cell.github.io/gegee';
+const APP_VER=96, SITE='https://otgoo-cell.github.io/gegee';
 async function checkUpdate(){
   if(!N.openUrl) return;
   try{ const r=await fetch(SITE+'/version.json?t='+Date.now(),{cache:'no-store'}); const v=await r.json();
@@ -4111,7 +4122,7 @@ async function pollChat(first){
 
 /* ===================== Санал хүсэлт ===================== */
 const FB={kind:'bug', newCount:0, mine:null, seenAt:0};
-const APP_NAME='10.5';
+const APP_NAME='10.6';
 const FB_K={bug:['🐞',()=>tr('Алдаа','Problem')], idea:['💡',()=>tr('Санаа','Idea')], other:['💬',()=>tr('Бусад','Other')]};
 const fbPlat=()=>{ try{ if(N.hasBg && N.hasBg()) return 'android-app'; }catch(e){} return /iPhone|iPad|iPod/.test(navigator.userAgent)?'ios-pwa':'web'; };
 const fbDev=()=>`${navigator.userAgent.slice(0,260)} | ${screen.width}x${screen.height}@${window.devicePixelRatio||1} | ${LANG} | ${view}`;
