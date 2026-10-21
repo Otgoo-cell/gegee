@@ -1808,12 +1808,7 @@ function bgPlan(){
   let waitSw=false;
   if(mode==='daily'){ const r=dailyRemain(k); rem=r.R; if(r.Lr>0 && r.Sr>0){ sw=r.Lr; waitSw=true; } else if(r.wait){ sw=0.6; waitSw=true; } }
   else { rem=sess.T-sess.e; if(freeWait()){ sw=0.6; waitSw=true; } else if(sess.e<sess.Tl && sess.Ts>0 && !sess.acked){ sw=sess.Tl-sess.e; waitSw=true; } }
-  if(waitSw){   // баталгаажуулах хүртэл 20 секунд тутам 6 цаг давтана; суулт тэр хооронд дуусахгүй
-    for(let t=sw; t<sw+WAIT_MAX; t+=20) add(t,'bell_switch.wav');
-    if(every){ for(let t=every-sinceRemind; t<sw-5; t+=every) add(t,'bell_remind.wav'); }
-    add(sw+WAIT_MAX+30,'quit');
-    return ev.join(',');
-  }
+  if(waitSw && sw>0.6) add(sw,'bell_switch.wav');   // гэрэл дуусахад нэг хонх, суулт аялгуугаар үргэлжилнэ
   if(every){ for(let t=every-sinceRemind; t<rem-5; t+=every) add(t,'bell_remind.wav'); }
   if(mode==='daily'){ add(rem,'alldone.mp3'); add(rem+380,'quit'); }
   else if(freeMusicOn){ add(rem,'free.mp3'); add(rem+170,'quit'); }
@@ -1963,6 +1958,7 @@ function switchOnce(){
   if(!native){ try{ switchAudio.currentTime=0; switchAudio.volume=1; const p=switchAudio.play(); if(p&&p.catch) p.catch(()=>bell(523,4,.3)); }catch(e){ bell(523,4,.3); } }
   try{ navigator.vibrate && navigator.vibrate([400,200,400,200,800]); }catch(e){}
 }
+function switchChime(){ try{ switchOnce(); }catch(e){} toast(tr('Гэрэл дууслаа, аялгуу эхэллээ','Light is done, sound has begun')); }
 function switchBell(){
   if(quiet) return;
   clearInterval(switchRep); switchN=0; switchOnce();
@@ -1979,13 +1975,13 @@ function flash(){ const r=$('ringbox'); r.classList.remove('focus-flash'); void 
 /* ===================== modes ===================== */
 function dailyRemain(k){   // өдрийн хөтөлбөрт үлдсэн гэрэл / аялгуу
   const d=dget(k), Lr=Math.max(0,LIGHT-d.l), Sr=Math.max(0,soundTarget(k)-d.s);
-  return {R:Lr+Sr, Lr, Sr, wait: Lr===0 && Sr>0 && !swAcked(k)};
+  return {R:Lr+Sr, Lr, Sr, wait:false};
 }
 function swAcked(k){ return S.swAck===k || dget(k).s>0; }
 function soundTarget(k){ const d=dget(k); return Math.max(SOUND, Math.round(d.l/PHI)); }   // гэрэл уртсавал аялгуу ч алтан харьцаагаар нэмэгдэнэ
 function dayDone(k){ const d=dget(k); return d.l>=LIGHT && d.s>=soundTarget(k); }
-function freeWait(){ return sess && sess.Tl>0 && sess.Ts>0 && sess.e>=sess.Tl && sess.e<sess.T && !sess.acked; }
-const OPEN_T=12*3600;
+function freeWait(){ return false; }
+const OPEN_T=3*3600;   // хугацаагүй суулт 3 цагт өөрөө зогсоно
 function freeSplit(min, fm){
   if(!(min>0) && (fm==='light'||fm==='sound')) return fm==='light' ? {T:OPEN_T, Tl:OPEN_T, Ts:0, open:'light'} : {T:OPEN_T, Tl:0, Ts:OPEN_T, open:'sound'};
   const T=Math.round(min*60);
@@ -2192,8 +2188,7 @@ function tick(){
   if(mode==='daily'){
     const r=dailyRemain(k);
     if(r.Lr>0){ const a=Math.min(dt,r.Lr); dadd(k,'light',a);
-      if(a===r.Lr){ const rest=dt-a; dadd(k,'light',Math.min(rest,WAIT_MAX)); if(!quiet) switchBell();
-        if(rest>=WAIT_MAX){ stop(); toast(tr('Аялгуу руу шилжээгүй тул суулт түр зогслоо. Үргэлжлүүлэхдээ дахин эхлүүлээрэй.','You did not switch to sound, so the sitting paused. Start again to continue.')); return; } } }
+      if(a===r.Lr){ S.swAck=k; const rest=dt-a; if(rest>0) dadd(k,'sound',Math.min(rest,soundTarget(k)-dget(k).s)); if(!quiet) switchChime(); } }
     else if(r.wait){   // аялгуу руу шилжихийг баталгаажуулах хүртэл 20 минут л гэрэлд тоологдоно, түүнээс хойш суулт зогсоно
       const over=Math.max(0,dget(k).l-LIGHT), room=Math.max(0,WAIT_MAX-over);
       dadd(k,'light',Math.min(dt,room)); if(!switchRep && !quiet) switchBell();
@@ -2205,9 +2200,8 @@ function tick(){
       if(dt>=room){ stop(); toast(tr('Аялгуу руу шилжээгүй тул суулт түр зогслоо. Үргэлжлүүлэхдээ дахин эхлүүлээрэй.','You did not switch to sound, so the sitting paused. Start again to continue.')); return; } }
     else {
       const before=sess.e; let step=Math.min(dt, sess.T-before);
-      if(before<sess.Tl && before+step>=sess.Tl && sess.Ts>0 && !sess.acked){
-        const a=sess.Tl-before, ex=Math.min(step-a,WAIT_MAX); sess.e=sess.Tl; dadd(k,'light',a+ex); sess.lx=(sess.lx||0)+ex; if(!quiet) switchBell();
-      } else {
+      if(before<sess.Tl && before+step>=sess.Tl && sess.Ts>0 && !sess.acked){ sess.acked=true; if(!quiet) switchChime(); }
+      {
         sess.e += step;
         const lPart = Math.max(0, Math.min(sess.e, sess.Tl) - Math.min(before, sess.Tl));
         dadd(k,'light',lPart); dadd(k,'sound',step-lPart);
@@ -4044,7 +4038,7 @@ async function openGroup(id){
 function socBadges(){ if(!socOn()||!S||!S.soc) return; chatUnread(); rpc('my_friends').then(l=>{ FR.list=l; FR.incoming=l.filter(f=>f.state==='incoming').length; }).catch(()=>{}); rpc('my_invites').then(l=>{ GR.inv=l; }).catch(()=>{}); }
 
 /* ===================== шинэчлэлийн мэдэгдэл (Android) ===================== */
-const APP_VER=94, SITE='https://otgoo-cell.github.io/gegee';
+const APP_VER=95, SITE='https://otgoo-cell.github.io/gegee';
 async function checkUpdate(){
   if(!N.openUrl) return;
   try{ const r=await fetch(SITE+'/version.json?t='+Date.now(),{cache:'no-store'}); const v=await r.json();
@@ -4117,7 +4111,7 @@ async function pollChat(first){
 
 /* ===================== Санал хүсэлт ===================== */
 const FB={kind:'bug', newCount:0, mine:null, seenAt:0};
-const APP_NAME='10.4';
+const APP_NAME='10.5';
 const FB_K={bug:['🐞',()=>tr('Алдаа','Problem')], idea:['💡',()=>tr('Санаа','Idea')], other:['💬',()=>tr('Бусад','Other')]};
 const fbPlat=()=>{ try{ if(N.hasBg && N.hasBg()) return 'android-app'; }catch(e){} return /iPhone|iPad|iPod/.test(navigator.userAgent)?'ios-pwa':'web'; };
 const fbDev=()=>`${navigator.userAgent.slice(0,260)} | ${screen.width}x${screen.height}@${window.devicePixelRatio||1} | ${LANG} | ${view}`;
@@ -4572,12 +4566,12 @@ async function checkReviews(){
   if(!S || !S.soc || !socOn() || checkReviews.busy || document.getElementById('revOv')) return; checkReviews.busy=true;
   let list=[], fixes=[]; try{ list=await rpc('my_reviews',{})||[]; }catch(e){} try{ fixes=await rpc('my_fixes',{})||[]; }catch(e){} checkReviews.busy=false;
   if(fixes.length){ let ch=false;
-    fixes.forEach(r=>{ const x=S.days[r.day]; if(x && x.l>r.light_fix){ x.l=r.light_fix; ch=true; } });
+    fixes.forEach(r=>{ const x=S.days[r.day]; if(!x) return; if(r.light_fix!=null && x.l!==r.light_fix){ x.l=r.light_fix; ch=true; } if(r.sound_fix!=null && x.s!==r.sound_fix){ x.s=r.sound_fix; ch=true; } });
     if(ch){ save(); try{ renderMed(); renderTrack(); }catch(_){} try{ socSync(true); }catch(_){} }
     const ds=fixes.map(r=>{ const d=parse(r.day); return tr(`${d.getMonth()+1}-р сарын ${d.getDate()}`,`${MN_EN[d.getMonth()]} ${d.getDate()}`); }).join(', ');
     const ov=document.createElement('div'); ov.id='revOv'; ov.innerHTML=`<div class="revBox glass">
       <b class="revT">${tr('Суултын цаг засагдлаа','Your sitting time was corrected')}</b>
-      <p>${tr(`Апп-ын алдаанаас болж таны ${ds}-ны гэрлийн суултад илүү цаг бичигдэж, чулуу буруу нэмэгдсэн байсан тул засаж хураалаа.`,`Because of an app bug, extra time was recorded for your light sitting on ${ds} and stones were added by mistake, so we corrected it.`)}</p>
+      <p>${tr(`Апп-ын алдаанаас болж таны ${ds}-ны суултын цаг буруу тоологдсон байсан тул заслаа.`,`Because of an app bug, your sitting time on ${ds} was counted wrongly, so we corrected it.`)}</p>
       <p class="revWhy">${tr('Хэрэв та тэр өдөр үнэхээр ийм удаан суусан гэж үзвэл Санал хүсэлт хэсгээр бидэнд бичээрэй.','If you believe you really sat that long, please write to us through Feedback.')}</p>
       <div class="revBtns"><button class="main" data-a="ok">${tr('Ойлголоо','Got it')}</button><button data-a="fb">${tr('Санал хүсэлт бичих','Write feedback')}</button></div></div>`;
     document.body.appendChild(ov);
