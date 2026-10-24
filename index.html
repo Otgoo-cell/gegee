@@ -226,6 +226,15 @@ header{display:flex;justify-content:space-between;align-items:baseline;gap:12px}
 .chip{padding:6px 11px;border-radius:20px;font-size:13px;background:var(--soft)}
 .chip.on{background:var(--accentBg);color:var(--on-accent);border-color:transparent}
 
+.onlineP{display:flex;align-items:center;justify-content:center;gap:8px;margin:12px auto 2px;padding:7px 15px;border-radius:999px;border:1px solid rgba(63,191,127,.42);background:rgba(63,191,127,.1);color:var(--text);font:inherit;font-size:13px;cursor:pointer}
+.onlineP b{color:#3fbf7f;font-weight:600}
+.onlineP i{font-style:normal;color:var(--light);opacity:.9}
+.sitWith{display:flex;align-items:center;gap:7px;margin-top:10px;font-size:12px;color:rgba(255,255,255,.32)}
+.sitWith .sitDot{width:7px;height:7px;opacity:.7}
+.onSec{margin:14px 2px 6px;font-size:12px;letter-spacing:.08em;opacity:.7}
+.socRow.onG{border:1px solid rgba(234,176,40,.5);box-shadow:inset 0 0 0 1px rgba(234,176,40,.12);background:rgba(234,176,40,.07)}
+.socRow.onG small{color:var(--light)}
+.onOthers{margin-top:12px;padding:14px;text-align:center;font-size:13.5px;opacity:.85}
 .ringwrap{position:relative;display:flex;justify-content:center;padding-block:6px}
 .ringbox{position:relative;width:min(280px,74vw);aspect-ratio:1;max-width:100%;border-radius:50%}
 .ringbox::before{content:"";position:absolute;inset:14%;border-radius:50%;background:radial-gradient(circle at 35% 30%,var(--orbA),var(--orbB));box-shadow:inset 0 0 0 1px var(--edge),0 18px 50px rgba(47,84,60,.10)}
@@ -1319,6 +1328,7 @@ body:has(#doneBar:not([hidden])) .toast{bottom:calc(148px + env(safe-area-inset-
   <div class="pet" id="petSit"><div class="aura"></div><div class="rays"></div><i class="spark"></i><i class="spark"></i><i class="spark"></i><i class="spark"></i><i class="spark"></i></div>
   <div class="sitPhase" id="sitPhase"></div>
   <div class="sitTime" id="sitTime"></div>
+  <div class="sitWith" id="sitWith" hidden></div>
   <button class="sitAlert" id="sitAlert" hidden><b>♪ Аялгуу эхлүүлэх</b><span>Гэрэл дууслаа. Дарахад аялгуу тоологдож эхэлнэ</span></button>
   <div class="sitHint">Дэлгэц дээр дарж удирдлага харна</div>
   <div class="sitQuiet" id="sitQuiet" hidden><svg viewBox="0 0 24 24" fill="currentColor"><path d="M15.5 4.5a8 8 0 1 0 4 12.8a7 7 0 0 1-4-12.8z"/></svg><span id="sitQuietTxt">Чимээгүй</span></div><div class="sitCtl" id="sitCtl" hidden><button id="sitToSound" hidden></button><button id="sitPause">Түр зогсоох</button><button id="sitDim">Гэрэл</button></div>
@@ -1351,6 +1361,7 @@ body:has(#doneBar:not([hidden])) .toast{bottom:calc(148px + env(safe-area-inset-
     <div class="fCustom" id="fCustom" hidden><input id="fcH" type="number" inputmode="numeric" min="0" max="99" placeholder="цаг"><span>:</span><input id="fcM" type="number" inputmode="numeric" min="0" max="59" placeholder="мин"><button class="main" id="fcOk">Болсон</button></div>
     <div class="fFoot"><div class="preview" id="fPrev"></div><span class="fFootR"><button class="chip" id="fEnd">⏰</button><button class="chip on" id="fMusic">♪ Ая</button></span></div>
   </div>
+  <button class="onlineP" id="onlineP" hidden></button>
   <div class="ringwrap">
     <div class="ringbox" id="ringbox">
       <div class="breath"></div>
@@ -3833,7 +3844,7 @@ function socErr2(e){
 async function act(fn, okMsg, after){ try{ const r=await fn(); if(okMsg) toast(typeof okMsg==='function'?okMsg(r):okMsg); if(after) after(r); }catch(e){ toast(socErr2(e)); } }
 
 /* ---------- presence: одоо суугаа эсэх ---------- */
-function socSitting(on){ if(!socOn() || !S || !S.soc) return; rpc('set_sitting',{on_:!!on}).catch(()=>{}); }
+function socSitting(on){ if(!socOn() || !S || !S.soc) return; rpc('set_sitting',{on_:!!on}).then(()=>onlineLoad()).catch(()=>{}); try{ onlineDraw(); }catch(e){} }
 
 /* ---------- найз ---------- */
 async function loadFriends(){
@@ -4049,7 +4060,7 @@ async function openGroup(id){
 function socBadges(){ if(!socOn()||!S||!S.soc) return; chatUnread(); rpc('my_friends').then(l=>{ FR.list=l; FR.incoming=l.filter(f=>f.state==='incoming').length; }).catch(()=>{}); rpc('my_invites').then(l=>{ GR.inv=l; }).catch(()=>{}); }
 
 /* ===================== шинэчлэлийн мэдэгдэл (Android) ===================== */
-const APP_VER=96, SITE='https://otgoo-cell.github.io/gegee';
+const APP_VER=97, SITE='https://otgoo-cell.github.io/gegee';
 async function checkUpdate(){
   if(!N.openUrl) return;
   try{ const r=await fetch(SITE+'/version.json?t='+Date.now(),{cache:'no-store'}); const v=await r.json();
@@ -4057,6 +4068,36 @@ async function checkUpdate(){
 }
 $('updBar').addEventListener('click', e=>{ if(e.target.closest('#updX')){ $('updBar').hidden=true; return; } try{ N.openUrl(GR.apk||SITE+'/get.html'); }catch(_){} toast(tr('Татаж дуусмагц файлаа нээгээд "Суулгах" дарна уу. Өгөгдөл тань хадгалагдана.','When the download finishes, open it and tap Install. Your data stays.')); $('updBar').hidden=true; });
 setTimeout(checkUpdate, 6000);
+
+/* ---------- Одоо хэдэн хүн бясалгаж байна ---------- */
+const ON={d:null};
+async function onlineLoad(){
+  if(!S || !S.soc || !socOn()){ ON.d=null; onlineDraw(); return; }
+  try{ ON.d=await rpc('online_now',{}); }catch(e){}
+  onlineDraw();
+}
+function onlineDraw(){
+  const b=$('onlineP'), w=$('sitWith'), d=ON.d; if(!b) return;
+  let n=d?d.total:0; const meOn=(typeof running!=='undefined' && running);
+  if(d && meOn && !d.me) n++; if(d && !meOn && d.me) n=Math.max(0,n-1);
+  const others=Math.max(0,n-(meOn?1:0)), gN=d?d.group.length:0;
+  b.hidden=!(n>0);
+  if(n>0) b.innerHTML=`<span class="sitDot"></span><span><b>🧘 ${n}</b> ${tr('хүн одоо бясалгаж байна','meditating now')}${gN?` <i>· ${tr('бүлгээс','from your group')} ${gN}</i>`:''}</span>`;
+  if(w){ w.hidden=!(others>0); w.innerHTML=`<span class="sitDot"></span>${tr(`Тантай хамт ${others} хүн сууж байна`,`${others} ${others===1?'person is':'people are'} sitting with you`)}`; }
+}
+function onlineSheet(){
+  const d=ON.d; if(!d) return;
+  const row=(nick,sub,cls)=>`<div class="socRow ${cls}" data-nick="${esc(nick)}"><span class="sitDot"></span><span class="socWho"><b>${esc(nick)}</b>${sub?`<small>${sub}</small>`:''}</span></div>`;
+  openSocSheet(sheetHead(tr('Одоо бясалгаж байна','Meditating now'))+
+    (d.group.length?`<div class="onSec">${tr('Таны бүлгээс','From your groups')}</div><div class="socList">${d.group.map(m=>row(m.nick,`${esc(m.i||'🪷')} ${esc(m.g||'')}`,'onG')).join('')}</div>`:'')+
+    (d.friends.length?`<div class="onSec">${tr('Найзууд','Friends')}</div><div class="socList">${d.friends.map(f=>row(f,'','')).join('')}</div>`:'')+
+    (d.others>0?`<div class="glass onOthers">🌍 ${tr(`Дэлхийн өнцөг булан бүрээс өөр ${d.others} хүн сууж байна`,`${d.others} more people are sitting around the world`)}</div>`:'')+
+    (!d.group.length && !d.friends.length && !(d.others>0) ? `<div class="glass onOthers">${tr('Одоохондоо зөвхөн та сууж байна','Right now it is just you')}</div>`:''));
+}
+if($('onlineP')) $('onlineP').addEventListener('click', onlineSheet);
+setTimeout(onlineLoad, 4000);
+setInterval(()=>{ if(document.visibilityState==='visible') onlineLoad(); }, 60000);
+document.addEventListener('visibilitychange', ()=>{ if(document.visibilityState==='visible') onlineLoad(); });
 
 /* ===================== Чат ===================== */
 const CH={list:null, unread:0, room:null, last:0, timer:null, busy:false};
@@ -4122,7 +4163,7 @@ async function pollChat(first){
 
 /* ===================== Санал хүсэлт ===================== */
 const FB={kind:'bug', newCount:0, mine:null, seenAt:0};
-const APP_NAME='10.6';
+const APP_NAME='10.7';
 const FB_K={bug:['🐞',()=>tr('Алдаа','Problem')], idea:['💡',()=>tr('Санаа','Idea')], other:['💬',()=>tr('Бусад','Other')]};
 const fbPlat=()=>{ try{ if(N.hasBg && N.hasBg()) return 'android-app'; }catch(e){} return /iPhone|iPad|iPod/.test(navigator.userAgent)?'ios-pwa':'web'; };
 const fbDev=()=>`${navigator.userAgent.slice(0,260)} | ${screen.width}x${screen.height}@${window.devicePixelRatio||1} | ${LANG} | ${view}`;
