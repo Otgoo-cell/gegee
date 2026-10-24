@@ -227,18 +227,29 @@ header{display:flex;justify-content:space-between;align-items:baseline;gap:12px}
 .chip.on{background:var(--accentBg);color:var(--on-accent);border-color:transparent}
 
 .onlineP{display:flex;align-items:center;justify-content:center;gap:7px;margin:12px auto 2px;padding:7px 15px;border-radius:999px;border:1px solid rgba(63,191,127,.42);background:rgba(63,191,127,.1);color:var(--text);font:inherit;font-size:13px;cursor:pointer}
-.onlineP b{color:#3fbf7f;font-weight:600;font-size:15px;font-variant-numeric:tabular-nums}
-.onlineP .medI{width:19px;height:19px;color:#3fbf7f}
-.onlineP i{display:flex;align-items:center;gap:4px;padding-left:9px;margin-left:2px;border-left:1px solid rgba(255,255,255,.15);font-weight:600}
+.onlineP>b{color:#3fbf7f;font-weight:600;font-size:15px;font-variant-numeric:tabular-nums}
+.onlineP .medI{font-size:26px;margin:-4px 0}
+.onlineP>i{display:flex;align-items:center;gap:4px;padding-left:9px;margin-left:2px;border-left:1px solid rgba(255,255,255,.15);font-weight:600}
 .onlineP .grpI{width:16px;height:16px}
-.sitWith .medI{width:15px;height:15px}
-.onlineP i{font-style:normal;color:var(--light);opacity:.9}
+.sitWith .medI{font-size:19px;opacity:.75}
+.onlineP>i{font-style:normal;color:var(--light);opacity:.9}
 .sitWith{display:flex;align-items:center;gap:7px;margin-top:10px;font-size:12px;color:rgba(255,255,255,.32)}
 .sitWith .sitDot{width:7px;height:7px;opacity:.7}
 .onSec{margin:14px 2px 6px;font-size:12px;letter-spacing:.08em;opacity:.7}
 .socRow.onG{border:1px solid rgba(234,176,40,.5);box-shadow:inset 0 0 0 1px rgba(234,176,40,.12);background:rgba(234,176,40,.07)}
 .socRow.onG small{color:var(--light)}
 .onOthers{margin-top:12px;padding:14px;text-align:center;font-size:13.5px;opacity:.85}
+.lotus3d{display:inline-block;font-size:22px;width:1em;height:1em;perspective:4em;vertical-align:middle;flex:none}
+.lt{position:relative;display:block;width:1em;height:1em;transform-style:preserve-3d;animation:lspin 10s linear infinite}
+@keyframes lspin{from{transform:rotateX(-26deg) rotateY(0deg)}to{transform:rotateX(-26deg) rotateY(360deg)}}
+.lt b{position:absolute;display:block;backface-visibility:visible}
+.lt .p{transform-origin:50% 100%;border-radius:50% 50% 45% 45%/80% 80% 20% 20%}
+.lt .o{width:.3em;height:.42em;left:.35em;top:.24em;transform:rotateY(var(--a)) translateZ(.07em) rotateX(-64deg);background:linear-gradient(to top,#e06892,#f6a9c6 55%,#ffe2ec)}
+.lt .m{width:.27em;height:.4em;left:.365em;top:.26em;transform:rotateY(var(--a)) translateZ(.045em) rotateX(-38deg);background:linear-gradient(to top,#ea79a2,#f9bcd3 55%,#fff0f5)}
+.lt .n{width:.22em;height:.34em;left:.39em;top:.32em;transform:rotateY(var(--a)) translateZ(.02em) rotateX(-14deg);background:linear-gradient(to top,#f28cb1,#ffd4e3 60%,#fff)}
+.lt .core{width:.2em;height:.2em;left:.4em;top:.55em;border-radius:50%;transform:rotateX(90deg);background:radial-gradient(circle,#ffe68f,#e2ad33)}
+.lt .pad{width:.86em;height:.86em;left:.07em;top:.23em;border-radius:50%;transform:rotateX(90deg);background:radial-gradient(circle,#5cd193 0,#2f9a63 64%,transparent 65%)}
+@media (prefers-reduced-motion:reduce){.lt{animation:none;transform:rotateX(-26deg) rotateY(20deg)}}
 .ringwrap{position:relative;display:flex;justify-content:center;padding-block:6px}
 .ringbox{position:relative;width:min(280px,74vw);aspect-ratio:1;max-width:100%;border-radius:50%}
 .ringbox::before{content:"";position:absolute;inset:14%;border-radius:50%;background:radial-gradient(circle at 35% 30%,var(--orbA),var(--orbB));box-shadow:inset 0 0 0 1px var(--edge),0 18px 50px rgba(47,84,60,.10)}
@@ -4064,7 +4075,7 @@ async function openGroup(id){
 function socBadges(){ if(!socOn()||!S||!S.soc) return; chatUnread(); rpc('my_friends').then(l=>{ FR.list=l; FR.incoming=l.filter(f=>f.state==='incoming').length; }).catch(()=>{}); rpc('my_invites').then(l=>{ GR.inv=l; }).catch(()=>{}); }
 
 /* ===================== шинэчлэлийн мэдэгдэл (Android) ===================== */
-const APP_VER=101, SITE='https://otgoo-cell.github.io/gegee';
+const APP_VER=102, SITE='https://otgoo-cell.github.io/gegee';
 async function checkUpdate(){
   if(!N.openUrl) return;
   try{ const r=await fetch(SITE+'/version.json?t='+Date.now(),{cache:'no-store'}); const v=await r.json();
@@ -4076,7 +4087,7 @@ setTimeout(checkUpdate, 6000);
 /* ---------- Одоо хэдэн хүн бясалгаж байна ---------- */
 const ON={d:null};
 // бясалгаж суугаа хүний дүрс: эр эм ялгагдахгүй энгийн силуэт
-const MED_SVG='<svg class="medI" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="4.6" r="2.5" fill="currentColor"/><path fill="currentColor" d="M12 8.4c-1.8 0-3.1 1.1-3.4 2.9l-.55 3.5-3.6 2.2c-.8.5-.45 1.7.5 1.7h14.1c.95 0 1.3-1.2.5-1.7l-3.6-2.2-.55-3.5C15.1 9.5 13.8 8.4 12 8.4z"/><path d="M3.6 20.6c2.5 1 5.3 1.5 8.4 1.5s5.9-.5 8.4-1.5" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"/></svg>';
+const MED_SVG='<span class="lotus3d medI" aria-hidden="true"><i class="lt"><b class="pad"></b><b class="p o" style="--a:0deg"></b><b class="p o" style="--a:45deg"></b><b class="p o" style="--a:90deg"></b><b class="p o" style="--a:135deg"></b><b class="p o" style="--a:180deg"></b><b class="p o" style="--a:225deg"></b><b class="p o" style="--a:270deg"></b><b class="p o" style="--a:315deg"></b><b class="p m" style="--a:30deg"></b><b class="p m" style="--a:90deg"></b><b class="p m" style="--a:150deg"></b><b class="p m" style="--a:210deg"></b><b class="p m" style="--a:270deg"></b><b class="p m" style="--a:330deg"></b><b class="p n" style="--a:45deg"></b><b class="p n" style="--a:135deg"></b><b class="p n" style="--a:225deg"></b><b class="p n" style="--a:315deg"></b><b class="core"></b></i></span>';   // эргэлддэг 3D лянхуа
 const GRP_SVG='<svg class="grpI" viewBox="0 0 24 24" aria-hidden="true"><circle cx="8.5" cy="8" r="3" fill="currentColor"/><circle cx="15.5" cy="8" r="3" fill="currentColor" opacity=".7"/><path d="M2.5 19c.6-3.4 3-5.5 6-5.5s5.4 2.1 6 5.5z" fill="currentColor"/><path d="M12.8 14.2c.8-.5 1.7-.7 2.7-.7 3 0 5.4 2.1 6 5.5h-6.2" fill="currentColor" opacity=".7"/></svg>';
 async function onlineLoad(){
   if(!S || !S.soc || !socOn()){ ON.d=null; onlineDraw(); return; }
@@ -4171,7 +4182,7 @@ async function pollChat(first){
 
 /* ===================== Санал хүсэлт ===================== */
 const FB={kind:'bug', newCount:0, mine:null, seenAt:0};
-const APP_NAME='11.1';
+const APP_NAME='11.2';
 const FB_K={bug:['🐞',()=>tr('Алдаа','Problem')], idea:['💡',()=>tr('Санаа','Idea')], other:['💬',()=>tr('Бусад','Other')]};
 const fbPlat=()=>{ try{ if(N.hasBg && N.hasBg()) return 'android-app'; }catch(e){} return /iPhone|iPad|iPod/.test(navigator.userAgent)?'ios-pwa':'web'; };
 const fbDev=()=>`${navigator.userAgent.slice(0,260)} | ${screen.width}x${screen.height}@${window.devicePixelRatio||1} | ${LANG} | ${view}`;
