@@ -226,8 +226,12 @@ header{display:flex;justify-content:space-between;align-items:baseline;gap:12px}
 .chip{padding:6px 11px;border-radius:20px;font-size:13px;background:var(--soft)}
 .chip.on{background:var(--accentBg);color:var(--on-accent);border-color:transparent}
 
-.onlineP{display:flex;align-items:center;justify-content:center;gap:8px;margin:12px auto 2px;padding:7px 15px;border-radius:999px;border:1px solid rgba(63,191,127,.42);background:rgba(63,191,127,.1);color:var(--text);font:inherit;font-size:13px;cursor:pointer}
-.onlineP b{color:#3fbf7f;font-weight:600}
+.onlineP{display:flex;align-items:center;justify-content:center;gap:7px;margin:12px auto 2px;padding:7px 15px;border-radius:999px;border:1px solid rgba(63,191,127,.42);background:rgba(63,191,127,.1);color:var(--text);font:inherit;font-size:13px;cursor:pointer}
+.onlineP b{color:#3fbf7f;font-weight:600;font-size:15px;font-variant-numeric:tabular-nums}
+.onlineP .medI{width:19px;height:19px;color:#3fbf7f}
+.onlineP i{display:flex;align-items:center;gap:4px;padding-left:9px;margin-left:2px;border-left:1px solid rgba(255,255,255,.15);font-weight:600}
+.onlineP .grpI{width:16px;height:16px}
+.sitWith .medI{width:15px;height:15px}
 .onlineP i{font-style:normal;color:var(--light);opacity:.9}
 .sitWith{display:flex;align-items:center;gap:7px;margin-top:10px;font-size:12px;color:rgba(255,255,255,.32)}
 .sitWith .sitDot{width:7px;height:7px;opacity:.7}
@@ -4060,7 +4064,7 @@ async function openGroup(id){
 function socBadges(){ if(!socOn()||!S||!S.soc) return; chatUnread(); rpc('my_friends').then(l=>{ FR.list=l; FR.incoming=l.filter(f=>f.state==='incoming').length; }).catch(()=>{}); rpc('my_invites').then(l=>{ GR.inv=l; }).catch(()=>{}); }
 
 /* ===================== шинэчлэлийн мэдэгдэл (Android) ===================== */
-const APP_VER=97, SITE='https://otgoo-cell.github.io/gegee';
+const APP_VER=98, SITE='https://otgoo-cell.github.io/gegee';
 async function checkUpdate(){
   if(!N.openUrl) return;
   try{ const r=await fetch(SITE+'/version.json?t='+Date.now(),{cache:'no-store'}); const v=await r.json();
@@ -4071,6 +4075,9 @@ setTimeout(checkUpdate, 6000);
 
 /* ---------- Одоо хэдэн хүн бясалгаж байна ---------- */
 const ON={d:null};
+// бясалгаж суугаа хүний дүрс: эр эм ялгагдахгүй энгийн силуэт
+const MED_SVG='<svg class="medI" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="4.6" r="2.5" fill="currentColor"/><path fill="currentColor" d="M12 8.4c-1.8 0-3.1 1.1-3.4 2.9l-.55 3.5-3.6 2.2c-.8.5-.45 1.7.5 1.7h14.1c.95 0 1.3-1.2.5-1.7l-3.6-2.2-.55-3.5C15.1 9.5 13.8 8.4 12 8.4z"/><path d="M3.6 20.6c2.5 1 5.3 1.5 8.4 1.5s5.9-.5 8.4-1.5" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"/></svg>';
+const GRP_SVG='<svg class="grpI" viewBox="0 0 24 24" aria-hidden="true"><circle cx="8.5" cy="8" r="3" fill="currentColor"/><circle cx="15.5" cy="8" r="3" fill="currentColor" opacity=".7"/><path d="M2.5 19c.6-3.4 3-5.5 6-5.5s5.4 2.1 6 5.5z" fill="currentColor"/><path d="M12.8 14.2c.8-.5 1.7-.7 2.7-.7 3 0 5.4 2.1 6 5.5h-6.2" fill="currentColor" opacity=".7"/></svg>';
 async function onlineLoad(){
   if(!S || !S.soc || !socOn()){ ON.d=null; onlineDraw(); return; }
   try{ ON.d=await rpc('online_now',{}); }catch(e){}
@@ -4082,8 +4089,9 @@ function onlineDraw(){
   if(d && meOn && !d.me) n++; if(d && !meOn && d.me) n=Math.max(0,n-1);
   const others=Math.max(0,n-(meOn?1:0)), gN=d?d.group.length:0;
   b.hidden=!(n>0);
-  if(n>0) b.innerHTML=`<span class="sitDot"></span><span><b>🧘 ${n}</b> ${tr('хүн одоо бясалгаж байна','meditating now')}${gN?` <i>· ${tr('бүлгээс','from your group')} ${gN}</i>`:''}</span>`;
-  if(w){ w.hidden=!(others>0); w.innerHTML=`<span class="sitDot"></span>${tr(`Тантай хамт ${others} хүн сууж байна`,`${others} ${others===1?'person is':'people are'} sitting with you`)}`; }
+  if(n>0){ b.innerHTML=`<span class="sitDot"></span>${MED_SVG}<b>${n}</b>${gN?`<i>${GRP_SVG}${gN}</i>`:''}`;
+    b.title=b.ariaLabel=tr(`Одоо ${n} хүн бясалгаж байна${gN?`, бүлгээс ${gN}`:''}`,`${n} meditating now${gN?`, ${gN} from your group`:''}`); }
+  if(w){ w.hidden=!(others>0); w.innerHTML=`${MED_SVG}<span>${others}</span>`; w.title=tr(`Тантай хамт ${others} хүн сууж байна`,`${others} sitting with you`); }
 }
 function onlineSheet(){
   const d=ON.d; if(!d) return;
@@ -4163,7 +4171,7 @@ async function pollChat(first){
 
 /* ===================== Санал хүсэлт ===================== */
 const FB={kind:'bug', newCount:0, mine:null, seenAt:0};
-const APP_NAME='10.7';
+const APP_NAME='10.8';
 const FB_K={bug:['🐞',()=>tr('Алдаа','Problem')], idea:['💡',()=>tr('Санаа','Idea')], other:['💬',()=>tr('Бусад','Other')]};
 const fbPlat=()=>{ try{ if(N.hasBg && N.hasBg()) return 'android-app'; }catch(e){} return /iPhone|iPad|iPod/.test(navigator.userAgent)?'ios-pwa':'web'; };
 const fbDev=()=>`${navigator.userAgent.slice(0,260)} | ${screen.width}x${screen.height}@${window.devicePixelRatio||1} | ${LANG} | ${view}`;
