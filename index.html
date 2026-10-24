@@ -228,10 +228,10 @@ header{display:flex;justify-content:space-between;align-items:baseline;gap:12px}
 
 .onlineP{display:flex;align-items:center;justify-content:center;gap:7px;margin:12px auto 2px;padding:7px 15px;border-radius:999px;border:1px solid rgba(63,191,127,.42);background:rgba(63,191,127,.1);color:var(--text);font:inherit;font-size:13px;cursor:pointer}
 .onlineP b{color:#3fbf7f;font-weight:600;font-size:15px;font-variant-numeric:tabular-nums}
-.onlineP .medI{width:21px;height:21px;color:#3fbf7f}
+.onlineP .medI{font-size:17px;line-height:1}
 .onlineP i{display:flex;align-items:center;gap:4px;padding-left:9px;margin-left:2px;border-left:1px solid rgba(255,255,255,.15);font-weight:600}
 .onlineP .grpI{width:16px;height:16px}
-.sitWith .medI{width:16px;height:16px}
+.sitWith .medI{font-size:14px;line-height:1;opacity:.6}
 .onlineP i{font-style:normal;color:var(--light);opacity:.9}
 .sitWith{display:flex;align-items:center;gap:7px;margin-top:10px;font-size:12px;color:rgba(255,255,255,.32)}
 .sitWith .sitDot{width:7px;height:7px;opacity:.7}
@@ -4064,7 +4064,7 @@ async function openGroup(id){
 function socBadges(){ if(!socOn()||!S||!S.soc) return; chatUnread(); rpc('my_friends').then(l=>{ FR.list=l; FR.incoming=l.filter(f=>f.state==='incoming').length; }).catch(()=>{}); rpc('my_invites').then(l=>{ GR.inv=l; }).catch(()=>{}); }
 
 /* ===================== шинэчлэлийн мэдэгдэл (Android) ===================== */
-const APP_VER=99, SITE='https://otgoo-cell.github.io/gegee';
+const APP_VER=100, SITE='https://otgoo-cell.github.io/gegee';
 async function checkUpdate(){
   if(!N.openUrl) return;
   try{ const r=await fetch(SITE+'/version.json?t='+Date.now(),{cache:'no-store'}); const v=await r.json();
@@ -4076,7 +4076,7 @@ setTimeout(checkUpdate, 6000);
 /* ---------- Одоо хэдэн хүн бясалгаж байна ---------- */
 const ON={d:null};
 // бясалгаж суугаа хүний дүрс: эр эм ялгагдахгүй энгийн силуэт
-const MED_SVG='<svg class="medI" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="3.9" r="2.4" fill="currentColor"/><path fill="currentColor" d="M9.6 7.4h4.8c1 0 1.8.7 1.9 1.7l.5 5.6H7.2l.5-5.6c.1-1 .9-1.7 1.9-1.7z"/><path d="M8.4 8.4L5.6 14.2l4.9 1.6M15.6 8.4l2.8 5.8-4.9 1.6" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"/><path fill="currentColor" d="M2.6 18.6c0-1.9 2.7-3.3 6.4-3.6h6c3.7.3 6.4 1.7 6.4 3.6 0 1.4-1.9 2.2-4.5 2.2H7.1c-2.6 0-4.5-.8-4.5-2.2z"/></svg>';
+const MED_SVG='<span class="medI" aria-hidden="true">🧘</span>';   // хүйсгүй үндсэн эможи
 const GRP_SVG='<svg class="grpI" viewBox="0 0 24 24" aria-hidden="true"><circle cx="8.5" cy="8" r="3" fill="currentColor"/><circle cx="15.5" cy="8" r="3" fill="currentColor" opacity=".7"/><path d="M2.5 19c.6-3.4 3-5.5 6-5.5s5.4 2.1 6 5.5z" fill="currentColor"/><path d="M12.8 14.2c.8-.5 1.7-.7 2.7-.7 3 0 5.4 2.1 6 5.5h-6.2" fill="currentColor" opacity=".7"/></svg>';
 async function onlineLoad(){
   if(!S || !S.soc || !socOn()){ ON.d=null; onlineDraw(); return; }
@@ -4171,7 +4171,7 @@ async function pollChat(first){
 
 /* ===================== Санал хүсэлт ===================== */
 const FB={kind:'bug', newCount:0, mine:null, seenAt:0};
-const APP_NAME='10.9';
+const APP_NAME='11.0';
 const FB_K={bug:['🐞',()=>tr('Алдаа','Problem')], idea:['💡',()=>tr('Санаа','Idea')], other:['💬',()=>tr('Бусад','Other')]};
 const fbPlat=()=>{ try{ if(N.hasBg && N.hasBg()) return 'android-app'; }catch(e){} return /iPhone|iPad|iPod/.test(navigator.userAgent)?'ios-pwa':'web'; };
 const fbDev=()=>`${navigator.userAgent.slice(0,260)} | ${screen.width}x${screen.height}@${window.devicePixelRatio||1} | ${LANG} | ${view}`;
