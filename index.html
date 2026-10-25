@@ -252,6 +252,12 @@ header{display:flex;justify-content:space-between;align-items:baseline;gap:12px}
 .lt .core{width:.2em;height:.2em;left:.4em;top:.55em;border-radius:50%;transform:rotateX(90deg);background:radial-gradient(circle,#ffe68f,#e2ad33)}
 .lt .pad{width:.86em;height:.86em;left:.07em;top:.23em;border-radius:50%;transform:rotateX(90deg);background:radial-gradient(circle,#5cd193 0,#2f9a63 64%,transparent 65%)}
 @media (prefers-reduced-motion:reduce){.lt{animation:none;transform:rotateX(-26deg) rotateY(20deg)}}
+.manLink{display:block;margin:10px auto 0;padding:7px 14px;border:0;background:none;color:var(--muted,#9aa);font:inherit;font-size:12.5px;opacity:.8;cursor:pointer}
+.manBox{display:flex;flex-direction:column;gap:10px}
+.manDays{flex-wrap:wrap}
+.manRow{display:flex;justify-content:space-between;align-items:center;padding:13px 16px;border-radius:14px;border:1px solid var(--line);background:rgba(255,255,255,.04);color:var(--text);font:inherit;font-size:15px;cursor:pointer}
+.manRow .l{color:var(--light)} .manRow .s{color:var(--sound)} .manRow b{font-weight:600;font-variant-numeric:tabular-nums}
+.manNote{margin-top:4px;font-size:12px;opacity:.7}
 .ringwrap{position:relative;display:flex;justify-content:center;padding-block:6px}
 .ringbox{position:relative;width:min(280px,74vw);aspect-ratio:1;max-width:100%;border-radius:50%}
 .ringbox::before{content:"";position:absolute;inset:14%;border-radius:50%;background:radial-gradient(circle at 35% 30%,var(--orbA),var(--orbB));box-shadow:inset 0 0 0 1px var(--edge),0 18px 50px rgba(47,84,60,.10)}
@@ -1403,6 +1409,7 @@ body:has(#doneBar:not([hidden])) .toast{bottom:calc(148px + env(safe-area-inset-
     <button class="qTog" id="qTog" role="switch" aria-checked="false"><span class="qTrack"><span class="qKnob"><svg class="qBell" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M6 16V11a6 6 0 0 1 12 0v5l1.5 2h-15z"/><path d="M10 20.5a2 2 0 0 0 4 0"/></svg><svg class="qMoon" viewBox="0 0 24 24" fill="currentColor"><path d="M15.5 4.5a8 8 0 1 0 4 12.8a7 7 0 0 1-4-12.8z"/></svg></span><i class="qz">z</i><i class="qz">z</i></span><span class="qLbl">Чимээгүй</span></button>
     <button class="qVib" id="qVib" role="checkbox" aria-checked="true"><span class="qBox"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg></span><svg class="qWave" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"><rect x="8" y="4" width="8" height="16" rx="2"/><path d="M4.5 9v6M19.5 9v6M2 11v2M22 11v2"/></svg><span>Чичиргээ</span></button>
   </div>
+  <button class="manLink" id="manLink">＋ Утасгүй суусан цагаа нөхөх</button>
   <div>
     <div class="bar"><div class="seg l"><i id="fillL"></i></div><div class="seg s"><i id="fillS"></i></div></div>
     <div class="legend">
@@ -2472,6 +2479,7 @@ function renderMed(){
     if(dialing && S.freeMin===0 && (S.freeMode==='light'||S.freeMode==='sound')){ $('fPrev').innerHTML=tr('Хугацаагүй · дараа нь нөгөөг санал болгоно','No limit · the other part is suggested after'); $('lgL').textContent=$('lgS').textContent='—'; $('fillL').style.width=$('fillS').style.width='0%'; }
   }
   g.classList.toggle('running',running);
+  { const ml=$('manLink'); if(ml) ml.hidden = running; }
   { const dd=dget(today()), pz = !running && (mode==='free' ? !!(sess&&sess.e>0&&sess.e<sess.T) : (dd.t>0 && !dayDone(today()) && !dialActive()));
     $('ringbox').classList.toggle('paused', pz); $('resumeTag').hidden=!pz; $('resumeTag').textContent=tr('Үргэлжлүүлэх','Resume'); }
   { const paused = mode==='free' ? (sess&&sess.e>0&&sess.e<sess.T) : false;
@@ -2568,11 +2576,13 @@ function renderDayDetail(){
   const txt = inf.st==='pre'?tr('Энэ өдөр хяналт эхлээгүй байсан.','Tracking had not started yet.'): inf.st==='fut'?tr('Ирээдүйн өдөр.','A future day.'):
     tr(`Гэрэл <strong>${Math.floor(inf.l/60)}</strong> мин, аялгуу <strong>${Math.floor(inf.s/60)}</strong> мин, нийт <strong>${Math.floor(inf.t/60)} / 150</strong>.`,`Light <strong>${Math.floor(inf.l/60)}</strong> min, sound <strong>${Math.floor(inf.s/60)}</strong> min, total <strong>${Math.floor(inf.t/60)} / 150</strong>.`) + (inf.miss&&!isLove(inf)?` <span style="color:var(--miss)">${tr(`${Math.ceil(inf.miss/60)} минут дутуу.`,`${Math.ceil(inf.miss/60)} min short.`)}</span>`:'');
   const loveTxt = isLove(inf) ? `<div class="loveNote">${LOVE_SVG}<span>${tr('Багш таныг үргэлж хайрладаг шүү. Хайртай шүү.','The Master always loves you. With love.')}</span></div>` : '';
-  el.innerHTML=`<div><b>${tr(`${d.getMonth()+1}-р сарын ${d.getDate()}`,`${MN_EN[d.getMonth()]} ${d.getDate()}`)}</b>, ${DN[(d.getDay()+6)%7]}</div>${loveTxt}${isLove(inf)?'':`<div>${txt}</div>`}` +
+  const xm=(S.days[selDay]&&S.days[selDay].m)||0, canMan = inf.st!=='pre' && inf.st!=='fut' && selDay>=key(addDays(new Date(),-7));
+  const manTxt = (xm?`<div class="manNote">${tr(`Үүнээс ${hmLeft(xm)} гараар нөхсөн`,`${hmLeft(xm)} of it added by hand`)}</div>`:'') + (canMan?`<button class="chip manAdd" data-man="${selDay}">＋ ${tr('Цаг нөхөж бичих','Add time')}</button>`:'');
+  el.innerHTML=`<div><b>${tr(`${d.getMonth()+1}-р сарын ${d.getDate()}`,`${MN_EN[d.getMonth()]} ${d.getDate()}`)}</b>, ${DN[(d.getDay()+6)%7]}</div>${loveTxt}${isLove(inf)?'':`<div>${txt}</div>`}${manTxt}` +
     ((rewardsFor(inf.t).length||ev.length||hasRainbow(inf.t,selDay))?`<div class="rwlist">${rewardsFor(inf.t).map(r=>`<span class="rwitem"><i class="bd bd-${r.id}">${IC(r.id)}</i>${r.name}<small>${r.why}</small></span>`).join('')}${hasRainbow(inf.t,selDay)?`<span class="rwitem rwrb"><i class="bd bd-rainbow"><i class="rbow">${IC('rainbow')}</i></i>${RAINBOW.name}<small>${RAINBOW.why}</small></span>`:''}${ev.map(e=>`<span class="rwitem evItem"><i class="bd di di-${e.type}">${IC(e.type)}</i>${DUTY[e.type].name}<button class="evDel" data-evdel="${e.id}" aria-label="${tr('Устгах','Delete')}">${tr('Устгах','Delete')}</button></span>`).join('')}</div>`:'') +
     ns.map(n=>`<div style="margin-top:8px;border-top:1px solid var(--line);padding-top:8px"><span class="tag ${n.tag}">${TAGN[n.tag]}</span> <span class="ntext">${esc(n.text)}</span></div>`).join('');
 }
-$('dayDetail').addEventListener('click', e=>{ const b=e.target.closest('[data-evdel]'); if(!b) return;
+$('dayDetail').addEventListener('click', e=>{ const mb=e.target.closest('[data-man]'); if(mb){ manOpen(mb.dataset.man); return; } const b=e.target.closest('[data-evdel]'); if(!b) return;
   if(!b.classList.contains('sure')){ b.classList.add('sure'); b.textContent=tr('Устгах уу?','Delete?'); return; }
   const x=S.events.find(v=>v.id===b.dataset.evdel); S.events=S.events.filter(v=>v.id!==b.dataset.evdel); save(); renderTrack(); try{ renderDuties(); }catch(er){}
   if(x) toast(DUTY[x.type].name+tr(' устгагдлаа',' removed')); });
@@ -4077,7 +4087,7 @@ async function openGroup(id){
 function socBadges(){ if(!socOn()||!S||!S.soc) return; chatUnread(); rpc('my_friends').then(l=>{ FR.list=l; FR.incoming=l.filter(f=>f.state==='incoming').length; }).catch(()=>{}); rpc('my_invites').then(l=>{ GR.inv=l; }).catch(()=>{}); }
 
 /* ===================== шинэчлэлийн мэдэгдэл (Android) ===================== */
-const APP_VER=103, SITE='https://otgoo-cell.github.io/gegee';
+const APP_VER=104, SITE='https://otgoo-cell.github.io/gegee';
 async function checkUpdate(){
   if(!N.openUrl) return;
   try{ const r=await fetch(SITE+'/version.json?t='+Date.now(),{cache:'no-store'}); const v=await r.json();
@@ -4120,6 +4130,57 @@ if($('onlineP')) $('onlineP').addEventListener('click', onlineSheet);
 setTimeout(onlineLoad, 4000);
 setInterval(()=>{ if(document.visibilityState==='visible') onlineLoad(); }, 60000);
 document.addEventListener('visibilitychange', ()=>{ if(document.visibilityState==='visible') onlineLoad(); });
+
+/* ---------- Утасгүй суусан цагаа гараар нөхөж бичих ---------- */
+const MAN_DAYS=7;
+function manOpen(day){
+  if(!S) return;
+  const t=today(), first=key(addDays(new Date(),-MAN_DAYS));
+  const st={k:(day && day<=t && day>=first)?day:t, l:0, s:0};
+  const deflt=()=>{ const d=dget(st.k); st.l=Math.max(0,LIGHT-d.l); st.s=Math.max(0,SOUND-d.s); if(!st.l && !st.s){ st.l=LIGHT; st.s=SOUND; } };
+  deflt();
+  const days=[]; for(let i=0;i<=MAN_DAYS;i++){ const dk=key(addDays(new Date(),-i)); if(dk>=S.start || i===0) days.push(dk); }
+  const yest=key(addDays(new Date(),-1));
+  const lbl=dk=>{ const d=parse(dk); return dk===t?tr('Өнөөдөр','Today'): dk===yest?tr('Өчигдөр','Yesterday'): tr(`${d.getMonth()+1}/${d.getDate()}`,`${MN_EN[d.getMonth()]} ${d.getDate()}`); };
+  const draw=()=>{ const d=dget(st.k);
+    openSocSheet(sheetHead(tr('Суусан цагаа нөхөх','Add a sitting'))+`<div class="glass socIntro manBox">
+      <p class="hint">${tr('Утасгүй суусан цагаа, жишээ нь бясалгалын төвд суусныг энд нөхөж бичээрэй.','Log time you sat without your phone, for example at the center.')}</p>
+      <div class="chips manDays">${days.map(dk=>`<button class="chip ${dk===st.k?'on':''}" data-k="${dk}">${lbl(dk)}</button>`).join('')}</div>
+      <small class="muted manNow">${tr(`Энэ өдөр одоо: гэрэл ${hmLeft(d.l)} · аялгуу ${hmLeft(d.s)}`,`This day so far: light ${hmLeft(d.l)} · sound ${hmLeft(d.s)}`)}</small>
+      <button class="manRow" data-p="l"><span class="l">☀ ${tr('Гэрэл','Light')}</span><b>${hmLeft(st.l)}</b></button>
+      <button class="manRow" data-p="s"><span class="s">♪ ${tr('Аялгуу','Sound')}</span><b>${hmLeft(st.s)}</b></button>
+      <div class="chips"><button class="chip" data-full>${tr('Бүтэн өдөр · 2ц 30м','Full day · 2h 30m')}</button><button class="chip" data-zero>${tr('Тэглэх','Clear')}</button></div>
+      <div class="socMsg" id="manErr"></div>
+      <button class="main" id="manOk">${tr(`${hmLeft(st.l+st.s)} нэмэх`,`Add ${hmLeft(st.l+st.s)}`)}</button></div>`);
+    const box=$('socSheetIn');
+    box.querySelectorAll('.manDays .chip').forEach(b=>b.onclick=()=>{ st.k=b.dataset.k; deflt(); draw(); });
+    box.querySelector('[data-full]').onclick=()=>{ st.l=LIGHT; st.s=SOUND; draw(); };
+    box.querySelector('[data-zero]').onclick=()=>{ st.l=0; st.s=0; draw(); };
+    box.querySelectorAll('.manRow').forEach(b=>b.onclick=()=>{ const p=b.dataset.p;
+      openSlot({title:p==='l'?tr('Гэрэл хэр удаан суусан бэ?','How long was light?'):tr('Аялгуу хэр удаан суусан бэ?','How long was sound?'), dur:true, v:Math.round(st[p]/60),
+        ok:v=>{ st[p]=Math.max(0,Math.min(300,v))*60; draw(); }}); });
+    $('manOk').onclick=save1;
+  };
+  async function save1(){ const err=$('manErr'), btn=$('manOk'), L=st.l, Sd=st.s;
+    if(L+Sd<60){ err.textContent=tr('Хугацаагаа оруулна уу','Enter the time'); return; }
+    if(L+Sd>6*3600){ err.textContent=tr('Нэг удаад 6 цагаас ихийг нэмэх боломжгүй','At most 6 hours at once'); return; }
+    btn.disabled=true; err.textContent='';
+    const x=S.days[st.k]||(S.days[st.k]={l:0,s:0});
+    if(S.soc && S.acct && socOn()){
+      try{ const r=await rpc('add_manual',{day_:st.k, light_:L, sound_:Sd}); x.l=r.light; x.s=r.sound; x.m=r.manual; }
+      catch(e){ btn.disabled=false; const m=String(e&&e.message||e);
+        err.textContent = /LOCKED/.test(m)?tr('Энэ өдөр засагдсан тул нэмэх боломжгүй','This day is locked')
+          : /TOO_MANY/.test(m)?tr('Өнөөдөр хэт олон удаа нэмсэн байна, маргааш дахин оролдоорой','Too many entries today, try tomorrow')
+          : /BAD_DAY/.test(m)?tr('Сүүлийн 7 хоногийн өдрийг л нөхөж болно','Only the last 7 days can be added')
+          : tr('Холболт тасарлаа, дахин оролдоно уу','No connection, please try again'); return; }
+    } else { x.l=Math.min(57600,x.l+L); x.s=Math.min(57600-x.l,x.s+Sd); x.m=(x.m||0)+L+Sd; }
+    save(); closeSocSheet();
+    try{ renderMed(); }catch(_){} try{ renderTrack(); }catch(_){} try{ achTick(); }catch(_){} try{ socSync(true); }catch(_){}
+    toast(tr(`${hmLeft(L+Sd)} нэмэгдлээ`,`${hmLeft(L+Sd)} added`));
+  }
+  draw();
+}
+if($('manLink')) $('manLink').addEventListener('click', ()=>manOpen());
 
 /* ===================== Чат ===================== */
 const CH={list:null, unread:0, room:null, last:0, timer:null, busy:false};
@@ -4185,7 +4246,7 @@ async function pollChat(first){
 
 /* ===================== Санал хүсэлт ===================== */
 const FB={kind:'bug', newCount:0, mine:null, seenAt:0};
-const APP_NAME='11.3';
+const APP_NAME='11.4';
 const FB_K={bug:['🐞',()=>tr('Алдаа','Problem')], idea:['💡',()=>tr('Санаа','Idea')], other:['💬',()=>tr('Бусад','Other')]};
 const fbPlat=()=>{ try{ if(N.hasBg && N.hasBg()) return 'android-app'; }catch(e){} return /iPhone|iPad|iPod/.test(navigator.userAgent)?'ios-pwa':'web'; };
 const fbDev=()=>`${navigator.userAgent.slice(0,260)} | ${screen.width}x${screen.height}@${window.devicePixelRatio||1} | ${LANG} | ${view}`;
