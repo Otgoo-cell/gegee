@@ -1354,7 +1354,7 @@ body:has(#doneBar:not([hidden])) .toast{bottom:calc(148px + env(safe-area-inset-
   <div class="sitWith" id="sitWith" hidden></div>
   <button class="sitAlert" id="sitAlert" hidden><b>♪ Аялгуу эхлүүлэх</b><span>Гэрэл дууслаа. Дарахад аялгуу тоологдож эхэлнэ</span></button>
   <div class="sitHint">Дэлгэц дээр дарж удирдлага харна</div>
-  <div class="sitQuiet" id="sitQuiet" hidden><svg viewBox="0 0 24 24" fill="currentColor"><path d="M15.5 4.5a8 8 0 1 0 4 12.8a7 7 0 0 1-4-12.8z"/></svg><span id="sitQuietTxt">Чимээгүй</span></div><div class="sitCtl" id="sitCtl" hidden><button id="sitToSound" hidden></button><button id="sitPause">Түр зогсоох</button><button id="sitDim">Гэрэл</button></div>
+  <div class="sitQuiet" id="sitQuiet" hidden><svg viewBox="0 0 24 24" fill="currentColor"><path d="M15.5 4.5a8 8 0 1 0 4 12.8a7 7 0 0 1-4-12.8z"/></svg><span id="sitQuietTxt">Чимээгүй</span></div><div class="sitCtl" id="sitCtl" hidden><button id="sitToSound" hidden></button><button id="sitPause">Түр зогсоох</button><button id="sitDim">Гэрэлтүүлэг</button></div>
 </div>
 
 <!-- ============ SPLASH QUOTE ============ -->
@@ -2902,7 +2902,7 @@ const EN = {
   'Сэргээх':'Restore', 'Өнгө':'Theme', 'Автомат (нар мандах, жаргахаар)':'Automatic (sunrise and sunset)', 'Үргэлж өдөр':'Always day', 'Үргэлж шөнө':'Always night',
   'Нууц кодоо солих':'Change passcode', 'Солих':'Change', 'Апп-аа одоо түгжих':'Lock the app now', 'Түгжих':'Lock', 'Хэл':'Language',
   'Өнөөдөр гэрлийн үед...':'Today during the light...', 'Тэмдэглэлээс хайх':'Search notes', 'Үгээ энд буулгана уу':'Paste the words here', 'Эх сурвалж (ном, хуудас) заавал биш':'Source (book, page), optional',
-  'Дэлгэц дээр дарж удирдлага харна':'Tap the screen for controls', 'Түр зогсоох':'Pause', 'Гэрэл':'Brightness', 'Аялгуу руу шилжих цаг боллоо':'Time to switch to the sound', 'Дарж баталгаажуулна уу':'Tap to confirm', 'Хамтрагч':'Companion', 'Суултын үеэр хамт байх амьд дүрээ сонго. Дээр нь дарвал баярлана.':'Choose the little friend who sits with you. Tap it and it bounces.',
+  'Дэлгэц дээр дарж удирдлага харна':'Tap the screen for controls', 'Түр зогсоох':'Pause', 'Гэрэл':'Light', 'Гэрэлтүүлэг':'Brightness', '♪ Аялгуу эхлүүлэх':'♪ Start Sound', 'Гэрэл дууслаа. Дарахад аялгуу тоологдож эхэлнэ':'Light is done. Tap to start counting Sound', '＋ Утасгүй суусан цагаа нөхөх':'＋ Add time sat without your phone', 'Аялгуу руу шилжих цаг боллоо':'Time to switch to the sound', 'Дарж баталгаажуулна уу':'Tap to confirm', 'Хамтрагч':'Companion', 'Суултын үеэр хамт байх амьд дүрээ сонго. Дээр нь дарвал баярлана.':'Choose the little friend who sits with you. Tap it and it bounces.',
   'Соёолж':'Sprout', 'Бадам':'Lotus', 'Үүлхэн':'Cloudy', '30м':'30m', '1ц':'1h', '2ц':'2h', '3ц':'3h', '5ц':'5h', '7ц':'7h', '9ц':'9h', '12ц':'12h',
   'Ариун нэрийн сануулга':'Holy Name reminder', '⏱ Давтамжаар':'⏱ Every…', '🕐 Тогтсон цагт':'🕐 At set times', 'Хэр олон сануулах вэ':'How often',  'Давталт':'Repeat', 'Чанга':'Volume', 'Чимээгүй горимд ч дуугарах':'Ring even on silent',  'Өөрийн сонгосон цагуудад зөвхөн таны мэдэх үгээр сануулна':'Reminds you at the times you choose, with a word only you understand', 'Сануулах цагууд':'Reminder times', 'Мэдэгдэл дээр гарах үг':'Text on the notification', 'Хажуунаас харсан хүн утгыг нь ойлгохооргүй үг, эсвэл ганц тэмдэг бичээрэй. Утгыг нь зөвхөн та мэднэ.':'Write a word or a single symbol others won\'t understand. Only you know what it means.', 'Шагнал':'Awards', 'Өдрийн сануулга':'Daily reminders', 'Асаалттай':'On', 'Унтраалттай':'Off', 'Өглөө · өдөр · орой':'Morning · day · evening', 'Хаах':'Close', 'Шагналын чулуу':'Award gems', 'Хамтрагчийг тойрно':'Circle my companion', 'Хамтрагчид зохирсон өнгөөр':'In my companion\'s colors', 'Нуух':'Hide', '⤢ Томоор':'⤢ Full view', '↻ Ар тал':'↻ Back side', 'Чирж эргүүлнэ · хоёр хуруугаар томруулна':'Drag to turn · pinch to zoom', 'Эргүүлж ар талыг харах':'Turn to see the back', 'Чирж эргүүлнэ':'Drag to turn', 'Өмнөх сар':'Previous month', 'Дараагийн сар':'Next month', 'Өмнөх жил':'Previous year', 'Дараагийн жил':'Next year'
 };
@@ -4087,7 +4087,7 @@ async function openGroup(id){
 function socBadges(){ if(!socOn()||!S||!S.soc) return; chatUnread(); rpc('my_friends').then(l=>{ FR.list=l; FR.incoming=l.filter(f=>f.state==='incoming').length; }).catch(()=>{}); rpc('my_invites').then(l=>{ GR.inv=l; }).catch(()=>{}); }
 
 /* ===================== шинэчлэлийн мэдэгдэл (Android) ===================== */
-const APP_VER=104, SITE='https://otgoo-cell.github.io/gegee';
+const APP_VER=105, SITE='https://otgoo-cell.github.io/gegee';
 async function checkUpdate(){
   if(!N.openUrl) return;
   try{ const r=await fetch(SITE+'/version.json?t='+Date.now(),{cache:'no-store'}); const v=await r.json();
@@ -4246,7 +4246,7 @@ async function pollChat(first){
 
 /* ===================== Санал хүсэлт ===================== */
 const FB={kind:'bug', newCount:0, mine:null, seenAt:0};
-const APP_NAME='11.4';
+const APP_NAME='11.5';
 const FB_K={bug:['🐞',()=>tr('Алдаа','Problem')], idea:['💡',()=>tr('Санаа','Idea')], other:['💬',()=>tr('Бусад','Other')]};
 const fbPlat=()=>{ try{ if(N.hasBg && N.hasBg()) return 'android-app'; }catch(e){} return /iPhone|iPad|iPod/.test(navigator.userAgent)?'ios-pwa':'web'; };
 const fbDev=()=>`${navigator.userAgent.slice(0,260)} | ${screen.width}x${screen.height}@${window.devicePixelRatio||1} | ${LANG} | ${view}`;
