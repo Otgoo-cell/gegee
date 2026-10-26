@@ -258,6 +258,43 @@ header{display:flex;justify-content:space-between;align-items:baseline;gap:12px}
 .manRow{display:flex;justify-content:space-between;align-items:center;padding:13px 16px;border-radius:14px;border:1px solid var(--line);background:rgba(255,255,255,.04);color:var(--text);font:inherit;font-size:15px;cursor:pointer}
 .manRow .l{color:var(--light)} .manRow .s{color:var(--sound)} .manRow b{font-weight:600;font-variant-numeric:tabular-nums}
 .manNote{margin-top:4px;font-size:12px;opacity:.7}
+.seg2.nSw3{grid-template-columns:repeat(3,1fr)}
+#nDiary{display:flex;flex-direction:column;gap:12px}
+#nDiary[hidden]{display:none}
+.dyHead{display:flex;align-items:center;gap:8px;padding:10px 8px}
+.dyNav{width:42px;height:42px;border-radius:50%;font-size:24px;line-height:1;padding:0;flex:none}
+.dyNav:disabled{opacity:.25}
+.dyWhen{flex:1;display:flex;flex-direction:column;align-items:center;gap:2px;text-align:center}
+.dyWhen b{font-size:16px;font-weight:600}
+.dyWhen small{font-size:12.5px;color:var(--muted)}
+.dyWhen small.ok{color:var(--ok)} .dyWhen small.fault{color:var(--light)}
+.dyAll{width:100%;padding:15px;font-size:15.5px}
+.dyAll.done{background:var(--ok);color:#fff;border-color:transparent}
+.dyHint{margin:-2px 4px 0;font-size:12.5px}
+.dyBody{display:flex;flex-direction:column;gap:16px;padding:16px}
+.dyG{display:flex;flex-direction:column;gap:8px}
+.dyGT{font-size:14.5px;font-weight:600;display:flex;align-items:baseline;gap:8px;flex-wrap:wrap}
+.dyGT small{font-weight:400;font-size:12px;color:var(--muted)}
+.dyC{flex-wrap:wrap;gap:6px}
+.dyC .chip{font-size:13.5px;padding:7px 12px}
+.dyC .chip.dyBad{background:rgba(234,176,40,.18);border-color:var(--light);color:var(--text);font-weight:600}
+.dyC .chip.dyGood{background:rgba(95,154,98,.2);border-color:var(--ok);color:var(--text);font-weight:600}
+.dyMed{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}
+.dyMed span{display:flex;flex-direction:column;align-items:center;gap:2px;padding:10px 4px;border-radius:12px;background:var(--faint);font-weight:600;font-variant-numeric:tabular-nums}
+.dyMed i{font-style:normal;font-weight:400;font-size:12px;color:var(--muted)} .dyMed i.l{color:var(--light)} .dyMed i.s{color:var(--sound)}
+.dyNotes{padding:14px 16px} .dyNotes summary{cursor:pointer;font-size:14.5px;font-weight:600}
+.dyNotes .socF{margin-top:10px}
+.dyMonth{padding:14px 14px 16px;display:flex;flex-direction:column;gap:10px}
+.dyMT{display:flex;justify-content:space-between;align-items:baseline} .dyMT small{color:var(--muted);font-size:12.5px}
+.dyGrid{display:grid;grid-template-columns:repeat(7,1fr);gap:6px}
+.dyD{aspect-ratio:1;border-radius:50%;padding:0;font-size:12.5px;border:1px solid var(--line);background:transparent;color:var(--muted);box-shadow:none}
+.dyD.ok{background:var(--ok);border-color:var(--ok);color:#10261a;font-weight:600}
+.dyD.fault{background:var(--light);border-color:var(--light);color:#1c1c1c;font-weight:600}
+.dyD.fut{opacity:.3}
+.dyD.today{box-shadow:0 0 0 2px var(--accent)}
+.dyD.sel{outline:2px solid var(--text);outline-offset:2px}
+.dyTop{font-size:12.5px;color:var(--muted)}
+.dyPriv{text-align:center;font-size:12px}
 .ringwrap{position:relative;display:flex;justify-content:center;padding-block:6px}
 .ringbox{position:relative;width:min(280px,74vw);aspect-ratio:1;max-width:100%;border-radius:50%}
 .ringbox::before{content:"";position:absolute;inset:14%;border-radius:50%;background:radial-gradient(circle at 35% 30%,var(--orbA),var(--orbB));box-shadow:inset 0 0 0 1px var(--edge),0 18px 50px rgba(47,84,60,.10)}
@@ -1470,10 +1507,12 @@ body:has(#doneBar:not([hidden])) .toast{bottom:calc(148px + env(safe-area-inset-
 <!-- ============ NOTES ============ -->
 <section class="view" id="vNotes" hidden>
   <header><h1>Тэмдэглэл</h1><span class="date" id="nCount"></span></header>
-  <div class="seg2 glass" id="nSw">
-    <button data-s="notes" class="on">Миний тэмдэглэл</button>
+  <div class="seg2 glass nSw3" id="nSw">
+    <button data-s="notes" class="on">Тэмдэглэл</button>
+    <button data-s="diary">Өдрийн дадал</button>
     <button data-s="quotes">Багшийн үгс</button>
   </div>
+  <div class="sect" id="nDiary" hidden></div>
 
   <div class="sect" id="nNotes">
     <div class="compose glass">
@@ -2595,9 +2634,10 @@ $('yNext').onclick=()=>{ yCursor++; renderTrack(); };
 /* ===================== render: notes ===================== */
 function renderNotes(){
   if(!S) return;
-  $('nNotes').hidden = notesSub!=='notes'; $('nQuotes').hidden = notesSub!=='quotes';
+  $('nNotes').hidden = notesSub!=='notes'; $('nQuotes').hidden = notesSub!=='quotes'; if($('nDiary')) $('nDiary').hidden = notesSub!=='diary';
   document.querySelectorAll('#nSw button').forEach(b=>b.classList.toggle('on', b.dataset.s===notesSub));
   renderBackup();
+  if(notesSub==='diary'){ try{ drawDiary(); }catch(e){} const n=Object.keys(S.diary||{}).length; $('nCount').textContent=tr(`${n} өдөр`,`${n} days`); return; }
   if(notesSub==='quotes'){ renderQuotes(); $('nCount').textContent=tr(`${S.quotes.length} үг`,`${S.quotes.length} quotes`); return; }
   const q=$('nSearch').value.trim().toLowerCase();
   const list=[...S.notes].sort((a,b)=>b.ts-a.ts).filter(n=>!q||n.text.toLowerCase().includes(q));
@@ -2891,7 +2931,7 @@ $('rtOk').addEventListener('click', ()=>{
 const EN = {
   'Нууц кодоо оруулна уу':'Enter your passcode', 'Тохиргоо':'Settings', 'Хөнгөн горим':'Light mode', 'Утас халж эсвэл гацвал асаагаарай. Хөдөлгөөн, бүдгэрүүлэлтийг багасгаж зай хэмнэнэ':'Turn on if your phone gets hot or slow. Reduces motion and blur to save battery', 'Нэргүй статистик илгээх':'Send anonymous stats', 'Апп-ыг сайжруулахын тулд нэр, тэмдэглэлгүйгээр зөвхөн суусан минут, цаг, апп-ын хувилбарыг илгээнэ':'To improve the app, sends only minutes sat, times and app version, with no name or notes', 'Санал хүсэлт илгээх':'Send feedback', 'Алдаа, санаа, асуултаа шууд хэлээрэй':'Tell us about problems, ideas or questions', 'Ирсэн санал хүсэлт':'Feedback inbox', 'Зөвхөн эзэмшигчид харагдана':'Visible only to the owner', 'Статистик':'Statistics', 'Хамт':'Together', 'Апп нээх бүрт кодын оронд хурууны хээгээ хүргэхэд л нээгдэнэ':'Each time you open the app, just touch your fingerprint instead of typing the code', 'Чимээгүй':'Silent', 'Чичиргээ':'Vibrate', 'Өдрийн дадлын цаг':'Daily practice time', 'Өдөр бүр яг энэ цагтаа сууснаар дадал бэхждэг':'Sitting at exactly this time every day is what makes the habit hold', 'Дадлын цаг · өдөр · орой':'Practice time · day · evening', 'Батлах':'Confirm', 'Болих':'Cancel', 'Дадлын цагаа байн байн солих нь дадлыг сулруулдаг. Шинэ цагаа сайтар бодож сонгоорой. Солисны дараа 30 хоног өөрчлөх боломжгүй болно.':'Changing your practice time often weakens the habit. Choose the new time with care. After changing it, it stays locked for 30 days.', 'Өнөөдрийн суулт бүрэн · Аяыг зогсоох':'Today complete · Stop the music', 'Нөөц хуулбараас сэргээх':'Restore from backup', 'Дарж үргэлжлүүлнэ үү':'Tap to continue',
   'Суулт':'Sit', 'Өдрийн 150 минут':'Daily 150 min', 'Чөлөөт суулт':'Free sitting', 'Алтан харьцаа':'Golden ratio', 'Дан гэрэл':'Light only', 'Дан аялгуу':'Sound only',
-  'Гэрэл':'Light', 'Аялгуу':'Sound', 'Эхлэх':'Begin', 'Энэ долоо хоног':'This week', 'Эргэн төвлөрөх хонх':'Bell to return focus between the eyebrows',
+  'Гэрэл':'Light', 'Өдрийн дадал':'Daily practice', 'Аялгуу':'Sound', 'Эхлэх':'Begin', 'Энэ долоо хоног':'This week', 'Эргэн төвлөрөх хонх':'Bell to return focus between the eyebrows',
   'Унтраах':'Off', '5 мин тутам':'Every 5 min', '10 мин тутам':'Every 10 min', '15 мин тутам':'Every 15 min', '21 мин тутам':'Every 21 min',
   'Хяналт':'Progress', 'Дараалан суусан':'Streak', 'Дараалсан бүрэн өдөр':'Full days in a row', 'Нийт суусан':'Total sat', 'Нийт дутуу':'Total short', 'Сарын суулт':'This month', 'Бүрэн өдөр':'Full days',
   'Сарын дутуу':'Month short', 'Жилийн суулт':'This year', 'Жилийн дутуу':'Year short', 'Тэмдэглэл':'Journal', 'Миний тэмдэглэл':'My notes', 'Багшийн үгс':'Master\'s words',
@@ -4087,7 +4127,7 @@ async function openGroup(id){
 function socBadges(){ if(!socOn()||!S||!S.soc) return; chatUnread(); rpc('my_friends').then(l=>{ FR.list=l; FR.incoming=l.filter(f=>f.state==='incoming').length; }).catch(()=>{}); rpc('my_invites').then(l=>{ GR.inv=l; }).catch(()=>{}); }
 
 /* ===================== шинэчлэлийн мэдэгдэл (Android) ===================== */
-const APP_VER=105, SITE='https://otgoo-cell.github.io/gegee';
+const APP_VER=106, SITE='https://otgoo-cell.github.io/gegee';
 async function checkUpdate(){
   if(!N.openUrl) return;
   try{ const r=await fetch(SITE+'/version.json?t='+Date.now(),{cache:'no-store'}); const v=await r.json();
@@ -4246,7 +4286,7 @@ async function pollChat(first){
 
 /* ===================== Санал хүсэлт ===================== */
 const FB={kind:'bug', newCount:0, mine:null, seenAt:0};
-const APP_NAME='11.5';
+const APP_NAME='11.6';
 const FB_K={bug:['🐞',()=>tr('Алдаа','Problem')], idea:['💡',()=>tr('Санаа','Idea')], other:['💬',()=>tr('Бусад','Other')]};
 const fbPlat=()=>{ try{ if(N.hasBg && N.hasBg()) return 'android-app'; }catch(e){} return /iPhone|iPad|iPod/.test(navigator.userAgent)?'ios-pwa':'web'; };
 const fbDev=()=>`${navigator.userAgent.slice(0,260)} | ${screen.width}x${screen.height}@${window.devicePixelRatio||1} | ${LANG} | ${view}`;
@@ -5147,6 +5187,75 @@ window.Fuse=(function(){
   function close(){ const ov=$f('fuseOv'); if(!ov) return; ov.classList.remove('on'); busy=false; try{ Gem.hide(); Gem.livePause(false); }catch(e){} setTimeout(()=>{ if(!ov.classList.contains('on')) ov.hidden=true; },300); }
   return {open, close, isOpen:()=>{ const o=$f('fuseOv'); return !!(o&&!o.hidden); }};
 })();
+
+/* ===================== Сүнслэг дадлын өдрийн тэмдэглэл ===================== */
+// Зөвхөн утсанд хадгалагдана (S.diary), сервер рүү хэзээ ч явахгүй.
+const DIARY=[
+  {id:'v', t:()=>tr('Хүч хэрэглэхгүй байх','Non-violence'), it:[['mind',()=>tr('Сэтгэлээр','In thought')],['word',()=>tr('Үг хэлээр','In speech')],['body',()=>tr('Биеэр','In action')]]},
+  {id:'h', t:()=>tr('Үнэнч шударга байх','Honesty'), it:[['lie',()=>tr('Худал хэлэх','Lying')],['cheat',()=>tr('Хуурах','Deceiving')],['pose',()=>tr('Ёс суртахууны дүр эсгэх','Feigning virtue')],['fraud',()=>tr('Залилан мэхлэх','Fraud')],['gain',()=>tr('Хууль бусаар ашиг олох','Unlawful gain')]]},
+  {id:'c', t:()=>tr('Ариун явдалтай байх','Purity'), it:[['mind',()=>tr('Сэтгэлээр','In thought')],['word',()=>tr('Үг хэлээр','In speech')],['body',()=>tr('Биеэр','In action')]]},
+  {id:'m', t:()=>tr('Даруу төлөв байх','Humility'), it:[['know',()=>tr('Мэдлэгээр хэт бардах','Pride in knowledge')],['boast',()=>tr('Баярхах','Boasting')],['power',()=>tr('Эрх мэдэлдээ ташуурах','Abusing power')]]},
+  {id:'s', t:()=>tr('Амь бие хайргүй бусдын тусыг бүтээх','Selfless service'), it:[['body',()=>tr('Биеэр','In action')],['money',()=>tr('Мөнгө санхүүгээр','Financially')]]}
+];
+let dySel=null, dyOpen=false;
+function dyGet(k){ S.diary=S.diary||{}; return S.diary[k]||null; }
+function dyEnsure(k){ S.diary=S.diary||{}; return S.diary[k]||(S.diary[k]={f:[],food:0}); }
+function dyFaults(d){ return d ? (d.f||[]).filter(x=>!x.startsWith('s.')).length + (d.food?1:0) : 0; }
+function dyState(k){ const d=dyGet(k); if(!d) return 'none'; return dyFaults(d)? 'fault' : (d.ok||(d.f||[]).length) ? 'ok' : 'none'; }
+function drawDiary(){
+  const box=$('nDiary'); if(!box||!S) return;
+  const t=today(); if(!dySel||dySel>t) dySel=t;
+  const d=dyGet(dySel), dt=parse(dySel), day=dget(dySel), faults=dyFaults(d), st=dyState(dySel);
+  const when=tr(`${dt.getMonth()+1}-р сарын ${dt.getDate()}, ${DN[(dt.getDay()+6)%7]}`,`${MN_EN[dt.getMonth()]} ${dt.getDate()}, ${DN[(dt.getDay()+6)%7]}`);
+  const has=(g,i)=>!!(d&&(d.f||[]).includes(g+'.'+i));
+  const groups=DIARY.map(g=>{ const good=g.id==='s';
+    return `<div class="dyG"><div class="dyGT">${g.t()}${good?`<small>${tr('тус болсон бол дарна','tap what you did')}</small>`:''}</div>
+      <div class="chips dyC">${g.it.map(([i,l])=>`<button class="chip ${has(g.id,i)?(good?'dyGood':'dyBad'):''}" data-f="${g.id}.${i}">${good&&has(g.id,i)?'✓ ':''}${l()}</button>`).join('')}</div></div>`; }).join('');
+  const food=d?d.food||0:0;
+  // сарын цэгэн хүснэгт
+  const y=dt.getFullYear(), mo=dt.getMonth(), nd=new Date(y,mo+1,0).getDate();
+  let okN=0, fN=0; const cnt={};
+  let cells='';
+  for(let i=1;i<=nd;i++){ const k=key(new Date(y,mo,i)); const s=k>t?'fut':dyState(k);
+    if(s==='ok') okN++; if(s==='fault'){ fN++; const x=dyGet(k); (x.f||[]).filter(z=>!z.startsWith('s.')).forEach(z=>cnt[z]=(cnt[z]||0)+1); if(x.food) cnt['food']=(cnt['food']||0)+1; }
+    cells+=`<button class="dyD ${s} ${k===dySel?'sel':''} ${k===t?'today':''}" data-k="${k}" ${s==='fut'?'disabled':''}>${i}</button>`; }
+  const lbl=z=>{ if(z==='food') return tr('Мах, өндөг','Meat or eggs'); const [g,i]=z.split('.'), G=DIARY.find(x=>x.id===g), I=G&&G.it.find(x=>x[0]===i); return G&&I?`${I[1]()}`+(i==='mind'||i==='word'||i==='body'?` (${G.t()})`:''):z; };
+  const top=Object.entries(cnt).sort((a,b)=>b[1]-a[1]).slice(0,3);
+  const m=v=>hmLeft(v||0);
+  box.innerHTML=`
+    <div class="glass dyHead">
+      <button class="dyNav" data-nav="-1" aria-label="${tr('Өмнөх өдөр','Previous day')}">‹</button>
+      <div class="dyWhen"><b>${when}</b><small class="${st}">${st==='ok'?tr('✓ Бүгдийг сахисан','✓ All kept'):st==='fault'?tr(`${faults} алдаа тэмдэглэсэн`,`${faults} slips noted`):tr('Тэмдэглээгүй','Not recorded')}</small></div>
+      <button class="dyNav" data-nav="1" ${dySel>=t?'disabled':''} aria-label="${tr('Дараагийн өдөр','Next day')}">›</button>
+    </div>
+    <button class="main dyAll ${st==='ok'?'done':''}" id="dyAll">${st==='ok'?tr('✓ Бүгдийг сахисан','✓ All precepts kept'):tr('Бүгдийг сахисан бол энд дарна','Tap if all precepts were kept')}</button>
+    <p class="hint dyHint">${tr('Алдаа гаргасан бол тухайн зүйл дээр нь дарна. Дахин дарвал арилна.','If you slipped, tap that item. Tap again to undo.')}</p>
+    <div class="glass dyBody">${groups}
+      <div class="dyG"><div class="dyGT">${tr('Хоолны дэглэм','Diet')}<small>${tr('мах, өндөгтэй зүйл','meat or eggs')}</small></div>
+        <div class="chips dyC dyFood">${[[0,tr('Цагаан хоол','Vegan')],[1,tr('Санамсаргүй идсэн','By accident')],[2,tr('Санаатай идсэн','On purpose')]].map(([v,l])=>`<button class="chip ${food===v&&d?(v?'dyBad':'dyGood'):''}" data-food="${v}">${l}</button>`).join('')}</div></div>
+      <div class="dyG"><div class="dyGT">${tr('Бясалгал','Meditation')}<small>${tr('апп өөрөө бөглөнө','filled in by the app')}</small></div>
+        <div class="dyMed"><span><i class="l">${tr('Үзэх','Light')}</i>${m(day.l)}</span><span><i class="s">${tr('Сонсох','Sound')}</i>${m(day.s)}</span><span><i>${tr('Бүгд','Total')}</i>${m((day.l||0)+(day.s||0))}</span></div></div>
+    </div>
+    <details class="glass dyNotes" ${dyOpen?'open':''}><summary>${tr('Ойлголт, бэрхшээл','Insights and difficulties')}${d&&(d.tL||d.tS||d.tD)?' ·':''}</summary>
+      <label class="socF"><span>${tr('Гэрлийн дотоод ахуй ойлголт','Inner experience of Light')}</span><textarea id="dyTL" rows="2">${esc(d&&d.tL||'')}</textarea></label>
+      <label class="socF"><span>${tr('Аялгууны дотоод ахуй ойлголт','Inner experience of Sound')}</span><textarea id="dyTS" rows="2">${esc(d&&d.tS||'')}</textarea></label>
+      <label class="socF"><span>${tr('Бясалгахад ямар бэрхшээл гарав?','What difficulties came up?')}</span><textarea id="dyTD" rows="2">${esc(d&&d.tD||'')}</textarea></label>
+    </details>
+    <div class="glass dyMonth">
+      <div class="dyMT"><b>${tr(`${mo+1}-р сар`,MN_EN[mo])}</b><small>${tr(`${okN} өдөр цэвэр · ${fN} өдөр алдаатай`,`${okN} clean · ${fN} with slips`)}</small></div>
+      <div class="dyGrid">${cells}</div>
+      ${top.length?`<div class="dyTop">${tr('Их давтагдсан','Most frequent')}: ${top.map(([z,c])=>`${lbl(z)} ${c}`).join(' · ')}</div>`:''}
+    </div>
+    <p class="hint dyPriv">🔒 ${tr('Энэ тэмдэглэл зөвхөн таны утсанд, шифрлэгдэж хадгалагдана.','This diary stays only on your phone, encrypted.')}</p>`;
+  const stamp=()=>{ save(); };
+  box.querySelectorAll('[data-nav]').forEach(b=>b.onclick=()=>{ const n=new Date(parse(dySel).getTime()+Number(b.dataset.nav)*86400e3); dySel=key(n); drawDiary(); });
+  $('dyAll').onclick=()=>{ const x=dyEnsure(dySel); const good=(x.f||[]).filter(z=>z.startsWith('s.')); x.f=good; x.food=0; x.ok=true; stamp(); drawDiary(); toast(tr('Сайн байна. Тэмдэглэгдлээ','Well done. Recorded')); };
+  box.querySelectorAll('[data-f]').forEach(b=>b.onclick=()=>{ const x=dyEnsure(dySel), z=b.dataset.f, i=x.f.indexOf(z); if(i>=0) x.f.splice(i,1); else x.f.push(z); x.ok=true; stamp(); drawDiary(); });
+  box.querySelectorAll('[data-food]').forEach(b=>b.onclick=()=>{ const x=dyEnsure(dySel); x.food=Number(b.dataset.food); x.ok=true; stamp(); drawDiary(); });
+  box.querySelectorAll('.dyD[data-k]').forEach(b=>b.onclick=()=>{ dySel=b.dataset.k; drawDiary(); });
+  const det=box.querySelector('.dyNotes'); det.addEventListener('toggle',()=>{ dyOpen=det.open; });
+  [['dyTL','tL'],['dyTS','tS'],['dyTD','tD']].forEach(([id,f])=>{ const el=$(id); el.addEventListener('change',()=>{ const x=dyEnsure(dySel); x[f]=el.value.trim().slice(0,2000); stamp(); }); });
+}
 
 </script>
 </body>
