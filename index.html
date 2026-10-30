@@ -3447,11 +3447,17 @@ const flag=c=>c&&c!=='XX'?String.fromCodePoint(...[...c.toUpperCase()].map(x=>0x
 const cname=c=>{ const r=COUNTRIES.find(x=>x[0]===c); return r?(LANG==='en'?r[2]:r[1]):c; };
 const hmin=m=>{ m=Math.round(m||0); const h=Math.floor(m/60); return h?`${h}${tr('ц','h')} ${pad2(m%60)}${tr('м','m')}`:`${m}${tr('м','m')}`; };
 
-async function sreq(path, body, method='POST', extra={}){
+async function sreq(path, body, method='POST', extra={}, again){
   const h={'apikey':SUPA.key,'Content-Type':'application/json',...extra};
   if(socTok) h.Authorization='Bearer '+socTok;
   const r=await fetch(SUPA.url+path,{method,headers:h,body:body==null?undefined:JSON.stringify(body)});
   const t=await r.text(); let j=null; try{ j=t?JSON.parse(t):null; }catch(e){}
+  // нэвтрэх түлхүүр хугацаа нь дууссан бол шинэчлээд нэг удаа дахин оролдоно
+  if(!r.ok && !again && socTok && (r.status===401 || /jwt/i.test(t))){
+    socTok=null; socTokAt=0;
+    if(!path.startsWith('/auth/')){ try{ if(S && S.acct) await socLogin(); }catch(e){} }
+    return sreq(path, body, method, extra, true);
+  }
   if(!r.ok){ const e=new Error((j&&(j.message||j.msg||j.error_description||j.error))||('HTTP '+r.status)); e.status=r.status; e.code=j&&j.code; throw e; }
   return j;
 }
@@ -3504,6 +3510,7 @@ function mergeDays(T, arr){
   if(first && (!T.start || first<T.start)) T.start=first;
 }
 async function socClaim(nick, real, phone, code){
+  socTok=null; socTokAt=0;   // сэргээх нь нэвтрэхгүйгээр явагддаг тул хуучин түлхүүр хэрэггүй
   const pass=rid(28), j=await sreq('/rest/v1/rpc/claim_profile',{nick_:nick, real_:real, phone_:phone, code_:code, newpass:pass, my_iid:iid()});
   if(!j || j.err){ const e=new Error(j&&j.err||'CLAIM'); throw e; }
   const T=T_(); T.acct={e:j.email, p:pass};
@@ -4127,7 +4134,7 @@ async function openGroup(id){
 function socBadges(){ if(!socOn()||!S||!S.soc) return; chatUnread(); rpc('my_friends').then(l=>{ FR.list=l; FR.incoming=l.filter(f=>f.state==='incoming').length; }).catch(()=>{}); rpc('my_invites').then(l=>{ GR.inv=l; }).catch(()=>{}); }
 
 /* ===================== шинэчлэлийн мэдэгдэл (Android) ===================== */
-const APP_VER=106, SITE='https://otgoo-cell.github.io/gegee';
+const APP_VER=107, SITE='https://otgoo-cell.github.io/gegee';
 async function checkUpdate(){
   if(!N.openUrl) return;
   try{ const r=await fetch(SITE+'/version.json?t='+Date.now(),{cache:'no-store'}); const v=await r.json();
@@ -4286,7 +4293,7 @@ async function pollChat(first){
 
 /* ===================== Санал хүсэлт ===================== */
 const FB={kind:'bug', newCount:0, mine:null, seenAt:0};
-const APP_NAME='11.6';
+const APP_NAME='11.7';
 const FB_K={bug:['🐞',()=>tr('Алдаа','Problem')], idea:['💡',()=>tr('Санаа','Idea')], other:['💬',()=>tr('Бусад','Other')]};
 const fbPlat=()=>{ try{ if(N.hasBg && N.hasBg()) return 'android-app'; }catch(e){} return /iPhone|iPad|iPod/.test(navigator.userAgent)?'ios-pwa':'web'; };
 const fbDev=()=>`${navigator.userAgent.slice(0,260)} | ${screen.width}x${screen.height}@${window.devicePixelRatio||1} | ${LANG} | ${view}`;
