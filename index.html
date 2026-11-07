@@ -295,6 +295,12 @@ header{display:flex;justify-content:space-between;align-items:baseline;gap:12px}
 .dyD.sel{outline:2px solid var(--text);outline-offset:2px}
 .dyTop{font-size:12.5px;color:var(--muted)}
 .dyPriv{text-align:center;font-size:12px}
+.nAct{display:flex;gap:6px;align-items:center}
+.nitem .edit{background:none;border:1px solid var(--line);color:var(--muted);font-size:12.5px;padding:5px 11px;border-radius:999px;box-shadow:none}
+.nitem.editing{display:flex;flex-direction:column;gap:10px}
+.nitem.editing .edT{width:100%;min-height:120px;resize:vertical;font:inherit;font-size:15px;line-height:1.5}
+.nitem.editing .edB{display:flex;justify-content:flex-end;gap:8px}
+.nitem.editing .edB button{padding:9px 18px}
 .ringwrap{position:relative;display:flex;justify-content:center;padding-block:6px}
 .ringbox{position:relative;width:min(280px,74vw);aspect-ratio:1;max-width:100%;border-radius:50%}
 .ringbox::before{content:"";position:absolute;inset:14%;border-radius:50%;background:radial-gradient(circle at 35% 30%,var(--orbA),var(--orbB));box-shadow:inset 0 0 0 1px var(--edge),0 18px 50px rgba(47,84,60,.10)}
@@ -2644,7 +2650,8 @@ function renderNotes(){
   $('nCount').textContent=tr(`${S.notes.length} тэмдэглэл`,`${S.notes.length} notes`);
   $('nList').innerHTML = list.length ? list.map(n=>{
     const d=new Date(n.ts);
-    return `<div class="nitem glass"><div class="nhead"><span>${d.getFullYear()}.${pad2(d.getMonth()+1)}.${pad2(d.getDate())} · ${pad2(d.getHours())}:${pad2(d.getMinutes())} <span class="tag ${n.tag}">${TAGN[n.tag]}</span></span><button class="del ${delArm===n.id?'confirm':''}" data-id="${n.id}">${delArm===n.id?tr('Устгахыг батлах','Tap to confirm'):tr('Устгах','Delete')}</button></div><div class="ntext">${esc(n.text)}</div></div>`;
+    if(nEdit===n.id) return editBox('n',n.id,n.text);
+    return `<div class="nitem glass"><div class="nhead"><span>${d.getFullYear()}.${pad2(d.getMonth()+1)}.${pad2(d.getDate())} · ${pad2(d.getHours())}:${pad2(d.getMinutes())} <span class="tag ${n.tag}">${TAGN[n.tag]}</span></span><span class="nAct"><button class="edit" data-nedit="${n.id}">${EDBTN()}</button><button class="del ${delArm===n.id?'confirm':''}" data-id="${n.id}">${delArm===n.id?tr('Устгахыг батлах','Tap to confirm'):tr('Устгах','Delete')}</button></span></div><div class="ntext">${esc(n.text)}</div></div>`;
   }).join('') : `<div class="emptyS">${q?tr('Хайлтад тохирох тэмдэглэл олдсонгүй.','No notes match your search.'):tr('Одоогоор тэмдэглэл алга. Суултын дараа юу үзэж, юу сонссоноо дээр бичээрэй.','No notes yet. After a sitting, write above what you saw and heard.')}</div>`;
 }
 $('tagChips').addEventListener('click', e=>{ const b=e.target.closest('.chip'); if(!b) return; noteTag=b.dataset.tag; document.querySelectorAll('#tagChips .chip').forEach(c=>c.classList.toggle('on',c===b)); });
@@ -2656,6 +2663,7 @@ $('nSave').addEventListener('click', ()=>{
 });
 $('nSearch').addEventListener('input', renderNotes);
 $('nList').addEventListener('click', e=>{
+  if(edClick(e)) return;
   const b=e.target.closest('.del'); if(!b) return;
   if(delArm===b.dataset.id){ S.notes=S.notes.filter(n=>n.id!==delArm); delArm=null; save(); }
   else { delArm=b.dataset.id; setTimeout(()=>{ if(delArm===b.dataset.id){ delArm=null; renderNotes(); } },4000); }
@@ -2685,8 +2693,11 @@ function showSplash(){
 }
 function hideSplash(){ const sp=$('splash'); clearTimeout(sp._t); sp.classList.remove('on'); setTimeout(()=>{ if(!sp.classList.contains('on')) sp.hidden=true; },700); }
 $('splash').addEventListener('click', hideSplash);
+let qEdit=null, nEdit=null;
+const EDBTN=()=>tr('Засах','Edit');
+function editBox(kind,id,text,src){ return `<div class="nitem glass editing"><textarea class="edT" data-k="${kind}">${esc(text)}</textarea>${kind==='q'?`<input class="edS" placeholder="${tr('Эх сурвалж (заавал биш)','Source (optional)')}" value="${esc(src||'')}">`:''}<div class="edB"><button class="ghost" data-edcancel="${kind}">${tr('Болих','Cancel')}</button><button class="main" data-edsave="${kind}" data-id="${id}">${tr('Хадгалах','Save')}</button></div></div>`; }
 function renderQuotes(){
-  $('qList').innerHTML = S.quotes.length ? [...S.quotes].reverse().map(q=>`<div class="nitem glass"><div class="qtext">${esc(q.text)}</div><div class="nhead"><span>${esc(q.src||'')}</span><button class="del ${qArm===q.id?'confirm':''}" data-qid="${q.id}">${qArm===q.id?tr('Устгахыг батлах','Tap to confirm'):tr('Устгах','Delete')}</button></div></div>`).join('')
+  $('qList').innerHTML = S.quotes.length ? [...S.quotes].reverse().map(q=> qEdit===q.id ? editBox('q',q.id,q.text,q.src) : `<div class="nitem glass"><div class="qtext">${esc(q.text)}</div><div class="nhead"><span>${esc(q.src||'')}</span><span class="nAct"><button class="edit" data-qedit="${q.id}">${EDBTN()}</button><button class="del ${qArm===q.id?'confirm':''}" data-qid="${q.id}">${qArm===q.id?tr('Устгахыг батлах','Tap to confirm'):tr('Устгах','Delete')}</button></span></div></div>`).join('')
     : `<div class="emptyS">${tr('Одоогоор үг нэмээгүй байна. Нэмсэн үгс чинь Суулт хэсгийн дээд талд болон апп нээх бүрт ээлжлэн харагдана.','No words added yet. They will take turns appearing at the top of Sit and each time you open the app.')}</div>`;
 }
 $('nSw').addEventListener('click', e=>{ const b=e.target.closest('button'); if(!b) return; notesSub=b.dataset.s; renderNotes(); });
@@ -2697,7 +2708,20 @@ $('qAdd').addEventListener('click', ()=>{
   parts.forEach((t,i)=>S.quotes.push({id:Date.now().toString(36)+i+Math.random().toString(36).slice(2,5), text:t, src}));
   $('qIn').value=''; save(); renderNotes(); toast(parts.length>1?tr(`${parts.length} үг нэмэгдлээ`,`${parts.length} quotes added`):tr('Үг нэмэгдлээ','Quote added'));
 });
+function edClick(e){
+  const eb=e.target.closest('[data-qedit],[data-nedit]');
+  if(eb){ if(eb.dataset.qedit){ qEdit=eb.dataset.qedit; renderQuotes(); } else { nEdit=eb.dataset.nedit; renderNotes(); }
+    setTimeout(()=>{ const t=document.querySelector('.editing .edT'); if(t){ t.focus(); t.setSelectionRange(t.value.length,t.value.length); t.style.height=Math.min(420,t.scrollHeight+4)+'px'; } },30); return true; }
+  const cb=e.target.closest('[data-edcancel]'); if(cb){ qEdit=null; nEdit=null; renderNotes(); return true; }
+  const sb=e.target.closest('[data-edsave]');
+  if(sb){ const box=sb.closest('.editing'), txt=box.querySelector('.edT').value.trim(); if(!txt){ toast(tr('Хоосон байж болохгүй','Cannot be empty')); return true; }
+    if(sb.dataset.edsave==='q'){ const q=S.quotes.find(x=>x.id===sb.dataset.id); if(q){ q.text=txt; q.src=box.querySelector('.edS').value.trim(); } qEdit=null; }
+    else { const n=S.notes.find(x=>x.id===sb.dataset.id); if(n){ n.text=txt; n.edited=Date.now(); } nEdit=null; }
+    save(); renderNotes(); toast(tr('Засвар хадгалагдлаа','Changes saved')); return true; }
+  return false;
+}
 $('qList').addEventListener('click', e=>{
+  if(edClick(e)) return;
   const b=e.target.closest('.del'); if(!b) return;
   if(qArm===b.dataset.qid){ S.quotes=S.quotes.filter(q=>q.id!==qArm); qArm=null; save(); }
   else { qArm=b.dataset.qid; setTimeout(()=>{ if(qArm===b.dataset.qid){ qArm=null; renderQuotes(); } },4000); }
@@ -4134,7 +4158,7 @@ async function openGroup(id){
 function socBadges(){ if(!socOn()||!S||!S.soc) return; chatUnread(); rpc('my_friends').then(l=>{ FR.list=l; FR.incoming=l.filter(f=>f.state==='incoming').length; }).catch(()=>{}); rpc('my_invites').then(l=>{ GR.inv=l; }).catch(()=>{}); }
 
 /* ===================== шинэчлэлийн мэдэгдэл (Android) ===================== */
-const APP_VER=107, SITE='https://otgoo-cell.github.io/gegee';
+const APP_VER=108, SITE='https://otgoo-cell.github.io/gegee';
 async function checkUpdate(){
   if(!N.openUrl) return;
   try{ const r=await fetch(SITE+'/version.json?t='+Date.now(),{cache:'no-store'}); const v=await r.json();
@@ -4293,7 +4317,7 @@ async function pollChat(first){
 
 /* ===================== Санал хүсэлт ===================== */
 const FB={kind:'bug', newCount:0, mine:null, seenAt:0};
-const APP_NAME='11.7';
+const APP_NAME='11.8';
 const FB_K={bug:['🐞',()=>tr('Алдаа','Problem')], idea:['💡',()=>tr('Санаа','Idea')], other:['💬',()=>tr('Бусад','Other')]};
 const fbPlat=()=>{ try{ if(N.hasBg && N.hasBg()) return 'android-app'; }catch(e){} return /iPhone|iPad|iPod/.test(navigator.userAgent)?'ios-pwa':'web'; };
 const fbDev=()=>`${navigator.userAgent.slice(0,260)} | ${screen.width}x${screen.height}@${window.devicePixelRatio||1} | ${LANG} | ${view}`;
