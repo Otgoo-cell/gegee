@@ -1913,34 +1913,7 @@ function goBackground(){
   return true;
 }
 function catchUp(fromMs){
-  // Хугацаагүй суулт утас хаалттай үед тоологдсоор байдаг тул буцаж ирэхэд хэрэглэгчээр баталгаажуулна
-  const ask = mode==='free' && sess && sess.open && running;
-  const dk=[today(), key(addDays(new Date(),-1))], b={}; if(ask) dk.forEach(k=>b[k]=dget(k));
   quiet=true; try{ lastTick=fromMs; tick(); } finally { quiet=false; }
-  if(!ask) return;
-  const add={}; let tot=0;
-  dk.forEach(k=>{ const a=dget(k), l=Math.max(0,a.l-b[k].l), s=Math.max(0,a.s-b[k].s); if(l+s>0){ add[k]={l,s}; tot+=l+s; } });
-  if(tot>=AWAY_ASK) setTimeout(()=>awayAsk(add,tot,fromMs),700);
-}
-const AWAY_ASK=10*60;
-function awayAsk(add,tot,fromMs){
-  if(!S) return;
-  const d0=new Date(fromMs), from=hm(d0.getHours()*60+d0.getMinutes()), st={v:tot};
-  const draw=()=>{ openSocSheet(sheetHead(tr('Хэр удаан суусан бэ?','How long did you sit?'))+`<div class="glass socIntro manBox">
-      <p class="hint">${tr(`Утсаа ${from}-д хаасан. Түүнээс хойш хугацаагүй суулт ${hmLeft(tot)} тоологдлоо. Хугацаагүй суулт таныг зогсоотол тоологдсоор байдаг тул яг хэр удаан суусныг шалгаад зөв хугацааг хадгална уу.`,`You closed the phone at ${from}. An open-ended sitting kept counting and recorded ${hmLeft(tot)}. Please check how long you actually sat.`)}</p>
-      <button class="manRow" id="awRow"><span>${tr('Суусан хугацаа','Time sat')}</span><b>${hmLeft(st.v)}</b></button>
-      <button class="main" id="awOk">${st.v<tot?tr(`${hmLeft(st.v)} гэж хадгалах`,`Save as ${hmLeft(st.v)}`):tr('Зөв, бүгдийг тоолох','Correct, keep it all')}</button>
-      ${running?`<small class="muted">${tr('Одоо ч сууж байгаа бол "Зөв" дарвал суулт үргэлжилнэ.','If you are still sitting, tap "Correct" and it continues.')}</small>`:''}</div>`);
-    $('awRow').onclick=()=>openSlot({title:tr('Хэр удаан суусан бэ?','How long did you sit?'), dur:true, v:Math.round(st.v/60), ok:v=>{ st.v=Math.max(0,Math.min(tot,v*60)); draw(); }});
-    $('awOk').onclick=()=>{ const cut=tot-st.v; closeSocSheet(); if(cut<1) return;
-      let r=cut; Object.keys(add).sort().reverse().forEach(k=>{ const x=S.days[k]; if(!x||r<=0) return;
-        const s1=Math.min(r,add[k].s,x.s||0); x.s-=s1; r-=s1; const l1=Math.min(r,add[k].l,x.l||0); x.l-=l1; r-=l1; });
-      if(sess) sess.e=Math.max(0,sess.e-cut);
-      if(running) stop(); tickPrev=dget(today()).t;
-      save(); try{ renderMed(); }catch(_){} try{ renderTrack(); }catch(_){} try{ socSync(true); }catch(_){}
-      toast(tr(`${hmLeft(st.v)} гэж засагдлаа`,`Saved as ${hmLeft(st.v)}`)); };
-  };
-  draw();
 }
 window.onAppHidden = function(){
   if(!S || pickerOpen || lmode.startsWith('chg') || lmode==='restore') return;
@@ -2097,7 +2070,7 @@ function swAcked(k){ return S.swAck===k || dget(k).s>0; }
 function soundTarget(k){ const d=dget(k); return Math.max(SOUND, Math.round(d.l/PHI)); }   // гэрэл уртсавал аялгуу ч алтан харьцаагаар нэмэгдэнэ
 function dayDone(k){ const d=dget(k); return d.l>=LIGHT && d.s>=soundTarget(k); }
 function freeWait(){ return !!(sess && sess.Tl>0 && sess.Ts>0 && sess.e>=sess.Tl && sess.e<sess.T && !sess.acked); }
-const OPEN_T=3*3600;   // хугацаагүй суулт 3 цагт өөрөө зогсоно
+const OPEN_T=8*3600;   // хугацаагүй суулт хэрэглэгч зогсоотол үргэлжилнэ, зөвхөн 8 цагт хамгаалалтаар зогсоно
 function freeSplit(min, fm){
   if(!(min>0) && (fm==='light'||fm==='sound')) return fm==='light' ? {T:OPEN_T, Tl:OPEN_T, Ts:0, open:'light'} : {T:OPEN_T, Tl:0, Ts:OPEN_T, open:'sound'};
   const T=Math.round(min*60);
@@ -4185,7 +4158,7 @@ async function openGroup(id){
 function socBadges(){ if(!socOn()||!S||!S.soc) return; chatUnread(); rpc('my_friends').then(l=>{ FR.list=l; FR.incoming=l.filter(f=>f.state==='incoming').length; }).catch(()=>{}); rpc('my_invites').then(l=>{ GR.inv=l; }).catch(()=>{}); }
 
 /* ===================== шинэчлэлийн мэдэгдэл (Android) ===================== */
-const APP_VER=109, SITE='https://otgoo-cell.github.io/gegee';
+const APP_VER=110, SITE='https://otgoo-cell.github.io/gegee';
 async function checkUpdate(){
   if(!N.openUrl) return;
   try{ const r=await fetch(SITE+'/version.json?t='+Date.now(),{cache:'no-store'}); const v=await r.json();
@@ -4373,7 +4346,7 @@ async function pollChat(first){
 
 /* ===================== Санал хүсэлт ===================== */
 const FB={kind:'bug', newCount:0, mine:null, seenAt:0};
-const APP_NAME='11.9';
+const APP_NAME='12.0';
 const FB_K={bug:['🐞',()=>tr('Алдаа','Problem')], idea:['💡',()=>tr('Санаа','Idea')], other:['💬',()=>tr('Бусад','Other')]};
 const fbPlat=()=>{ try{ if(N.hasBg && N.hasBg()) return 'android-app'; }catch(e){} return /iPhone|iPad|iPod/.test(navigator.userAgent)?'ios-pwa':'web'; };
 const fbDev=()=>`${navigator.userAgent.slice(0,260)} | ${screen.width}x${screen.height}@${window.devicePixelRatio||1} | ${LANG} | ${view}`;
